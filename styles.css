@@ -1,0 +1,517 @@
+/* -----------------------------
+1. Importaci¨®n y configuraci¨®n general
+------------------------------ */
+@import url("https://use.typekit.net/qrv8fyz.css");
+
+:root {
+    --color-naranja: #fd7800;
+    --color-fondo: #FFF4EE;
+    --color-principal: #004758;
+    --color-texto: #333;
+    --color-secundario: #666;
+    --color-blanco: #FFF;
+}
+
+
+body {
+    font-family: "Gelica", sans-serif, Arial, Helvetica;
+    background-color: var(--color-fondo);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* -----------------------------
+2. Contenedores y estructura layout
+------------------------------ */
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    max-width: 80%;
+}
+
+.container {
+    max-width: 1200px;
+    width: 90%;
+    margin: auto;
+    padding: 20px;
+    background-color: var(--color-fondo);
+    align-items: flex-start;
+}
+
+.header-container,
+.logo-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.top-row,
+.botones-section,
+.buttons-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.buttons-container {
+    width: 100%;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.buttons-container a {
+    text-align: center;
+}
+
+.button-link,
+.btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    text-align: center;
+    color: black;
+    font-size: 25px;
+    margin: 10px auto;
+    width: 200px;
+    background-color: var(--color-principal);
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.button-link img {
+    width: 120px;
+    margin-bottom: 5px;
+}
+
+.btn-small {
+    background-color: #fd7800;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 3px;
+    margin-top: 5px;
+    display: flex;
+    cursor: pointer;
+}
+
+.btn-small:hover {
+    background-color: #003941;
+}
+
+.btn-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+
+.logout-link,
+.login-link {
+    display: block;
+    margin-top: 20px;
+    color: var(--color-naranja);
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.logout-link:hover,
+.login-link:hover {
+    text-decoration: underline;
+}
+
+.boton-agregar-miembro {
+    display: flex;
+    align-items: center;
+    background-color: var(--color-naranja);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 25px;
+}
+
+.boton-agregar-miembro img {
+    width: 100px;
+    height: 100px;
+    margin-right: 10px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+/* -----------------------------
+3. Tipograf¨ªas y estilos de texto
+------------------------------ */
+.company-name,
+.company-info h1 {
+    font-size: 50px;
+    color: var(--color-texto);
+    font-weight: normal;
+}
+
+.company-info p {
+    margin: 0;
+    font-size: 25px;
+    color: var(--color-secundario);
+    text-align: left;
+}
+
+.valor-descripcion,
+.descripcion {
+    font-size: 25px;
+    color: var(--color-secundario);
+    text-align: left;
+}
+
+.proposito-text {
+    font-size: 18px;
+    font-style: italic;
+    color: #002135;
+}
+
+.valores-section h2,
+.valor-titulo,
+.mensaje-alerta {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--color-naranja);
+}
+
+.mensaje-alerta {
+    font-size: 20px;
+    margin: 20px auto;
+    padding: 10px;
+    text-align: center;
+    width: 80%;
+}
+
+.ver-mas {
+    color: var(--color-naranja);
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+/* -----------------------------
+4. Im¨¢genes
+------------------------------ */
+.company-logo {
+    width: 200px;
+    margin-right: 20px;
+    clip-path: circle(50% at 50% 50%);
+    object-fit: cover;
+}
+
+.analisis-icon {
+    width: 30px;
+    height: auto;
+}
+
+.separador-img {
+    padding: 30px 0;
+    width: 100%;
+    display: block;
+}
+
+.circle,
+.line-container .circle {
+    position: absolute;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    background-color: var(--color-naranja);
+    border-radius: 50%;
+    z-index: 3;
+    transform: translateY(-50%) translateX(-50%);
+}
+
+/* -----------------------------
+5. Formularios e inputs
+------------------------------ */
+.input-field,
+textarea,
+input[type="text"],
+input[type="email"],
+input[type="radio"] {
+    width: 80%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid var(--color-naranja);
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: var(--color-fondo);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    font-family: 'Gelica', sans-serif;
+}
+
+.proposito-form,
+.valores-form {
+    margin-top: 20px;
+    text-align: left;
+}
+
+/* -----------------------------
+6. Componentes visuales funcionales
+------------------------------ */
+.valores-section,
+.analisis-section {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.valor-item,
+.analisis-item,
+.dimension-explanation {
+    margin-top: 10px;
+    text-align: left;
+}
+
+.analisis-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+
+.analisis-item a,
+.dimension-explanation a {
+    font-size: 16px;
+    color: var(--color-naranja);
+    text-decoration: none;
+}
+
+.analisis-item a:hover {
+    text-decoration: underline;
+}
+
+.dashboard-container table {
+    margin: 20px auto;
+    border-collapse: collapse;
+}
+
+.dimension-explanation h4 {
+    margin-top: 20px;
+}
+
+.dimension-explanation p {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+/* Promedio alineaci¨®n */
+.promedio-container {
+    background-color: var(--color-blanco);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    min-width: 250px;
+    text-align: center;
+}
+
+.promedio-container h2 {
+    color: var(--color-naranja);
+    margin: 0;
+}
+
+.promedio-container p {
+    font-size: 45px;
+    color: var(--color-principal);
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.promedio-container a {
+    color: var(--color-secundario);
+    font-size: 16px;
+    text-decoration: underline;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+/* Listas */
+.perfil-container ul,
+.perfil-lista {
+    list-style: none;
+    padding: 0;
+    margin-top: 30px;
+    color: var(--color-naranja);
+}
+
+.perfil-container li,
+.perfil-lista li {
+    padding-left: 50px;
+    background: url('/uploads/icon-perfiles.png') no-repeat left center;
+    background-size: 35px;
+    margin-bottom: 10px;
+    color: var(--color-naranja);
+}
+
+.perfil-container li a,
+.perfil-lista li a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Barras de progreso */
+.bar-container,
+.progress-container {
+    width: 100%;
+    background-color: #ddd;
+    height: 20px;
+    margin: 10px 0;
+}
+
+.bar {
+    height: 100%;
+    background-color: #4CAF50;
+    text-align: center;
+    color: white;
+}
+
+/* L¨ªnea visual */
+.line-container {
+    position: relative;
+    width: 100%;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.line-label {
+    color: var(--color-blanco);
+    background-color: var(--color-naranja);
+    font-size: 12px;
+    padding: 2px 5px;
+    border-radius: 5px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+}
+
+.line-label.left { left: 0; }
+.line-label.right { right: 0; }
+
+.line-background {
+    position: absolute;
+    height: 2px;
+    background-color: var(--color-naranja);
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+/* Cuadrante cultural */
+.cuadrante {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    text-align: center;
+}
+
+.fila {
+    display: contents;
+}
+
+.celda {
+    padding: 20px;
+    border: 1px solid #ccc;
+    position: relative;
+}
+
+.celda.activa {
+    background-color: #4CAF50;
+}
+
+/* -----------------------------
+7. Utilidades
+------------------------------ */
+.oculto {
+    display: none;
+}
+
+.question {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: var(--color-fondo);
+    border-radius: 5px;
+}
+
+.question h3 {
+    margin-bottom: 10px;
+}
+
+.question div {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    gap: 12px;
+    line-height: 1.4;
+    max-width: 100%;
+}
+
+.question input[type="radio"] {
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.question label,
+.opcion-radio {
+    font-size: 18px;
+    line-height: 1.4;
+    color: var(--color-texto);
+}
+
+.opcion-radio {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.opcion-radio input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.texto-opcion {
+    line-height: 1.5;
+    flex: 1;
+}
+
+/* -----------------------------
+8. Media Queries (Responsive)
+------------------------------ */
+@media (max-width: 768px) {
+    .botones-inner {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        width: 100%;
+        gap: 30px;
+        flex-wrap: nowrap;
+    }
+
+    .button-link img {
+        width: 50px;
+    }
+}

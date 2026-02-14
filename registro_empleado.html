@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Empleado</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+    <h1>Registro de Empleados</h1>
+    <form action="guardar_empleado.php" method="POST">
+        <div><label for="usuario_id">ID de la Empresa:<br></label>
+        <input type="text" id="usuario_id" name="usuario_id" required></div>
+
+        <div><label for="nombre">Tu Nombre:<br></label>
+        <input type="text" id="nombre" name="nombre" required></div>
+        
+        <div><label for="apellido">Tu Apellido:<br></label>
+        <input type="text" id="apellido" name="apellido" required></div>
+
+        <div><label for="cargo">Tu Cargo, Rol o Posición:<br></label>
+        <input type="text" id="cargo" name="cargo" required></div>
+
+        <div><label for="correo">Tu Correo:<br></label>
+        <input type="email" id="correo" name="correo" required></div>
+
+<!-- Pregunta 1 -->
+<div class="question">
+  <h3>1. ¿Con qué tipo de ambiente de liderazgo te sientes más motivado en el trabajo?</h3>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta1" value="a" required>
+    <div class="texto-opcion">Me motiva cuando mis superiores guían con directrices claras y se mantienen respetados en su rol de autoridad, brindándome seguridad sobre qué camino seguir.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta1" value="b" required>
+    <div class="texto-opcion">Disfruto una estructura jerárquica definida, pero donde cada miembro puede aportar ideas y opiniones; el líder orienta sin dejar de fomentar la participación de todos.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta1" value="c" required>
+    <div class="texto-opcion">Prefiero que colaboremos en equipo de forma abierta, con poca intervención jerárquica; los superiores confían en nosotros y solo brindan guía cuando es necesario.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta1" value="d" required>
+    <div class="texto-opcion">Me motiva un ambiente muy igualitario, donde todos, independientemente del cargo, colaboramos de la mano y podemos tomar decisiones de forma autónoma y colegiada.</div>
+  </div>
+</div>
+
+<!-- Pregunta 2 -->
+<div class="question">
+  <h3>2. ¿Qué estilo de trabajo te hace sentir más realizado?</h3>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta2" value="a" required>
+    <div class="texto-opcion">Cuando puedo trabajar de forma autónoma, tomando mis propias decisiones y destacando por mis logros individuales (por ejemplo, cumplir mis metas por iniciativa propia).</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta2" value="b" required>
+    <div class="texto-opcion">Cuando tengo responsabilidad personal en mis tareas, pero sabiendo que mi trabajo contribuye al objetivo del equipo; disfruto combinar independencia con colaboración.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta2" value="c" required>
+    <div class="texto-opcion">Cuando colaboro estrechamente con mis colegas, compartiendo responsabilidades y logrando metas en conjunto; me satisface alcanzar el éxito como equipo.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta2" value="d" required>
+    <div class="texto-opcion">Cuando siento que formo parte de una “familia” laboral, priorizando la cooperación y lealtad al grupo por encima del logro individual; para mí, el éxito es esencialmente colectivo.</div>
+  </div>
+</div>
+
+<!-- Pregunta 3 -->
+<div class="question">
+  <h3>3. ¿Qué tipo de cultura de trabajo te resulta más satisfactoria personalmente?</h3>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta3" value="a" required>
+    <div class="texto-opcion">Una cultura donde se retoquen metas ambiciosas y haya motivación por destacar y ser el mejor en lo que hacemos; me agrada el entusiasmo por los logros y la competencia saludable.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta3" value="b" required>
+    <div class="texto-opcion">Una cultura que busca excelencia en los resultados, pero equilibrada con bienestar; es decir, alcanzamos metas desafiantes colaborando y cuidando el buen clima laboral al mismo tiempo.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta3" value="c" required>
+    <div class="texto-opcion">Una cultura donde predomina la colaboración, la empatía y el apoyo mutuo; se valora que el equipo se mantenga unido y en armonía, incluso por encima de competir por el primer lugar.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta3" value="d" required>
+    <div class="texto-opcion">Una cultura muy orientada a las personas, donde reina la armonía y todos cuidan de todos; me siento satisfecho en un ambiente de trabajo comprensivo, centrado en el bienestar de los empleados.</div>
+  </div>
+</div>
+
+<!-- Pregunta 4 -->
+<div class="question">
+  <h3>4. ¿Con qué estilo de organización del trabajo te sientes más cómodo?</h3>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta4" value="a" required>
+    <div class="texto-opcion">Me gusta tener procedimientos claros y planificar detalladamente las tareas; prefiero anticipar y evitar sorpresas, trabajando con normas definidas que den certeza al proyecto.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta4" value="b" required>
+    <div class="texto-opcion">Me siento cómodo siguiendo lineamientos generales y reglas básicas, pero con margen para adaptarme si las cosas cambian; combino la organización con cierta flexibilidad cuando surge algo inesperado.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta4" value="c" required>
+    <div class="texto-opcion">Disfruto cuando hay flexibilidad para innovar y se aceptan cambios sobre la marcha, aunque agradezco contar con algunas pautas iniciales que orienten; no temo la incertidumbre si tengo un mínimo de guía.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta4" value="d" required>
+    <div class="texto-opcion">Me encanta un entorno dinámico, donde puedo enfrentar nuevos retos sin procedimientos rígidos; confío en mi capacidad para improvisar y adaptarme rápidamente ante lo inesperado.</div>
+  </div>
+</div>
+
+<!-- Pregunta 5 -->
+<div class="question">
+  <h3>5. Al fijarte metas laborales, ¿cuál de los siguientes enfoques se acerca más a tu estilo?</h3>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta5" value="a" required>
+    <div class="texto-opcion">Suelo pensar en objetivos futuros y en la visión a largo plazo de mis proyectos. Estoy dispuesto a trabajar con paciencia y perseverancia ahora para cosechar logros importantes más adelante, manteniendo constancia en mis planes.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta5" value="b" required>
+    <div class="texto-opcion">Me gusta planificar para el futuro, pero también es importante obtener resultados rápidos. Idealmente, combino metas a largo plazo con logros a corto plazo que me indiquen que voy por buen camino y mantienen al equipo motivado.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta5" value="c" required>
+    <div class="texto-opcion">Me enfoco en metas de corto plazo que traigan resultados rápidos y tangibles. Valoro mucho las victorias inmediatas y cumplir con los objetivos del presente; pienso que lograr éxitos hoy sienta las bases para avanzar luego.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta5" value="d" required>
+    <div class="texto-opcion">Prefiero centrarme en objetivos actuales, cumpliendo con las tareas y estándares vigentes de la organización. Doy importancia a mantener las prácticas y tradiciones existentes, asegurando que el trabajo diario se haga de la mejor manera antes de pensar en el largo plazo.</div>
+  </div>
+</div>
+
+<!-- Pregunta 6 -->
+<div class="question">
+  <h3>6. ¿Qué descripción encaja mejor con cómo te gusta que sea el ambiente de trabajo?</h3>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta6" value="a" required>
+    <div class="texto-opcion">Me encanta mantener un ambiente alegre. Disfruto celebrar los logros (grandes o pequeños) y organizar actividades que hagan el trabajo divertido; creo que un toque de optimismo y disfrute mantiene al equipo motivado y unido.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta6" value="b" required>
+    <div class="texto-opcion">Prefiero un ambiente principalmente profesional y enfocado, pero sin que ello impida reconocer y celebrar logros importantes de vez en cuando. Mantener la disciplina es clave, aunque valoro tener momentos de positividad para no perder la motivación.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta6" value="c" required>
+    <div class="texto-opcion">Me siento a gusto en un entorno serio y estable, donde el foco está en cumplir los objetivos con alta disciplina. Aunque haya espacio para el buen ánimo, en general se mantienen las normas y la moderación: primero el deber y luego el premio.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta6" value="d" required>
+    <div class="texto-opcion">Prefiero un ambiente de trabajo muy profesional, con poca distracción y donde prime el autocontrol. Más que celebraciones frecuentes, valoro la disciplina y el compromiso diario; los festejos los reservo para ocasiones realmente destacadas.</div>
+  </div>
+</div>
+
+
+<!-- Pregunta 7 -->
+<div class="question">
+  <h3>7. ¿Cómo describirías tu nivel de atención al cuidado de tu salud y bienestar personal?</h3>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta7" value="a" required>
+    <div class="texto-opcion">No suelo enfocarme en hábitos de bienestar en mi rutina diaria.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta7" value="b" required>
+    <div class="texto-opcion">Tengo momentos en los que me enfoco en mi bienestar, aunque no es algo constante.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta7" value="c" required>
+    <div class="texto-opcion">Mantengo varios hábitos saludables, aunque a veces los adapto según el ritmo del trabajo o la vida.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta7" value="d" required>
+    <div class="texto-opcion">El bienestar hace parte de mi rutina; suelo priorizarlo de manera consistente.</div>
+  </div>
+</div>
+
+<!-- Pregunta 8 -->
+<div class="question">
+  <h3>8. ¿Qué tan presente sientes el propósito de la marca en tu día a día laboral?</h3>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta8" value="a" required>
+    <div class="texto-opcion">No suelo pensar mucho en el propósito mientras trabajo.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta8" value="b" required>
+    <div class="texto-opcion">A veces conecto lo que hago con el propósito, aunque no siempre.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta8" value="c" required>
+    <div class="texto-opcion">El propósito está presente en mi forma de trabajar, incluso si no lo menciono abiertamente.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta8" value="d" required>
+    <div class="texto-opcion">Me conecto con el propósito de manera natural y lo tengo como referencia en mis decisiones.</div>
+  </div>
+</div>
+
+<!-- Pregunta 9 -->
+<div class="question">
+  <h3>9. ¿Cómo vives los valores de la marca en tu día a día?</h3>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta9" value="a" required>
+    <div class="texto-opcion">No tengo muy presentes los valores en mi rutina de trabajo.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta9" value="b" required>
+    <div class="texto-opcion">Conozco los valores y los tengo en mente en algunas situaciones.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta9" value="c" required>
+    <div class="texto-opcion">Los valores me guían en varias de mis decisiones y formas de actuar.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta9" value="d" required>
+    <div class="texto-opcion">Los valores son parte de mi forma de ser y trabajar, los aplico de forma natural.</div>
+  </div>
+</div>
+
+<!-- Pregunta 10 -->
+<div class="question">
+  <h3>10. ¿Cómo te sientes respecto a tus tareas y tu rol actual?</h3>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta10" value="a" required>
+    <div class="texto-opcion">Las tareas que realizo no siempre se sienten conectadas conmigo.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta10" value="b" required>
+    <div class="texto-opcion">Me involucro con mi rol, aunque hay momentos en que siento desconexión.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta10" value="c" required>
+    <div class="texto-opcion">En general, siento que mi rol tiene sentido y me permite aportar valor a la marca.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta10" value="d" required>
+    <div class="texto-opcion">Me siento pleno en mi rol y con las tareas que realizo, se que mi labor genera un gran impacto en la marca.</div>
+  </div>
+</div>
+
+<!-- Pregunta 11 -->
+<div class="question">
+  <h3>11. ¿Cuál de los siguientes aspectos de tu trabajo es el que más te motiva y te hace sentir satisfecho actualmente?</h3>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta11" value="a" required>
+    <div class="texto-opcion">Tener un buen salario y condiciones cómodas de trabajo, que me permiten cubrir mis necesidades básicas.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta11" value="b" required>
+    <div class="texto-opcion">Disfrutar de estabilidad en mi empleo y un ambiente de trabajo seguro, donde siento un fuerte sentido de pertenencia y apoyo mutuo con mis colegas.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta11" value="c" required>
+    <div class="texto-opcion">Recibir reconocimiento por mi trabajo y saber que se valoran mis logros en la empresa.</div>
+  </div>
+
+  <div class="opcion-radio">
+    <input type="radio" name="pregunta11" value="d" required>
+    <div class="texto-opcion">Tener oportunidades de crecimiento profesional que me permitan desarrollar todo mi potencial.</div>
+  </div>
+</div>
+
+
+
+        <button style="margin-top:30px;" class="button" type="submit">Enviar Registro</button>
+    </form>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const empresaId = urlParams.get('empresa_id');
+  
+  if (empresaId) {
+    const input = document.getElementById('usuario_id');
+    if (input) {
+      input.value = empresaId;
+      input.readOnly = true; // 🔒 Esto la bloquea para edición
+    }
+  }
+</script>
+
+
+
+</body>
+</html>
