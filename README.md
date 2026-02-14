@@ -1,1 +1,0 @@
-# Val-rica-App
