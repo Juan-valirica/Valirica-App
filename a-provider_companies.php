@@ -42,7 +42,7 @@ $stmt = $conn->prepare("SELECT empresa, rol, logo FROM usuarios WHERE id = ? LIM
 
 $stmt->bind_param("i", $viewer_id);
 $stmt->execute();
-$user = $stmt->get_result()->fetch_assoc() ?: [];
+$user = stmt_get_result($stmt)->fetch_assoc() ?: [];
 $stmt->close();
 
 // Normaliza y propaga el rol a la sesión para que las páginas destino lo lean
@@ -135,7 +135,7 @@ function try_avg(mysqli $conn, string $fk, int $company_id, string $expr, bool $
   $stmt = $conn->prepare($sql);
   $stmt->bind_param("i", $company_id);
   $stmt->execute();
-  $row = $stmt->get_result()->fetch_assoc();
+  $row = stmt_get_result($stmt)->fetch_assoc();
   $stmt->close();
   return isset($row['v']) && $row['v'] !== null ? (float)$row['v'] : null;
 }
@@ -185,7 +185,7 @@ function get_company_metrics(mysqli $conn, int $company_id): array {
     $stmt = $conn->prepare("SELECT COUNT(*) c FROM equipo WHERE `$fk` = ? $whereEstado");
     $stmt->bind_param("i", $company_id);
     $stmt->execute();
-    $team_count = (int)($stmt->get_result()->fetch_assoc()['c'] ?? 0);
+    $team_count = (int)(stmt_get_result($stmt)->fetch_assoc()['c'] ?? 0);
     $stmt->close();
   } catch (\Throwable $e) {
     // fallback sin columna estado
@@ -193,7 +193,7 @@ function get_company_metrics(mysqli $conn, int $company_id): array {
     $stmt = $conn->prepare("SELECT COUNT(*) c FROM equipo WHERE `$fk` = ?");
     $stmt->bind_param("i", $company_id);
     $stmt->execute();
-    $team_count = (int)($stmt->get_result()->fetch_assoc()['c'] ?? 0);
+    $team_count = (int)(stmt_get_result($stmt)->fetch_assoc()['c'] ?? 0);
     $stmt->close();
   }
 
@@ -214,7 +214,7 @@ function get_company_metrics(mysqli $conn, int $company_id): array {
     $stA = $conn->prepare($sqlAlign);
     $stA->bind_param("i", $company_id);
     $stA->execute();
-    $rowA = $stA->get_result()->fetch_assoc();
+    $rowA = stmt_get_result($stA)->fetch_assoc();
     $stA->close();
     if ($rowA && $rowA['a'] !== null) $align_avg = (float)$rowA['a'];
   } catch (\Throwable $e) {
@@ -229,7 +229,7 @@ function get_company_metrics(mysqli $conn, int $company_id): array {
         $st = $conn->prepare($sql);
         $st->bind_param("i", $company_id);
         $st->execute();
-        $r = $st->get_result()->fetch_assoc();
+        $r = stmt_get_result($st)->fetch_assoc();
         $st->close();
         if ($r && $r['a'] !== null) { $align_avg = (float)$r['a']; break; }
       } catch (\Throwable $e) { /* sigue */ }
@@ -244,7 +244,7 @@ function get_company_metrics(mysqli $conn, int $company_id): array {
       $st = $conn->prepare($sql);
       $st->bind_param("i", $company_id);
       $st->execute();
-      $r = $st->get_result()->fetch_assoc();
+      $r = stmt_get_result($st)->fetch_assoc();
       $st->close();
       if ($r && $r['m'] !== null) { $motiv_avg = (float)$r['m']; break; }
     } catch (\Throwable $e) { /* sigue */ }
@@ -290,7 +290,7 @@ $sql_count = "SELECT COUNT(*) AS total " . $sql_base;
 $stmt = $conn->prepare($sql_count);
 $stmt->bind_param($types, ...$params);
 $stmt->execute();
-$total = (int)($stmt->get_result()->fetch_assoc()['total'] ?? 0);
+$total = (int)(stmt_get_result($stmt)->fetch_assoc()['total'] ?? 0);
 $stmt->close();
 
 /* Página de resultados */
@@ -303,7 +303,7 @@ $params_list[] = $offset;
 $stmt = $conn->prepare($sql_list);
 $stmt->bind_param($types_list, ...$params_list);
 $stmt->execute();
-$rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$rows = stmt_get_result($stmt)->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
 /* Paginación */

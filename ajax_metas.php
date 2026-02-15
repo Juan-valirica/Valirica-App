@@ -54,7 +54,7 @@ if ($user_id <= 0) {
             $q = $conn->prepare("SELECT usuario_id FROM equipo WHERE id = ? LIMIT 1");
             $q->bind_param("i", $empleado_id);
             $q->execute();
-            $row = $q->get_result()->fetch_assoc();
+            $row = stmt_get_result($q)->fetch_assoc();
             $q->close();
 
             if ($row && !empty($row['usuario_id'])) {
@@ -143,7 +143,7 @@ switch ($action) {
             ");
             $stmtEmp->bind_param("i", $empleado_id);
             $stmtEmp->execute();
-            $emp = $stmtEmp->get_result()->fetch_assoc();
+            $emp = stmt_get_result($stmtEmp)->fetch_assoc();
             $stmtEmp->close();
 
             if (!$emp) {
@@ -170,7 +170,7 @@ switch ($action) {
                     ");
                     $stmtAreaId->bind_param("si", $area_id_raw, $user_id_emp);
                     $stmtAreaId->execute();
-                    $areaIdResult = $stmtAreaId->get_result()->fetch_assoc();
+                    $areaIdResult = stmt_get_result($stmtAreaId)->fetch_assoc();
                     $stmtAreaId->close();
 
                     if ($areaIdResult) {
@@ -192,7 +192,7 @@ switch ($action) {
             ");
             $qEmpresa->bind_param("i", $user_id_emp);
             $qEmpresa->execute();
-            $rowEmpresa = $qEmpresa->get_result()->fetch_assoc();
+            $rowEmpresa = stmt_get_result($qEmpresa)->fetch_assoc();
             $qEmpresa->close();
 
             if ($rowEmpresa) {
@@ -209,7 +209,7 @@ switch ($action) {
                 ");
                 $qEmpresaAny->bind_param("i", $user_id_emp);
                 $qEmpresaAny->execute();
-                $rowEmpresaAny = $qEmpresaAny->get_result()->fetch_assoc();
+                $rowEmpresaAny = stmt_get_result($qEmpresaAny)->fetch_assoc();
                 $qEmpresaAny->close();
 
                 if ($rowEmpresaAny) {
@@ -245,7 +245,7 @@ switch ($action) {
                 $areaValue = is_numeric($area_id_raw) ? (int)$area_id_raw : $area_id_raw;
                 $qArea->bind_param($bindType, $user_id_emp, $areaValue);
                 $qArea->execute();
-                $rowArea = $qArea->get_result()->fetch_assoc();
+                $rowArea = stmt_get_result($qArea)->fetch_assoc();
                 $qArea->close();
 
                 if ($rowArea) {
@@ -581,7 +581,7 @@ switch ($action) {
                 ");
                 $stmtArea->bind_param("i", $empleado_id);
                 $stmtArea->execute();
-                $areaResult = $stmtArea->get_result()->fetch_assoc();
+                $areaResult = stmt_get_result($stmtArea)->fetch_assoc();
                 $stmtArea->close();
 
                 if ($areaResult) {
@@ -627,7 +627,7 @@ switch ($action) {
                 ");
                 $stmtAreaIdLookup->bind_param("si", $area_id, $user_id);
                 $stmtAreaIdLookup->execute();
-                $areaIdLookupResult = $stmtAreaIdLookup->get_result()->fetch_assoc();
+                $areaIdLookupResult = stmt_get_result($stmtAreaIdLookup)->fetch_assoc();
                 $stmtAreaIdLookup->close();
 
                 if ($areaIdLookupResult) {
@@ -663,7 +663,7 @@ switch ($action) {
             ");
             $debugStmt->bind_param("i", $user_id);
             $debugStmt->execute();
-            $debugResult = $debugStmt->get_result();
+            $debugResult = stmt_get_result($debugStmt);
             $allMetas = [];
             while ($row = $debugResult->fetch_assoc()) {
                 $allMetas[] = $row;
@@ -685,7 +685,7 @@ switch ($action) {
             // Bind siempre con tipo int
             $stmtMetas->bind_param("ii", $user_id, $area_id_for_query);
             $stmtMetas->execute();
-            $result = $stmtMetas->get_result();
+            $result = stmt_get_result($stmtMetas);
 
             $metas = [];
             while ($row = $result->fetch_assoc()) {
@@ -729,7 +729,7 @@ switch ($action) {
             ");
             $stmtArea->bind_param("ii", $empleado_id, $user_id);
             $stmtArea->execute();
-            $areaResult = $stmtArea->get_result()->fetch_assoc();
+            $areaResult = stmt_get_result($stmtArea)->fetch_assoc();
             $stmtArea->close();
 
             if (!$areaResult) {
@@ -750,7 +750,7 @@ switch ($action) {
             ");
             $stmtTeam->bind_param("isi", $user_id, $area, $empleado_id);
             $stmtTeam->execute();
-            $result = $stmtTeam->get_result();
+            $result = stmt_get_result($stmtTeam);
 
             $teammates = [];
             while ($row = $result->fetch_assoc()) {
@@ -834,7 +834,7 @@ switch ($action) {
                 $stmtName = $conn->prepare("SELECT nombre_persona FROM equipo WHERE id = ?");
                 $stmtName->bind_param("i", $empleado_id);
                 $stmtName->execute();
-                $resultName = $stmtName->get_result()->fetch_assoc();
+                $resultName = stmt_get_result($stmtName)->fetch_assoc();
                 if ($resultName) {
                     $helped_by_name = $resultName['nombre_persona'];
                 }

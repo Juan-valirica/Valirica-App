@@ -131,7 +131,7 @@ $usuario_id = (int)$_SESSION['user_id'];
 $stmt = $conn->prepare("SELECT empresa, logo, cultura_empresa_tipo, rol FROM usuarios WHERE id = ?");
 $stmt->bind_param("i", $usuario_id);
 $stmt->execute();
-$u = $stmt->get_result()->fetch_assoc() ?: [];
+$u = stmt_get_result($stmt)->fetch_assoc() ?: [];
 $stmt->close();
 
 $empresa             = $u['empresa'] ?? 'Nombre de la empresa';
@@ -193,7 +193,7 @@ function next_order_index_empresa(mysqli $conn, int $user_id): int {
     $stmt = $conn->prepare("SELECT COALESCE(MAX(order_index), -1) + 1 AS nxt FROM metas WHERE user_id=? AND tipo='empresa'");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $nxt = (int)$stmt->get_result()->fetch_assoc()['nxt'];
+    $nxt = (int)stmt_get_result($stmt)->fetch_assoc()['nxt'];
     $stmt->close();
     return $nxt;
 }
@@ -202,7 +202,7 @@ function next_order_index_child(mysqli $conn, int $parent_meta_id): int {
     $stmt = $conn->prepare("SELECT COALESCE(MAX(order_index), -1) + 1 AS nxt FROM metas WHERE parent_meta_id=?");
     $stmt->bind_param("i", $parent_meta_id);
     $stmt->execute();
-    $nxt = (int)$stmt->get_result()->fetch_assoc()['nxt'];
+    $nxt = (int)stmt_get_result($stmt)->fetch_assoc()['nxt'];
     $stmt->close();
     return $nxt;
 }
@@ -220,7 +220,7 @@ function resolve_meta_area_context(mysqli $conn, int $meta_area_id): array {
     ");
     $stmt->bind_param("i", $meta_area_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     $row = $res->fetch_assoc() ?: ['meta_empresa_id' => null, 'area_id' => null];
     $stmt->close();
     return [
@@ -384,7 +384,7 @@ function db_get_metas_empresa(mysqli $conn, int $user_id): array {
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($r = $res->fetch_assoc()) $out[] = $r;
     $stmt->close();
     return $out;
@@ -404,7 +404,7 @@ function db_get_metas_area(mysqli $conn, int $meta_empresa_id): array {
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $meta_empresa_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($r = $res->fetch_assoc()) $out[] = $r;
     $stmt->close();
     return $out;
@@ -423,7 +423,7 @@ function db_get_metas_persona(mysqli $conn, int $user_id, int $meta_area_id): ar
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ii", $user_id, $meta_area_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($r = $res->fetch_assoc()) {
         $out[] = $r;
     }
@@ -442,7 +442,7 @@ function db_get_areas(mysqli $conn, int $user_id): array {
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($r = $res->fetch_assoc()) $out[] = $r;
     $stmt->close();
     return $out;
@@ -453,7 +453,7 @@ function db_get_personas(mysqli $conn, int $user_id): array {
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($r = $res->fetch_assoc()) $out[] = $r;
     $stmt->close();
     return $out;
@@ -466,7 +466,7 @@ function db_get_metas_empresa_min(mysqli $conn, int $user_id): array {
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($r = $res->fetch_assoc()) $out[] = $r;
     $stmt->close();
     return $out;
@@ -477,7 +477,7 @@ function db_get_metas_area_min_por_empresa(mysqli $conn, int $meta_empresa_id): 
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $meta_empresa_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($r = $res->fetch_assoc()) $out[] = $r;
     $stmt->close();
     return $out;

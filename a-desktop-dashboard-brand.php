@@ -182,7 +182,7 @@ function avg_progress_between(mysqli $conn, int $empresa_id, string $from, strin
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("iss", $empresa_id, $from, $to);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     $row = $res->fetch_assoc() ?: ['pct' => 0];
     $stmt->close();
     return (int)round((float)$row['pct'] ?: 0);
@@ -214,7 +214,7 @@ $stmt = $conn->prepare("SELECT empresa, logo, cultura_empresa_tipo, rol, email, 
 
 $stmt->bind_param("i", $usuario_id);
 $stmt->execute();
-$result = $stmt->get_result();
+$result = stmt_get_result($stmt);
 
 if ($usuario = $result->fetch_assoc()) {
         $empresa = (string)($usuario['empresa'] ?? '');
@@ -248,7 +248,7 @@ if (!empty($user_id)) {
         if ($stmtViewer = $conn->prepare("SELECT rol FROM usuarios WHERE id = ? LIMIT 1")) {
             $stmtViewer->bind_param("i", $user_id);
             $stmtViewer->execute();
-            $resViewer = $stmtViewer->get_result();
+            $resViewer = stmt_get_result($stmtViewer);
             if ($rowViewer = $resViewer->fetch_assoc()) {
                 $viewer_rol = (string)($rowViewer['rol'] ?? null);
             }
@@ -279,7 +279,7 @@ if (strcasecmp((string)$rol_usuario, 'provider') === 0) {
         if ($stp = $conn->prepare("SELECT email, logo FROM usuarios WHERE id = ? AND rol = 'provider' LIMIT 1")) {
             $stp->bind_param("i", $provider_id);
             $stp->execute();
-            $rsp = $stp->get_result();
+            $rsp = stmt_get_result($stp);
             if ($rowp = $rsp->fetch_assoc()) {
                 $emailBD = trim((string)($rowp['email'] ?? ''));
                 $logoBD  = resolve_logo_url($rowp['logo'] ?? '');
@@ -295,7 +295,7 @@ if (strcasecmp((string)$rol_usuario, 'provider') === 0) {
         // Sin provider_id → intenta 1er provider del sistema (ajusta criterio si manejas multi-tenant)
         if ($stp = $conn->prepare("SELECT email, logo FROM usuarios WHERE rol = 'provider' ORDER BY id ASC LIMIT 1")) {
             $stp->execute();
-            $rsp = $stp->get_result();
+            $rsp = stmt_get_result($stp);
             if ($rowp = $rsp->fetch_assoc()) {
                 $emailBD = trim((string)($rowp['email'] ?? ''));
                 $logoBD  = resolve_logo_url($rowp['logo'] ?? '');
@@ -346,7 +346,7 @@ $cultura_labels = [
 $stmt_count = $conn->prepare("SELECT COUNT(*) AS total FROM equipo WHERE usuario_id = ?");
 $stmt_count->bind_param("i", $usuario_id);
 $stmt_count->execute();
-$res_count = $stmt_count->get_result();
+$res_count = stmt_get_result($stmt_count);
 $row_count = $res_count->fetch_assoc();
 $equipo_count = (int)($row_count['total'] ?? 0);
 $stmt_count->close();
@@ -377,7 +377,7 @@ $stmt_prom = $conn->prepare("
 if ($stmt_prom) {
     $stmt_prom->bind_param("i", $usuario_id);
     $stmt_prom->execute();
-    $result = $stmt_prom->get_result();
+    $result = stmt_get_result($stmt_prom);
     if ($fila = $result->fetch_assoc()) {
         $promedios = array_map(function ($valor) {
             return is_null($valor) ? 0 : round(floatval($valor));
@@ -406,7 +406,7 @@ $stmt = $conn->prepare("SELECT id, nombre_persona,
     WHERE usuario_id = ?");
 $stmt->bind_param("i", $usuario_id);
 $stmt->execute();
-$result = $stmt->get_result();
+$result = stmt_get_result($stmt);
 $perfiles = [];
 
 $stmt_ideal = $conn->prepare("
@@ -417,7 +417,7 @@ $stmt_ideal = $conn->prepare("
 ");
 $stmt_ideal->bind_param("i", $usuario_id);
 $stmt_ideal->execute();
-$result_ideal = $stmt_ideal->get_result();
+$result_ideal = stmt_get_result($stmt_ideal);
 $cultura_ideal = $result_ideal->fetch_assoc() ?: [];
 $stmt_ideal->close();
 
@@ -510,7 +510,7 @@ $stmt_ideal = $conn->prepare("
 ");
 $stmt_ideal->bind_param("i", $usuario_id);
 $stmt_ideal->execute();
-$result_ideal = $stmt_ideal->get_result();
+$result_ideal = stmt_get_result($stmt_ideal);
 $cultura_ideal = $result_ideal->fetch_assoc() ?: [];
 $stmt_ideal->close();
 
@@ -535,7 +535,7 @@ $stmt_equipo = $conn->prepare("
 ");
 $stmt_equipo->bind_param("i", $usuario_id);
 $stmt_equipo->execute();
-$result_equipo = $stmt_equipo->get_result();
+$result_equipo = stmt_get_result($stmt_equipo);
 
 $total_alineacion = 0;
 $cantidad_miembros = 0;
@@ -668,7 +668,7 @@ if ($stmt_sen = $conn->prepare("
 ")) {
     $stmt_sen->bind_param("i", $usuario_id);
     $stmt_sen->execute();
-    $res_sen = $stmt_sen->get_result();
+    $res_sen = stmt_get_result($stmt_sen);
     if ($row = $res_sen->fetch_assoc()) {
         $sen_visual      = (float)($row['visual'] ?? 0);
         $sen_auditivo    = (float)($row['auditivo'] ?? 0);
@@ -903,7 +903,7 @@ $stmt_rf = $conn->prepare("
 ");
 $stmt_rf->bind_param("i", $usuario_id);
 $stmt_rf->execute();
-$res_rf = $stmt_rf->get_result();
+$res_rf = stmt_get_result($stmt_rf);
 
 $riesgos = [];
 
@@ -1074,7 +1074,7 @@ $stmt_avg = $conn->prepare("
 ");
 $stmt_avg->bind_param("i", $usuario_id);
 $stmt_avg->execute();
-$res_avg = $stmt_avg->get_result();
+$res_avg = stmt_get_result($stmt_avg);
 if ($row = $res_avg->fetch_assoc()) {
     foreach ($team_avg as $k => $v) $team_avg[$k] = (float)($row[$k] ?? 0);
 }
@@ -1343,7 +1343,7 @@ $stmt_conf = $conn->prepare("
 ");
 $stmt_conf->bind_param("i", $usuario_id);
 $stmt_conf->execute();
-$res_conf = $stmt_conf->get_result();
+$res_conf = stmt_get_result($stmt_conf);
 
 if ($c = $res_conf->fetch_assoc()) {
 
@@ -1459,7 +1459,7 @@ if ($q = $conn->prepare("
 ")) {
   $q->bind_param("i", $usuario_id);
   $q->execute();
-  $disc_avg = $q->get_result()->fetch_assoc() ?: $disc_avg;
+  $disc_avg = stmt_get_result($q)->fetch_assoc() ?: $disc_avg;
   $q->close();
 }
 
@@ -1474,7 +1474,7 @@ if ($q = $conn->prepare("
 ")) {
   $q->bind_param("i", $usuario_id);
   $q->execute();
-  $values_avg = $q->get_result()->fetch_assoc() ?: $values_avg;
+  $values_avg = stmt_get_result($q)->fetch_assoc() ?: $values_avg;
   $q->close();
 }
 

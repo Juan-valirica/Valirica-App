@@ -33,7 +33,7 @@ $stmt_eq = $conn->prepare("SELECT id, nombre_persona, cargo FROM equipo WHERE us
 if ($stmt_eq) {
     $stmt_eq->bind_param("i", $user_id);
     $stmt_eq->execute();
-    $res_eq = $stmt_eq->get_result();
+    $res_eq = stmt_get_result($stmt_eq);
     while ($row = $res_eq->fetch_assoc()) {
         $empleados_equipo[] = $row;
     }
@@ -69,7 +69,7 @@ if ($tablas_existen) {
     if ($stmt) {
         $stmt->bind_param("iiii", $user_id, $empleado_id, $empleado_id, $empleado_id);
         $stmt->execute();
-        $result = $stmt->get_result();
+        $result = stmt_get_result($stmt);
 
         while ($proyecto = $result->fetch_assoc()) {
             // ⭐ Determinar si el empleado actual es el LÍDER de este proyecto
@@ -98,7 +98,7 @@ if ($tablas_existen) {
             ");
             $stmt_tareas->bind_param("i", $proyecto['id']);
             $stmt_tareas->execute();
-            $result_tareas = $stmt_tareas->get_result();
+            $result_tareas = stmt_get_result($stmt_tareas);
 
             $tareas = [];
             $completadas = 0;

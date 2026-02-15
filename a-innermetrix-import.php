@@ -32,7 +32,7 @@ try {
     $stmtRole = $conn->prepare("SELECT rol FROM usuarios WHERE id = ?");
     $stmtRole->bind_param("i", $logged_user_id);
     $stmtRole->execute();
-    $resR = $stmtRole->get_result();
+    $resR = stmt_get_result($stmtRole);
     $userRow = $resR->fetch_assoc();
     $stmtRole->close();
 
@@ -80,7 +80,7 @@ $stmtBrands = $conn->prepare("
 
 $stmtBrands->bind_param("ii", $logged_user_id, $logged_user_id);
 $stmtBrands->execute();
-$resb = $stmtBrands->get_result();
+$resb = stmt_get_result($stmtBrands);
 
 while ($row = $resb->fetch_assoc()) {
     $brands[] = $row;
@@ -166,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['empresa_id'])) {
         $stCfg = $conn->prepare($sqlCfg);
         $stCfg->bind_param("i", $empresa_id);
         $stCfg->execute();
-        $rsCfg = $stCfg->get_result();
+        $rsCfg = stmt_get_result($stCfg);
         while ($rowCfg = $rsCfg->fetch_assoc()) {
             $empresa_has_config = true;
             $empresa_config_template[$rowCfg['competencia']] = (int)$rowCfg['valor'];
@@ -354,7 +354,7 @@ if ($correo_csv === '') {
                         // Match por (empresa seleccionada, correo)
                         $stmtFind->bind_param("is", $empresa_id, $correo_csv);
                         $stmtFind->execute();
-                        $resF = $stmtFind->get_result();
+                        $resF = stmt_get_result($stmtFind);
                         $equipo = $resF->fetch_assoc();
                         $equipo_id = (int)($equipo['id'] ?? 0);
 
@@ -668,7 +668,7 @@ if ($selectedEquipoId > 0) {
   $st = $conn->prepare("SELECT competencia, valor FROM imx_config WHERE equipo_id = ?");
   $st->bind_param("i", $selectedEquipoId);
   $st->execute();
-  $rs = $st->get_result();
+  $rs = stmt_get_result($st);
   while ($r = $rs->fetch_assoc()) {
     $existing_config[$r['competencia']] = (int)$r['valor'];
   }
@@ -1158,7 +1158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_key_comp_cat']))
             $resAll = $conn->prepare("SELECT id FROM equipo WHERE usuario_id = ?");
             $resAll->bind_param("i", $empresa_ctx);
             $resAll->execute();
-            $rsAll = $resAll->get_result();
+            $rsAll = stmt_get_result($resAll);
             while ($r = $rsAll->fetch_assoc()) $target_equipo_ids[] = (int)$r['id'];
             $resAll->close();
         }

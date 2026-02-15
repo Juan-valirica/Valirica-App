@@ -28,7 +28,7 @@ if ($viewer_rol === '' && isset($_SESSION['user_id'], $conn)) {
     if ($stmtViewerHd = $conn->prepare("SELECT empresa, logo, rol, cultura_empresa_tipo FROM usuarios WHERE id = ? LIMIT 1")) {
       $stmtViewerHd->bind_param("i", $viewer_id_fallback);
       $stmtViewerHd->execute();
-      $resViewerHd = $stmtViewerHd->get_result();
+      $resViewerHd = stmt_get_result($stmtViewerHd);
       if ($rowViewerHd = $resViewerHd->fetch_assoc()) {
         // Rol real del usuario loggeado
         $viewer_rol = strtolower((string)($rowViewerHd['rol'] ?? $viewer_rol));
@@ -132,7 +132,7 @@ if ($target_usuario_id > 0 && isset($conn) && $conn instanceof mysqli) {
   if ($stmtCul = $conn->prepare("SELECT estilo_comunicacion FROM cultura_ideal WHERE usuario_id = ? LIMIT 1")) {
     $stmtCul->bind_param("i", $target_usuario_id);
     $stmtCul->execute();
-    $resCul = $stmtCul->get_result();
+    $resCul = stmt_get_result($stmtCul);
     if ($rowCul = $resCul->fetch_assoc()) {
       $estilo_marca_aprend = (string)($rowCul['estilo_comunicacion'] ?? '');
     }
@@ -177,7 +177,7 @@ if ($empresa_id_header > 0 && isset($conn) && $conn instanceof mysqli) {
   ")) {
     $stmtDocs->bind_param("i", $empresa_id_header);
     $stmtDocs->execute();
-    $resDocs = $stmtDocs->get_result();
+    $resDocs = stmt_get_result($stmtDocs);
     if ($rowDocs = $resDocs->fetch_assoc()) {
       $docs_unread_count = (int)$rowDocs['total'];
     }

@@ -26,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $conn->prepare("SELECT id FROM valores_marca WHERE usuario_id = ? AND titulo = ?");
         $stmt->bind_param("is", $user_id, $titulo);
         $stmt->execute();
-        $result = $stmt->get_result();
+        $result = stmt_get_result($stmt);
 
         if ($result->num_rows > 0) {
             $stmt->close();

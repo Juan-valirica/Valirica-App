@@ -12,7 +12,7 @@ $user_id = $_SESSION['user_id'];
 $stmt = $conn->prepare("SELECT nombre, empresa, logo, proposito, cultura_empresa_tipo FROM usuarios WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$result = $stmt->get_result();
+$result = stmt_get_result($stmt);
 $usuario = $result->fetch_assoc();
 $cultura_empresa_tipo = $usuario['cultura_empresa_tipo']; // ✅ extraerlo para mostrarlo más adelante
 
@@ -21,7 +21,7 @@ $stmt->close();
 $stmt = $conn->prepare("SELECT titulo, descripcion FROM valores_marca WHERE usuario_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$valores_resultado = $stmt->get_result();
+$valores_resultado = stmt_get_result($stmt);
 $valores = $valores_resultado->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
@@ -35,7 +35,7 @@ $analisis_disponible = true; // Esto es un ejemplo, necesitas establecer esta va
 $stmt = $conn->prepare("SELECT Analisis_DISC_Dominante, Analisis_DISC_Secundario, Analisis_Distancia_Poder, Analisis_Masculino_Femenino, Analisis_Individualismo_Colectivismo, Analisis_Tolerancia_Incertidumbre, Analisis_Corto_Largo_Plazo, Analisis_Indulgencia_Restrictivo, Analisis_Resumen FROM equipo WHERE id = ?");
 $stmt->bind_param("i", $empleado_id);
 $stmt->execute();
-$result = $stmt->get_result();
+$result = stmt_get_result($stmt);
 
 
 

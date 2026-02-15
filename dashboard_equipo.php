@@ -77,7 +77,7 @@ if (empty($user_id)) {
 
     $q->execute();
 
-    $row = $q->get_result()->fetch_assoc();
+    $row = stmt_get_result($q)->fetch_assoc();
 
     $q->close();
 
@@ -165,7 +165,7 @@ $stmt->bind_param("i", $user_id);
 
 $stmt->execute();
 
-$r_u = $stmt->get_result()->fetch_assoc() ?: [];
+$r_u = stmt_get_result($stmt)->fetch_assoc() ?: [];
 
 $stmt->close();
 
@@ -255,7 +255,7 @@ $sql->bind_param("ii", $empleado_id, $user_id);
 
 $sql->execute();
 
-$emp = $sql->get_result()->fetch_assoc();
+$emp = stmt_get_result($sql)->fetch_assoc();
 
 $sql->close();
 
@@ -543,7 +543,7 @@ $stmtMp->bind_param("ii", $empleado_id, $user_id);
 
 $stmtMp->execute();
 
-$resMp = $stmtMp->get_result();
+$resMp = stmt_get_result($stmtMp);
 
  
 
@@ -579,7 +579,7 @@ if (!empty($area_trabajo_nombre) && $area_trabajo_nombre !== '—') {
     ");
     $stmtAreaId->bind_param("si", $area_trabajo_nombre, $user_id);
     $stmtAreaId->execute();
-    $areaIdResult = $stmtAreaId->get_result()->fetch_assoc();
+    $areaIdResult = stmt_get_result($stmtAreaId)->fetch_assoc();
     $stmtAreaId->close();
 
     if ($areaIdResult) {
@@ -618,7 +618,7 @@ $stmtMe->bind_param("ii", $user_id, $area_id_emp);
 
 $stmtMe->execute();
 
-$resMe = $stmtMe->get_result();
+$resMe = stmt_get_result($stmtMe);
 
 
 
@@ -694,7 +694,7 @@ if (!empty($area_trabajo_emp) && $area_trabajo_emp !== '—') {
 
     $stmtAyuda->execute();
 
-    $resAyuda = $stmtAyuda->get_result();
+    $resAyuda = stmt_get_result($stmtAyuda);
 
  
 
@@ -744,7 +744,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_asistencia']))
         ");
         $stmt_jornada->bind_param("iss", $empleado_id, $fecha_hoy, $fecha_hoy);
         $stmt_jornada->execute();
-        $jornada_result = $stmt_jornada->get_result()->fetch_assoc();
+        $jornada_result = stmt_get_result($stmt_jornada)->fetch_assoc();
         $stmt_jornada->close();
 
         if (!$jornada_result) {
@@ -765,7 +765,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_asistencia']))
         ");
         $stmt_turno->bind_param("ii", $jornada_id, $dia_semana);
         $stmt_turno->execute();
-        $turno = $stmt_turno->get_result()->fetch_assoc();
+        $turno = stmt_get_result($stmt_turno)->fetch_assoc();
         $stmt_turno->close();
 
         if (!$turno) {
@@ -784,7 +784,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_asistencia']))
             ");
             $stmt_check->bind_param("is", $empleado_id, $fecha_hoy);
             $stmt_check->execute();
-            $asistencia_existente = $stmt_check->get_result()->fetch_assoc();
+            $asistencia_existente = stmt_get_result($stmt_check)->fetch_assoc();
             $stmt_check->close();
 
             if ($asistencia_existente && $asistencia_existente['hora_entrada']) {
@@ -845,7 +845,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_asistencia']))
             ");
             $stmt_check->bind_param("is", $empleado_id, $fecha_hoy);
             $stmt_check->execute();
-            $asistencia_existente = $stmt_check->get_result()->fetch_assoc();
+            $asistencia_existente = stmt_get_result($stmt_check)->fetch_assoc();
             $stmt_check->close();
 
             if (!$asistencia_existente || !$asistencia_existente['hora_entrada']) {
@@ -944,7 +944,7 @@ try {
     ");
     $stmt_jornada->bind_param("iss", $empleado_id, $fecha_hoy, $fecha_hoy);
     $stmt_jornada->execute();
-    $jornada_asignada = $stmt_jornada->get_result()->fetch_assoc();
+    $jornada_asignada = stmt_get_result($stmt_jornada)->fetch_assoc();
     $stmt_jornada->close();
 
     if ($jornada_asignada) {
@@ -958,7 +958,7 @@ try {
         ");
         $stmt_turno->bind_param("ii", $jornada_id, $dia_semana);
         $stmt_turno->execute();
-        $turno_hoy = $stmt_turno->get_result()->fetch_assoc();
+        $turno_hoy = stmt_get_result($stmt_turno)->fetch_assoc();
         $stmt_turno->close();
 
         // Obtener registro de asistencia de hoy
@@ -968,7 +968,7 @@ try {
         ");
         $stmt_asistencia->bind_param("is", $empleado_id, $fecha_hoy);
         $stmt_asistencia->execute();
-        $asistencia_hoy = $stmt_asistencia->get_result()->fetch_assoc();
+        $asistencia_hoy = stmt_get_result($stmt_asistencia)->fetch_assoc();
         $stmt_asistencia->close();
     }
 } catch (Exception $e) {

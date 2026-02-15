@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt = $conn->prepare("SELECT id FROM usuarios WHERE id = ?");
     $stmt->bind_param("i", $usuario_id);
     $stmt->execute();
-    $result = $stmt->get_result();
+    $result = stmt_get_result($stmt);
 
     if ($result->num_rows == 0) {
         echo "ID de la empresa no válido.";
