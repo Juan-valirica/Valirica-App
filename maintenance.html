@@ -159,57 +159,148 @@
       animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
     }
 
-    /* ========== CTA BUTTON ========== */
+    /* ========== CTA BUTTONS ========== */
     .cta-wrapper {
       animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
     }
 
-    .cta-button {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 16px 36px;
-      background: var(--accent);
-      color: var(--white);
+    .cta-grid {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .cta-card {
+      flex: 1;
+      max-width: 260px;
+      background: var(--white);
+      border: 1px solid rgba(1, 33, 51, 0.06);
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-align: center;
       text-decoration: none;
-      font-family: inherit;
-      font-size: 1rem;
-      font-weight: 600;
-      border: none;
-      border-radius: 14px;
-      cursor: pointer;
+      color: var(--text-primary);
       transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow:
-        0 1px 2px rgba(239, 127, 27, 0.2),
-        0 4px 12px rgba(239, 127, 27, 0.15),
-        0 12px 32px rgba(239, 127, 27, 0.1);
+        0 1px 2px rgba(1, 33, 51, 0.03),
+        0 4px 16px rgba(1, 33, 51, 0.04);
+      position: relative;
+      overflow: hidden;
     }
 
-    .cta-button:hover {
-      background: var(--accent-hover);
-      transform: translateY(-2px);
+    .cta-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      border-radius: 20px 20px 0 0;
+      transition: height 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .cta-card.entrada::before {
+      background: linear-gradient(90deg, #00D98F, #00b377);
+    }
+
+    .cta-card.salida::before {
+      background: linear-gradient(90deg, var(--accent), #f6a556);
+    }
+
+    .cta-card:hover {
+      transform: translateY(-4px);
       box-shadow:
-        0 2px 4px rgba(239, 127, 27, 0.2),
-        0 8px 20px rgba(239, 127, 27, 0.2),
-        0 16px 40px rgba(239, 127, 27, 0.12);
+        0 4px 8px rgba(1, 33, 51, 0.06),
+        0 12px 32px rgba(1, 33, 51, 0.08);
     }
 
-    .cta-button:active {
-      transform: translateY(0);
+    .cta-card:hover::before {
+      height: 6px;
     }
 
-    .cta-button svg {
-      width: 18px;
-      height: 18px;
-      transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    .cta-card:active {
+      transform: translateY(-2px);
     }
 
-    .cta-button:hover svg {
-      transform: translateX(3px);
+    .cta-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 1.5rem;
+    }
+
+    .cta-card.entrada .cta-icon {
+      background: rgba(0, 217, 143, 0.1);
+      color: #00b377;
+    }
+
+    .cta-card.salida .cta-icon {
+      background: rgba(239, 127, 27, 0.1);
+      color: var(--accent);
+    }
+
+    .cta-card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .cta-card-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    .cta-card-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .cta-card.entrada .cta-card-btn {
+      background: #00D98F;
+      color: var(--white);
+    }
+
+    .cta-card.entrada:hover .cta-card-btn {
+      background: #00b377;
+    }
+
+    .cta-card.salida .cta-card-btn {
+      background: var(--accent);
+      color: var(--white);
+    }
+
+    .cta-card.salida:hover .cta-card-btn {
+      background: var(--accent-hover);
+    }
+
+    .cta-card-btn svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .cta-card:hover .cta-card-btn svg {
+      transform: translateX(2px);
     }
 
     .cta-helper {
-      margin-top: 16px;
+      margin-top: 20px;
       font-size: 0.82rem;
       color: var(--text-muted);
       font-weight: 400;
@@ -442,11 +533,14 @@
         margin-bottom: 36px;
       }
 
-      .cta-button {
-        padding: 14px 28px;
-        font-size: 0.95rem;
+      .cta-grid {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .cta-card {
+        max-width: 100%;
         width: 100%;
-        justify-content: center;
       }
 
       .progress-card {
@@ -502,13 +596,44 @@
       </p>
 
       <div class="cta-wrapper">
-        <a href="AQUI_PON_EL_LINK_DEL_GOOGLE_FORM" class="cta-button">
-          Registrar check-in temporal
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-          </svg>
-        </a>
-        <p class="cta-helper">Usa el formulario temporal mientras volvemos</p>
+        <div class="cta-grid">
+
+          <!-- ENTRADA -->
+          <a href="LINK_FORM_ENTRADA" class="cta-card entrada">
+            <div class="cta-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="cta-card-title">Registrar Entrada</div>
+            <p class="cta-card-desc">Marca el inicio de tu jornada laboral</p>
+            <span class="cta-card-btn">
+              Check-in
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </span>
+          </a>
+
+          <!-- SALIDA -->
+          <a href="LINK_FORM_SALIDA" class="cta-card salida">
+            <div class="cta-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+              </svg>
+            </div>
+            <div class="cta-card-title">Registrar Salida</div>
+            <p class="cta-card-desc">Marca el fin de tu jornada laboral</p>
+            <span class="cta-card-btn">
+              Check-out
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </span>
+          </a>
+
+        </div>
+        <p class="cta-helper">Usa los formularios temporales mientras volvemos</p>
       </div>
 
       <!-- Progress -->
