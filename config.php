@@ -12,8 +12,15 @@ ini_set('log_errors', 1);
 // Verificación de extensiones críticas
 // ------------------------------
 if (!function_exists('json_encode')) {
+    error_log("VALIRICA FATAL: json extension not loaded");
     http_response_code(500);
     die('Error: La extensión PHP "json" no está habilitada. Contacta a tu proveedor de hosting.');
+}
+
+if (!class_exists('mysqli')) {
+    error_log("VALIRICA FATAL: mysqli class not available. Check nd_mysqli / mysqli extension in PHP Selector.");
+    http_response_code(500);
+    die('Error: La extensión PHP "mysqli" no está habilitada. Activa mysqli o nd_mysqli en PHP Selector.');
 }
 
 // ------------------------------
@@ -38,7 +45,7 @@ try {
         http_response_code(500);
         die("Error de conexión a la base de datos. Intenta de nuevo más tarde.");
     }
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     error_log("DB exception: " . $e->getMessage());
     http_response_code(500);
     die("Error de conexión a la base de datos. Intenta de nuevo más tarde.");
