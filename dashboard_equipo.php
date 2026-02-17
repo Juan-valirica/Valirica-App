@@ -3829,30 +3829,6 @@ try {
         </div>
       </div>
 
-      <!-- Tags de perfil cognitivo (compactos) -->
-      <div style="display:flex; flex-wrap:wrap; gap:8px; padding-top:14px; border-top:1px solid #f0f0f0;">
-
-        <!-- Motivación -->
-        <span class="perfil-tag">
-          <i class="ph ph-lightning"></i>
-          Motivación: <?php echo (int)$energia_pct; ?>%
-        </span>
-
-        <!-- Estilo de aprendizaje -->
-        <?php if ($estilo_emp_aprend !== 'Sin datos'): ?>
-        <span class="perfil-tag">
-          <i class="ph ph-brain"></i>
-          <?php echo htmlspecialchars($estilo_emp_aprend); ?>
-        </span>
-        <?php endif; ?>
-
-        <!-- Cultura natural -->
-        <span class="perfil-tag">
-          <i class="ph ph-compass"></i>
-          <?php echo htmlspecialchars($tipo_cultura_natural); ?>
-        </span>
-
-      </div>
     </div>
   </div>
 
