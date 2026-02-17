@@ -4135,6 +4135,10 @@ details[open] > summary .caret{ transform:rotate(45deg); }
       <span class="tab-icon">📋</span>
       <span>Proyectos</span>
     </a>
+    <a href="?tab=people" class="tab-link <?= $active_tab === 'people' ? 'is-active' : '' ?>">
+      <span class="tab-icon">👥</span>
+      <span>Equipo</span>
+    </a>
   </div>
 </nav>
 
@@ -7818,6 +7822,380 @@ document.addEventListener('keydown', function(e) {
     </header>
 
     <?php include __DIR__ . '/proyectos_tareas_panel.php'; ?>
+  </section>
+</div>
+
+<!-- ============================================
+     TAB 5: EQUIPO — Gestión de áreas de trabajo
+     ============================================ -->
+<div class="tab-content <?= $active_tab === 'people' ? 'is-active' : '' ?>">
+  <section class="wrap" style="padding-top: var(--space-6); padding-bottom: var(--space-8);">
+    <header style="margin-bottom: var(--space-6);">
+      <h1 style="font-size: 28px; font-weight: 700; color: var(--c-secondary); margin: 0;">
+        Equipo
+      </h1>
+      <p style="color: var(--c-body); opacity: 0.7; margin-top: var(--space-2);">
+        Asigna una o varias áreas de trabajo a cada miembro de tu equipo
+      </p>
+    </header>
+
+    <?php
+    // Obtener áreas disponibles
+    $areas_list = db_get_areas($conn, $user_id);
+
+    // Obtener miembros con sus áreas (vía junction table)
+    $stmt_people = $conn->prepare("
+        SELECT e.id, e.nombre_persona, e.apellido, e.cargo,
+               GROUP_CONCAT(at2.id ORDER BY at2.nombre_area SEPARATOR ',') AS areas_ids,
+               GROUP_CONCAT(at2.nombre_area ORDER BY at2.nombre_area SEPARATOR '||') AS areas_nombres
+        FROM equipo e
+        LEFT JOIN equipo_areas_trabajo eat ON e.id = eat.equipo_id
+        LEFT JOIN areas_trabajo at2 ON eat.area_id = at2.id
+        WHERE e.usuario_id = ?
+        GROUP BY e.id
+        ORDER BY e.nombre_persona ASC
+    ");
+    $stmt_people->bind_param("i", $user_id);
+    $stmt_people->execute();
+    $people_list = stmt_get_result($stmt_people)->fetch_all(MYSQLI_ASSOC);
+    $stmt_people->close();
+    ?>
+
+    <?php if (empty($areas_list)): ?>
+    <div style="
+      background: #FFF7ED;
+      border: 1px solid #FB923C;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      color: #9A3412;
+    ">
+      <p style="margin: 0; font-weight: 600;">No tienes áreas de trabajo creadas.</p>
+      <p style="margin: 8px 0 0; opacity: 0.8;">
+        Ve a <a href="cultura_ideal.php" style="color: #EA580C; text-decoration: underline;">Cultura Ideal</a>
+        para crear tus áreas de trabajo primero.
+      </p>
+    </div>
+    <?php else: ?>
+
+    <!-- Barra de búsqueda -->
+    <div style="margin-bottom: var(--space-4);">
+      <input
+        type="text"
+        id="peopleSearchInput"
+        placeholder="Buscar miembro por nombre o cargo..."
+        style="
+          width: 100%;
+          max-width: 400px;
+          padding: 10px 16px;
+          border: 1px solid #D1D5DB;
+          border-radius: 8px;
+          font-size: 14px;
+          outline: none;
+          transition: border-color 0.2s;
+        "
+        oninput="filterPeopleTable()"
+      >
+    </div>
+
+    <!-- Tabla de miembros -->
+    <div style="
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #E5E7EB;
+      overflow: hidden;
+    ">
+      <table style="width: 100%; border-collapse: collapse;" id="peopleTable">
+        <thead>
+          <tr style="background: #F9FAFB; border-bottom: 2px solid #E5E7EB;">
+            <th style="padding: 14px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #374151;">Nombre</th>
+            <th style="padding: 14px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #374151;">Cargo</th>
+            <th style="padding: 14px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #374151;">Áreas asignadas</th>
+            <th style="padding: 14px 16px; text-align: center; font-size: 13px; font-weight: 600; color: #374151; width: 120px;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($people_list as $person):
+            $p_areas_ids = $person['areas_ids'] ? explode(',', $person['areas_ids']) : [];
+            $p_areas_nombres = $person['areas_nombres'] ? explode('||', $person['areas_nombres']) : [];
+          ?>
+          <tr
+            class="people-row"
+            data-id="<?= (int)$person['id'] ?>"
+            data-nombre="<?= h($person['nombre_persona'] . ' ' . ($person['apellido'] ?? '')) ?>"
+            data-cargo="<?= h($person['cargo'] ?? '') ?>"
+            style="border-bottom: 1px solid #F3F4F6; transition: background 0.15s;"
+            onmouseover="this.style.background='#F9FAFB'"
+            onmouseout="this.style.background='white'"
+          >
+            <td style="padding: 12px 16px;">
+              <div style="font-weight: 600; color: #111827; font-size: 14px;">
+                <?= h($person['nombre_persona']) ?> <?= h($person['apellido'] ?? '') ?>
+              </div>
+            </td>
+            <td style="padding: 12px 16px; color: #6B7280; font-size: 14px;">
+              <?= h($person['cargo'] ?? '—') ?>
+            </td>
+            <td style="padding: 12px 16px;" id="areas-cell-<?= (int)$person['id'] ?>">
+              <?php if (empty($p_areas_nombres)): ?>
+                <span style="color: #9CA3AF; font-size: 13px; font-style: italic;">Sin áreas</span>
+              <?php else: ?>
+                <?php foreach ($p_areas_nombres as $an): ?>
+                  <span style="
+                    display: inline-block;
+                    background: #EFF6FF;
+                    color: #1D4ED8;
+                    padding: 3px 10px;
+                    border-radius: 12px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    margin: 2px 4px 2px 0;
+                  "><?= h(trim($an)) ?></span>
+                <?php endforeach; ?>
+              <?php endif; ?>
+            </td>
+            <td style="padding: 12px 16px; text-align: center;">
+              <button
+                onclick="openAreaModal(<?= (int)$person['id'] ?>, '<?= h(addslashes($person['nombre_persona'])) ?>', <?= h(json_encode($p_areas_ids)) ?>)"
+                style="
+                  padding: 6px 16px;
+                  background: linear-gradient(135deg, #184656, #1E5A6E);
+                  color: white;
+                  border: none;
+                  border-radius: 6px;
+                  font-size: 13px;
+                  cursor: pointer;
+                  transition: opacity 0.2s;
+                "
+                onmouseover="this.style.opacity='0.85'"
+                onmouseout="this.style.opacity='1'"
+              >
+                Editar áreas
+              </button>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Modal de asignación de áreas -->
+    <div id="areaAssignModal" style="
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+    ">
+      <div style="
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+      ">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <div>
+            <h3 style="margin: 0; font-size: 20px; color: #111827;" id="areaModalTitle">Asignar áreas</h3>
+            <p style="margin: 4px 0 0; color: #6B7280; font-size: 14px;" id="areaModalSubtitle"></p>
+          </div>
+          <button onclick="closeAreaModal()" style="
+            background: none; border: none; font-size: 24px; cursor: pointer;
+            color: #9CA3AF; line-height: 1;
+          ">&times;</button>
+        </div>
+
+        <input type="hidden" id="areaModalEquipoId" value="">
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
+            Selecciona las áreas de trabajo:
+          </label>
+          <div id="areaCheckboxList" style="
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 8px;
+          ">
+            <?php foreach ($areas_list as $area): ?>
+            <label style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              padding: 10px 12px;
+              border-radius: 6px;
+              cursor: pointer;
+              transition: background 0.15s;
+              font-size: 14px;
+              color: #374151;
+            "
+              onmouseover="this.style.background='#F3F4F6'"
+              onmouseout="this.style.background='transparent'"
+            >
+              <input
+                type="checkbox"
+                name="area_ids[]"
+                value="<?= (int)$area['id'] ?>"
+                class="area-checkbox"
+                style="width: 18px; height: 18px; accent-color: #184656; cursor: pointer;"
+              >
+              <span><?= h($area['nombre_area']) ?></span>
+            </label>
+            <?php endforeach; ?>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button
+            onclick="closeAreaModal()"
+            style="
+              padding: 10px 24px;
+              background: #F3F4F6;
+              color: #374151;
+              border: none;
+              border-radius: 8px;
+              font-size: 14px;
+              cursor: pointer;
+            "
+          >Cancelar</button>
+          <button
+            onclick="saveAreas()"
+            id="saveAreasBtn"
+            style="
+              padding: 10px 24px;
+              background: linear-gradient(135deg, #184656, #1E5A6E);
+              color: white;
+              border: none;
+              border-radius: 8px;
+              font-size: 14px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: opacity 0.2s;
+            "
+            onmouseover="this.style.opacity='0.85'"
+            onmouseout="this.style.opacity='1'"
+          >Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    // ============ People Tab: búsqueda y gestión de áreas ============
+    function filterPeopleTable() {
+      const q = document.getElementById('peopleSearchInput').value.toLowerCase();
+      document.querySelectorAll('.people-row').forEach(function(row) {
+        const nombre = (row.dataset.nombre || '').toLowerCase();
+        const cargo = (row.dataset.cargo || '').toLowerCase();
+        row.style.display = (nombre.includes(q) || cargo.includes(q)) ? '' : 'none';
+      });
+    }
+
+    function openAreaModal(equipoId, nombre, currentAreaIds) {
+      document.getElementById('areaModalEquipoId').value = equipoId;
+      document.getElementById('areaModalTitle').textContent = 'Asignar áreas';
+      document.getElementById('areaModalSubtitle').textContent = nombre;
+
+      // Reset checkboxes
+      document.querySelectorAll('.area-checkbox').forEach(function(cb) {
+        cb.checked = false;
+      });
+
+      // Marcar las áreas actuales
+      var ids = (currentAreaIds || []).map(function(v) { return String(v); });
+      document.querySelectorAll('.area-checkbox').forEach(function(cb) {
+        if (ids.indexOf(cb.value) !== -1) {
+          cb.checked = true;
+        }
+      });
+
+      var modal = document.getElementById('areaAssignModal');
+      modal.style.display = 'flex';
+    }
+
+    function closeAreaModal() {
+      document.getElementById('areaAssignModal').style.display = 'none';
+    }
+
+    // Cerrar al hacer clic fuera
+    document.getElementById('areaAssignModal')?.addEventListener('click', function(e) {
+      if (e.target === this) closeAreaModal();
+    });
+
+    function saveAreas() {
+      var equipoId = document.getElementById('areaModalEquipoId').value;
+      var selected = [];
+      document.querySelectorAll('.area-checkbox:checked').forEach(function(cb) {
+        selected.push(cb.value);
+      });
+
+      var btn = document.getElementById('saveAreasBtn');
+      btn.textContent = 'Guardando...';
+      btn.disabled = true;
+
+      var fd = new FormData();
+      fd.append('action', 'save_areas');
+      fd.append('equipo_id', equipoId);
+      selected.forEach(function(id) {
+        fd.append('area_ids[]', id);
+      });
+
+      fetch('ajax_equipo_areas.php', { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.ok) {
+            // Actualizar celda de áreas en la tabla
+            updateAreaCell(equipoId, selected);
+            closeAreaModal();
+          } else {
+            alert('Error: ' + (data.error || 'Desconocido'));
+          }
+        })
+        .catch(function(err) {
+          alert('Error de conexión: ' + err.message);
+        })
+        .finally(function() {
+          btn.textContent = 'Guardar';
+          btn.disabled = false;
+        });
+    }
+
+    function updateAreaCell(equipoId, selectedIds) {
+      var cell = document.getElementById('areas-cell-' + equipoId);
+      if (!cell) return;
+
+      if (selectedIds.length === 0) {
+        cell.innerHTML = '<span style="color: #9CA3AF; font-size: 13px; font-style: italic;">Sin áreas</span>';
+      } else {
+        // Obtener nombres de áreas desde los checkboxes
+        var html = '';
+        document.querySelectorAll('.area-checkbox').forEach(function(cb) {
+          if (selectedIds.indexOf(cb.value) !== -1) {
+            var name = cb.parentElement.querySelector('span').textContent.trim();
+            html += '<span style="display:inline-block;background:#EFF6FF;color:#1D4ED8;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500;margin:2px 4px 2px 0;">' + name + '</span>';
+          }
+        });
+        cell.innerHTML = html;
+      }
+
+      // Actualizar el botón para pasar los nuevos IDs
+      var row = cell.closest('tr');
+      if (row) {
+        var btn = row.querySelector('button[onclick*="openAreaModal"]');
+        if (btn) {
+          var nombre = row.dataset.nombre || '';
+          btn.setAttribute('onclick', "openAreaModal(" + equipoId + ", '" + nombre.replace(/'/g, "\\'") + "', " + JSON.stringify(selectedIds) + ")");
+        }
+      }
+    }
+    </script>
+
+    <?php endif; ?>
   </section>
 </div>
 

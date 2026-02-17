@@ -145,7 +145,7 @@ if (!empty($_GET['equipo_ids']) && is_array($_GET['equipo_ids'])) {
 
 
 
-/* ============ Miembros del equipo según área (por NOMBRE) ============ */
+/* ============ Miembros del equipo según área (vía tabla junction) ============ */
 $equipo_miembros = [];
 
 if ($area_seleccionada === 'custom') {
@@ -161,34 +161,18 @@ if ($area_seleccionada === 'custom') {
 
 } else {
 
-    // Obtener el nombre real del área desde areas_trabajo
-    $stmt_area = $conn->prepare("
-        SELECT nombre_area
-        FROM areas_trabajo
-        WHERE id = ? AND usuario_id = ?
-        LIMIT 1
+    // Filtrar por área usando tabla junction equipo_areas_trabajo
+    $area_sel_int = (int)$area_seleccionada;
+    $stmt_eq = $conn->prepare("
+        SELECT DISTINCT e.id, e.nombre_persona, e.apellido, e.cargo
+        FROM equipo e
+        INNER JOIN equipo_areas_trabajo eat ON e.id = eat.equipo_id
+        WHERE e.usuario_id = ?
+          AND eat.area_id = ?
+        ORDER BY e.nombre_persona ASC
     ");
-    $stmt_area->bind_param("ii", $area_seleccionada, $user_id);
-    $stmt_area->execute();
-    $area_row = stmt_get_result($stmt_area)->fetch_assoc();
-    $stmt_area->close();
-
-    $nombre_area = $area_row['nombre_area'] ?? '';
-
-    // Si el área existe, filtramos por NOMBRE
-    if ($nombre_area !== '') {
-        $stmt_eq = $conn->prepare("
-            SELECT id, nombre_persona, apellido, cargo
-            FROM equipo
-            WHERE usuario_id = ?
-              AND area_trabajo = ?
-            ORDER BY nombre_persona ASC
-        ");
-        $stmt_eq->bind_param("is", $user_id, $nombre_area);
-    } else {
-        // Área inválida → no mostrar nadie
-        $equipo_miembros = [];
-        $stmt_eq = null;
+    if ($stmt_eq) {
+        $stmt_eq->bind_param("ii", $user_id, $area_sel_int);
     }
 }
 
@@ -456,26 +440,28 @@ if (!empty($_GET['equipo_ids']) && is_array($_GET['equipo_ids'])) {
     $equipo_ids_seleccionados = array_map('intval', $_GET['equipo_ids']);
 }
 
-/* Si hay área seleccionada (no custom), obtenemos su nombre */
-$nombre_area = '';
+/* Si hay área seleccionada (no custom), obtenemos IDs de miembros del área */
+$ids_en_area = [];
 if ($area_seleccionada !== 'custom') {
-    $stmt_area = $conn->prepare("
-        SELECT nombre_area
-        FROM areas_trabajo
-        WHERE id = ? AND usuario_id = ?
-        LIMIT 1
+    $area_sel_int2 = (int)$area_seleccionada;
+    $stmt_area_ids = $conn->prepare("
+        SELECT eat.equipo_id
+        FROM equipo_areas_trabajo eat
+        INNER JOIN equipo e ON eat.equipo_id = e.id
+        WHERE eat.area_id = ? AND e.usuario_id = ?
     ");
-    $stmt_area->bind_param("ii", $area_seleccionada, $uid);
-    $stmt_area->execute();
-    $row_area = stmt_get_result($stmt_area)->fetch_assoc();
-    $stmt_area->close();
-
-    $nombre_area = $row_area['nombre_area'] ?? '';
+    $stmt_area_ids->bind_param("ii", $area_sel_int2, $uid);
+    $stmt_area_ids->execute();
+    $res_area_ids = stmt_get_result($stmt_area_ids);
+    while ($row_a = $res_area_ids->fetch_assoc()) {
+        $ids_en_area[] = (int)$row_a['equipo_id'];
+    }
+    $stmt_area_ids->close();
 }
 
 /* Traemos TODOS los miembros (filtraremos en PHP) */
 $q = $conn->prepare("
-  SELECT id, nombre_persona, area_trabajo,
+  SELECT id, nombre_persona,
          hofstede_poder          AS distancia_poder,
          hofstede_individualismo AS individualismo,
          hofstede_incertidumbre  AS incertidumbre,
@@ -491,17 +477,17 @@ $rs = stmt_get_result($q);
 
 while ($r = $rs->fetch_assoc()) {
 
-    /* ===== FILTRO 1: ÁREA ===== */
+    /* ===== FILTRO 1: ÁREA (vía tabla junction) ===== */
     if ($area_seleccionada !== 'custom') {
-        if ($nombre_area === '' || $r['area_trabajo'] !== $nombre_area) {
-            continue; // ❌ fuera del área
+        if (!in_array((int)$r['id'], $ids_en_area, true)) {
+            continue;
         }
     }
 
     /* ===== FILTRO 2: CHECKBOX ===== */
     if (!empty($equipo_ids_seleccionados)) {
         if (!in_array((int)$r['id'], $equipo_ids_seleccionados, true)) {
-            continue; // ❌ no marcado
+            continue;
         }
     }
 

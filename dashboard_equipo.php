@@ -193,7 +193,13 @@ $sql = $conn->prepare("
 
         COALESCE(e.cargo,'—') AS cargo,
 
-        COALESCE(e.area_trabajo,'—') AS area,
+        COALESCE(
+            (SELECT GROUP_CONCAT(at2.nombre_area ORDER BY at2.nombre_area SEPARATOR ', ')
+             FROM equipo_areas_trabajo eat
+             INNER JOIN areas_trabajo at2 ON eat.area_id = at2.id
+             WHERE eat.equipo_id = e.id),
+            COALESCE(e.area_trabajo, '—')
+        ) AS area,
 
  
 
@@ -563,69 +569,61 @@ $stmtMp->close();
 
 // --------------------------------------------------------------------
 
-// PASO 1: Obtener el nombre del área desde equipo.area_trabajo
-$area_trabajo_nombre = $emp['area'] ?? ''; // 'area' contiene area_trabajo
-
-
-
-// PASO 2: Buscar el ID del área en la tabla areas_trabajo
-$area_id_emp = 0;
-if (!empty($area_trabajo_nombre) && $area_trabajo_nombre !== '—') {
-    $stmtAreaId = $conn->prepare("
-        SELECT id
-        FROM areas_trabajo
-        WHERE nombre_area = ? AND usuario_id = ?
-        LIMIT 1
-    ");
-    $stmtAreaId->bind_param("si", $area_trabajo_nombre, $user_id);
-    $stmtAreaId->execute();
-    $areaIdResult = stmt_get_result($stmtAreaId)->fetch_assoc();
-    $stmtAreaId->close();
-
-    if ($areaIdResult) {
-        $area_id_emp = (int)$areaIdResult['id'];
-    }
+// PASO 1: Obtener TODAS las áreas del miembro desde tabla junction
+$area_ids_emp = [];
+$stmtAreasEmp = $conn->prepare("
+    SELECT eat.area_id
+    FROM equipo_areas_trabajo eat
+    INNER JOIN equipo e ON eat.equipo_id = e.id
+    WHERE eat.equipo_id = ? AND e.usuario_id = ?
+");
+$stmtAreasEmp->bind_param("ii", $empleado_id, $user_id);
+$stmtAreasEmp->execute();
+$resAreasEmp = stmt_get_result($stmtAreasEmp);
+while ($rowA = $resAreasEmp->fetch_assoc()) {
+    $area_ids_emp[] = (int)$rowA['area_id'];
 }
+$stmtAreasEmp->close();
 
-
+// Compatibilidad: primer área para código legacy
+$area_id_emp = !empty($area_ids_emp) ? $area_ids_emp[0] : 0;
 
 $metas_equipo = [];
 
+// PASO 2: Buscar metas de empresa Y metas de TODAS las áreas del miembro
+if (!empty($area_ids_emp)) {
+    $ph = implode(',', array_fill(0, count($area_ids_emp), '?'));
+    $types = 'i' . str_repeat('i', count($area_ids_emp));
+    $params = array_merge([$user_id], $area_ids_emp);
 
-
-// PASO 3: Buscar metas de empresa Y metas del área usando el ID numérico
-$stmtMe = $conn->prepare("
-
-    SELECT
-
-        id, descripcion, due_date, progress_pct,
-
-        is_completed, tipo, area_id,
-
-        parent_meta_id, order_index
-
-    FROM metas
-
-    WHERE user_id = ?
-
-      AND (tipo = 'empresa' OR (tipo = 'area' AND area_id = ?))
-
-    ORDER BY COALESCE(order_index, 9999) ASC, created_at DESC
-
-");
-
-$stmtMe->bind_param("ii", $user_id, $area_id_emp);
+    $stmtMe = $conn->prepare("
+        SELECT id, descripcion, due_date, progress_pct,
+               is_completed, tipo, area_id,
+               parent_meta_id, order_index
+        FROM metas
+        WHERE user_id = ?
+          AND (tipo = 'empresa' OR (tipo = 'area' AND area_id IN ($ph)))
+        ORDER BY COALESCE(order_index, 9999) ASC, created_at DESC
+    ");
+    $stmtMe->bind_param($types, ...$params);
+} else {
+    $stmtMe = $conn->prepare("
+        SELECT id, descripcion, due_date, progress_pct,
+               is_completed, tipo, area_id,
+               parent_meta_id, order_index
+        FROM metas
+        WHERE user_id = ?
+          AND tipo = 'empresa'
+        ORDER BY COALESCE(order_index, 9999) ASC, created_at DESC
+    ");
+    $stmtMe->bind_param("i", $user_id);
+}
 
 $stmtMe->execute();
-
 $resMe = stmt_get_result($stmtMe);
 
-
-
 while ($row = $resMe->fetch_assoc()) {
-
     $metas_equipo[] = $row;
-
 }
 
 $stmtMe->close();
@@ -642,70 +640,40 @@ $solicitudes_ayuda = [];
 
  
 
-// Obtener el area_trabajo del empleado actual (ya lo tienes como $area_emp)
-
-$area_trabajo_emp = $emp['area'] ?? ''; // Es el mismo que usas arriba
-
- 
-
-// Solo buscar solicitudes si el empleado tiene un área asignada
-
-if (!empty($area_trabajo_emp) && $area_trabajo_emp !== '—') {
+// Buscar solicitudes de ayuda de compañeros en las MISMAS áreas (vía junction)
+if (!empty($area_ids_emp)) {
+    $ph_ayuda = implode(',', array_fill(0, count($area_ids_emp), '?'));
+    $types_ayuda = 'i' . str_repeat('i', count($area_ids_emp)) . 'i';
+    $params_ayuda = array_merge([$user_id], $area_ids_emp, [$empleado_id]);
 
     $stmtAyuda = $conn->prepare("
-
         SELECT
-
             mp.id,
-
             mp.persona_id,
-
             mp.descripcion,
-
             mp.progress_pct,
-
             mp.help_requested,
-
             mp.help_requested_by,
-
-            e.nombre_persona,
-
-            e.area_trabajo
-
+            e.nombre_persona
         FROM metas_personales mp
-
         INNER JOIN equipo e ON mp.persona_id = e.id
-
+        INNER JOIN equipo_areas_trabajo eat ON e.id = eat.equipo_id
         WHERE mp.user_id = ?
-
-          AND e.area_trabajo = ?
-
+          AND eat.area_id IN ($ph_ayuda)
           AND mp.help_requested = 1
-
           AND mp.is_completed = 0
-
           AND mp.persona_id != ?
-
+        GROUP BY mp.id
         ORDER BY mp.created_at DESC
-
     ");
-
-    $stmtAyuda->bind_param("isi", $user_id, $area_trabajo_emp, $empleado_id);
-
+    $stmtAyuda->bind_param($types_ayuda, ...$params_ayuda);
     $stmtAyuda->execute();
-
     $resAyuda = stmt_get_result($stmtAyuda);
 
- 
-
     while ($row = $resAyuda->fetch_assoc()) {
-
         $solicitudes_ayuda[] = $row;
-
     }
-
     $stmtAyuda->close();
-
 }
 
 

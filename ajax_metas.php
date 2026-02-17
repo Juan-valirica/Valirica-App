@@ -112,31 +112,9 @@ switch ($action) {
                 $columnNullable[$col['Field']] = ($col['Null'] === 'YES');
             }
 
-            // PASO 2: Verificar columnas disponibles en equipo
-            $equipoColumnsCheck = $conn->query("SHOW COLUMNS FROM equipo");
-            $equipoColumns = [];
-            while ($col = $equipoColumnsCheck->fetch_assoc()) {
-                $equipoColumns[] = $col['Field'];
-            }
-
-            // Determinar qué columna usar para area_id
-            $area_column = null;
-            if (in_array('area_id', $equipoColumns)) {
-                $area_column = 'area_id';
-            } elseif (in_array('area', $equipoColumns)) {
-                $area_column = 'area';
-            } elseif (in_array('area_trabajo', $equipoColumns)) {
-                $area_column = 'area_trabajo';
-            }
-
-            // PASO 3: Obtener datos del empleado
-            $selectFields = "usuario_id";
-            if ($area_column) {
-                $selectFields .= ", {$area_column} as area_id";
-            }
-
+            // PASO 2: Obtener datos del empleado
             $stmtEmp = $conn->prepare("
-                SELECT {$selectFields}
+                SELECT usuario_id
                 FROM equipo
                 WHERE id = ?
                 LIMIT 1
@@ -152,32 +130,26 @@ switch ($action) {
             }
 
             $user_id_emp = (int)$emp['usuario_id'];
-            $area_id_raw = isset($emp['area_id']) ? $emp['area_id'] : null;
 
-            // Resolver area_id numérico
-            // Si es texto (ej: "People"), buscar ID en areas_trabajo
-            $area_id = null;
-            if ($area_id_raw) {
-                if (is_numeric($area_id_raw)) {
-                    $area_id = (int)$area_id_raw;
-                } else {
-                    // Buscar ID numérico en tabla areas_trabajo
-                    $stmtAreaId = $conn->prepare("
-                        SELECT id
-                        FROM areas_trabajo
-                        WHERE nombre_area = ? AND usuario_id = ?
-                        LIMIT 1
-                    ");
-                    $stmtAreaId->bind_param("si", $area_id_raw, $user_id_emp);
-                    $stmtAreaId->execute();
-                    $areaIdResult = stmt_get_result($stmtAreaId)->fetch_assoc();
-                    $stmtAreaId->close();
-
-                    if ($areaIdResult) {
-                        $area_id = (int)$areaIdResult['id'];
-                    }
-                }
+            // PASO 3: Obtener áreas del empleado desde tabla junction
+            $area_ids_emp = [];
+            $stmtAreas = $conn->prepare("
+                SELECT eat.area_id
+                FROM equipo_areas_trabajo eat
+                INNER JOIN equipo e ON eat.equipo_id = e.id
+                WHERE eat.equipo_id = ? AND e.usuario_id = ?
+            ");
+            $stmtAreas->bind_param("ii", $empleado_id, $user_id_emp);
+            $stmtAreas->execute();
+            $resAreas = stmt_get_result($stmtAreas);
+            while ($rowA = $resAreas->fetch_assoc()) {
+                $area_ids_emp[] = (int)$rowA['area_id'];
             }
+            $stmtAreas->close();
+
+            // Compatibilidad: usar primera área como area_id principal
+            $area_id = !empty($area_ids_emp) ? $area_ids_emp[0] : null;
+            $area_id_raw = $area_id;
 
             // PASO 4: Resolver meta_empresa_id (REQUERIDO)
             $meta_empresa_id = null;
@@ -560,41 +532,38 @@ switch ($action) {
                 $availableColumns[] = $col['Field'];
             }
 
-            // Intentar obtener area_id (puede tener diferentes nombres)
-            $area_id_column = null;
-            if (in_array('area_id', $availableColumns)) {
-                $area_id_column = 'area_id';
-            } elseif (in_array('area', $availableColumns)) {
-                $area_id_column = 'area';
-            } elseif (in_array('area_trabajo', $availableColumns)) {
-                $area_id_column = 'area_trabajo';
-            }
+            // Obtener áreas del empleado desde tabla junction
+            $area_ids_emp2 = [];
+            $stmtEmpUser = $conn->prepare("SELECT usuario_id FROM equipo WHERE id = ? LIMIT 1");
+            $stmtEmpUser->bind_param("i", $empleado_id);
+            $stmtEmpUser->execute();
+            $empUserRow = stmt_get_result($stmtEmpUser)->fetch_assoc();
+            $stmtEmpUser->close();
 
-            $area_id = null;
-
-            if ($area_id_column) {
-                // Obtener area_id del empleado
-                $stmtArea = $conn->prepare("
-                    SELECT {$area_id_column} as area_id, usuario_id
-                    FROM equipo
-                    WHERE id = ?
-                ");
-                $stmtArea->bind_param("i", $empleado_id);
-                $stmtArea->execute();
-                $areaResult = stmt_get_result($stmtArea)->fetch_assoc();
-                $stmtArea->close();
-
-                if ($areaResult) {
-                    $area_id = $areaResult['area_id'];
-                    // Si user_id no está en sesión, obtenerlo del empleado
-                    if ($user_id <= 0 && !empty($areaResult['usuario_id'])) {
-                        $user_id = (int)$areaResult['usuario_id'];
-                    }
+            if ($empUserRow) {
+                if ($user_id <= 0) {
+                    $user_id = (int)$empUserRow['usuario_id'];
                 }
             }
 
+            $stmtAreas2 = $conn->prepare("
+                SELECT eat.area_id
+                FROM equipo_areas_trabajo eat
+                INNER JOIN equipo e ON eat.equipo_id = e.id
+                WHERE eat.equipo_id = ? AND e.usuario_id = ?
+            ");
+            $stmtAreas2->bind_param("ii", $empleado_id, $user_id);
+            $stmtAreas2->execute();
+            $resAreas2 = stmt_get_result($stmtAreas2);
+            while ($rowA2 = $resAreas2->fetch_assoc()) {
+                $area_ids_emp2[] = (int)$rowA2['area_id'];
+            }
+            $stmtAreas2->close();
+
+            $area_id = !empty($area_ids_emp2) ? $area_ids_emp2[0] : null;
+            $area_id_numeric = $area_id;
+
             if (!$area_id) {
-                // Debug: mostrar información útil
                 echo json_encode([
                     'ok' => true,
                     'metas' => [],
@@ -602,37 +571,10 @@ switch ($action) {
                         'empleado_id' => $empleado_id,
                         'user_id' => $user_id,
                         'area_id_found' => false,
-                        'available_columns' => $availableColumns,
-                        'area_column_used' => $area_id_column
+                        'note' => 'No areas assigned via equipo_areas_trabajo'
                     ]
                 ]);
                 exit;
-            }
-
-            // PASO CRÍTICO: Convertir nombre del área a ID numérico
-            // El area_id puede ser texto (ej: "People") o número
-            // Necesitamos buscar el ID numérico en areas_trabajo
-            $area_id_numeric = null;
-
-            if (is_numeric($area_id)) {
-                // Ya es numérico, usarlo directamente
-                $area_id_numeric = (int)$area_id;
-            } else {
-                // Es texto, buscar en areas_trabajo
-                $stmtAreaIdLookup = $conn->prepare("
-                    SELECT id
-                    FROM areas_trabajo
-                    WHERE nombre_area = ? AND usuario_id = ?
-                    LIMIT 1
-                ");
-                $stmtAreaIdLookup->bind_param("si", $area_id, $user_id);
-                $stmtAreaIdLookup->execute();
-                $areaIdLookupResult = stmt_get_result($stmtAreaIdLookup)->fetch_assoc();
-                $stmtAreaIdLookup->close();
-
-                if ($areaIdLookupResult) {
-                    $area_id_numeric = (int)$areaIdLookupResult['id'];
-                }
             }
 
             if (!$area_id_numeric) {
@@ -721,34 +663,43 @@ switch ($action) {
         }
 
         try {
-            // Obtener área del empleado
-            $stmtArea = $conn->prepare("
-                SELECT area_trabajo
-                FROM equipo
-                WHERE id = ? AND usuario_id = ?
+            // Obtener áreas del empleado desde tabla junction
+            $stmtAreaIds = $conn->prepare("
+                SELECT eat.area_id
+                FROM equipo_areas_trabajo eat
+                INNER JOIN equipo e ON eat.equipo_id = e.id
+                WHERE eat.equipo_id = ? AND e.usuario_id = ?
             ");
-            $stmtArea->bind_param("ii", $empleado_id, $user_id);
-            $stmtArea->execute();
-            $areaResult = stmt_get_result($stmtArea)->fetch_assoc();
-            $stmtArea->close();
+            $stmtAreaIds->bind_param("ii", $empleado_id, $user_id);
+            $stmtAreaIds->execute();
+            $resAreaIds = stmt_get_result($stmtAreaIds);
 
-            if (!$areaResult) {
+            $my_area_ids = [];
+            while ($rowA = $resAreaIds->fetch_assoc()) {
+                $my_area_ids[] = (int)$rowA['area_id'];
+            }
+            $stmtAreaIds->close();
+
+            if (empty($my_area_ids)) {
                 echo json_encode(['ok' => true, 'teammates' => []]);
                 exit;
             }
 
-            $area = $areaResult['area_trabajo'];
+            // Obtener compañeros que comparten AL MENOS un área (excluyendo al empleado)
+            $ph_tm = implode(',', array_fill(0, count($my_area_ids), '?'));
+            $types_tm = str_repeat('i', count($my_area_ids)) . 'ii';
+            $params_tm = array_merge($my_area_ids, [$user_id, $empleado_id]);
 
-            // Obtener compañeros del área (excluyendo al empleado actual)
             $stmtTeam = $conn->prepare("
-                SELECT id, nombre_persona as nombre
-                FROM equipo
-                WHERE usuario_id = ?
-                  AND area_trabajo = ?
-                  AND id != ?
-                ORDER BY nombre_persona ASC
+                SELECT DISTINCT e.id, e.nombre_persona as nombre
+                FROM equipo e
+                INNER JOIN equipo_areas_trabajo eat ON e.id = eat.equipo_id
+                WHERE eat.area_id IN ($ph_tm)
+                  AND e.usuario_id = ?
+                  AND e.id != ?
+                ORDER BY e.nombre_persona ASC
             ");
-            $stmtTeam->bind_param("isi", $user_id, $area, $empleado_id);
+            $stmtTeam->bind_param($types_tm, ...$params_tm);
             $stmtTeam->execute();
             $result = stmt_get_result($stmtTeam);
 
