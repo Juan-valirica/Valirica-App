@@ -169,19 +169,23 @@ $empresa_id_header = isset($usuario_id) && (int)$usuario_id > 0
   : (isset($viewer_id) ? (int)$viewer_id : 0);
 
 if ($empresa_id_header > 0 && isset($conn) && $conn instanceof mysqli) {
-  if ($stmtDocs = $conn->prepare("
-    SELECT COUNT(*) as total 
-    FROM documentos 
-    WHERE empresa_id = ? 
-      AND estado = 'nuevo'
-  ")) {
-    $stmtDocs->bind_param("i", $empresa_id_header);
-    $stmtDocs->execute();
-    $resDocs = stmt_get_result($stmtDocs);
-    if ($rowDocs = $resDocs->fetch_assoc()) {
-      $docs_unread_count = (int)$rowDocs['total'];
+  try {
+    if ($stmtDocs = $conn->prepare("
+      SELECT COUNT(*) as total
+      FROM documentos
+      WHERE empresa_id = ?
+        AND estado = 'nuevo'
+    ")) {
+      $stmtDocs->bind_param("i", $empresa_id_header);
+      $stmtDocs->execute();
+      $resDocs = stmt_get_result($stmtDocs);
+      if ($rowDocs = $resDocs->fetch_assoc()) {
+        $docs_unread_count = (int)$rowDocs['total'];
+      }
+      $stmtDocs->close();
     }
-    $stmtDocs->close();
+  } catch (mysqli_sql_exception $e) {
+    $docs_unread_count = 0;
   }
 }
 
