@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS equipo_areas_trabajo (
     UNIQUE KEY uq_equipo_area (equipo_id, area_id),
     KEY idx_area (area_id),
     KEY idx_equipo (equipo_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 2) Migrar datos existentes de equipo.area_trabajo → equipo_areas_trabajo
 --    Solo migra filas donde area_trabajo tiene un nombre válido en areas_trabajo
