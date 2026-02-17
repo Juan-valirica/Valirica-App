@@ -284,6 +284,7 @@ try {
             $deadline = $_POST['deadline'] ?? null;
             $prioridad = $_POST['prioridad'] ?? 'media';
             $horas_estimadas = !empty($_POST['horas_estimadas']) ? floatval($_POST['horas_estimadas']) : null;
+            $area_id = !empty($_POST['area_id']) ? (int)$_POST['area_id'] : null;
 
             if (empty($titulo)) {
                 throw new Exception('El título de la tarea es obligatorio');
@@ -326,10 +327,10 @@ try {
             $deadline = !empty($deadline) ? $deadline : null;
 
             $stmt = $conn->prepare("
-                INSERT INTO tareas (proyecto_id, titulo, descripcion, responsable_id, fecha_inicio, deadline, prioridad, horas_estimadas, orden, estado)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')
+                INSERT INTO tareas (proyecto_id, titulo, descripcion, responsable_id, fecha_inicio, deadline, prioridad, horas_estimadas, orden, estado, area_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', ?)
             ");
-            $stmt->bind_param("ississsdi", $proyecto_id, $titulo, $descripcion, $responsable_id, $fecha_inicio, $deadline, $prioridad, $horas_estimadas, $orden);
+            $stmt->bind_param("ississsdii", $proyecto_id, $titulo, $descripcion, $responsable_id, $fecha_inicio, $deadline, $prioridad, $horas_estimadas, $orden, $area_id);
             $stmt->execute();
 
             $tarea_id = $conn->insert_id;
@@ -932,6 +933,30 @@ try {
             echo json_encode([
                 'ok' => true,
                 'miembros' => $miembros
+            ]);
+            break;
+
+        // Obtener áreas de trabajo de la empresa
+        case 'obtener_areas_trabajo':
+            $stmt = $conn->prepare("
+                SELECT id, nombre_area
+                FROM areas_trabajo
+                WHERE usuario_id = ?
+                ORDER BY nombre_area ASC
+            ");
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $result = stmt_get_result($stmt);
+
+            $areas = [];
+            while ($row = $result->fetch_assoc()) {
+                $areas[] = $row;
+            }
+            $stmt->close();
+
+            echo json_encode([
+                'ok' => true,
+                'areas' => $areas
             ]);
             break;
 
