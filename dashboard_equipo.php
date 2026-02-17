@@ -978,6 +978,10 @@ try {
 <link rel="apple-touch-icon" href="https://app.valirica.com/uploads/logos/1749413056_logo-valirica.png">
 <link rel="icon" type="image/png" sizes="192x192" href="https://app.valirica.com/uploads/logos/1749413056_logo-valirica.png">
 
+<!-- Phosphor Icons — librería de iconos profesionales -->
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
 
   <link rel="stylesheet" href="/css/valirica-design-system.css">
 
@@ -1009,6 +1013,8 @@ try {
 
     --c-secondary: #184656;
 
+    --c-teal:      #007a96;
+
     --c-accent:    #EF7F1B;
 
 
@@ -1027,11 +1033,13 @@ try {
 
 
 
-    /* High-Tech Gradients */
+    /* Valirica Brand Gradients */
 
-    --gradient-tech: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+    --gradient-tech: linear-gradient(135deg, #007a96 0%, #012133 100%);
 
     --gradient-accent: linear-gradient(135deg, #EF7F1B 0%, #C65F00 100%);
+
+    --gradient-primary: linear-gradient(135deg, #012133 0%, #007a96 100%);
 
     --gradient-card: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
 
@@ -1047,13 +1055,15 @@ try {
 
 
 
-    /* Tech Shadows */
+    /* Valirica Shadows */
 
-    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --shadow-card: 0 4px 24px rgba(1, 33, 51, 0.08);
 
-    --shadow-hover: 0 12px 40px rgba(102, 126, 234, 0.2);
+    --shadow-hover: 0 12px 40px rgba(0, 122, 150, 0.18);
 
     --shadow-tech: 0 10px 26px rgba(239, 127, 27, 0.35);
+
+    --shadow-primary: 0 8px 28px rgba(1, 33, 51, 0.18);
 
   }
 
@@ -2543,6 +2553,687 @@ try {
 }
 
 
+/* ==========================================================================
+   ASISTENCIA — Diseño profesional Valirica (Monday/Asana style)
+   ========================================================================== */
+
+.asistencia-section {
+  margin-bottom: 28px;
+}
+
+.asistencia-card {
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 6px 32px rgba(1, 33, 51, 0.12);
+  border: 1px solid rgba(1, 33, 51, 0.08);
+}
+
+/* ---- Header con color primario ---- */
+.asistencia-header {
+  background: var(--c-primary);
+  padding: 22px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.asistencia-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.asistencia-fecha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.80);
+  font-weight: 500;
+}
+
+.asistencia-fecha i {
+  font-size: 15px;
+}
+
+.asistencia-jornada-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+
+.asistencia-reloj {
+  font-size: 44px;
+  font-weight: 800;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -2px;
+  line-height: 1;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+/* ---- Franja de turno ---- */
+.asistencia-turno {
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: #f5f8fa;
+  border-bottom: 1px solid rgba(1, 33, 51, 0.06);
+}
+
+.turno-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.turno-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.turno-label i {
+  font-size: 13px;
+  color: var(--c-teal);
+}
+
+.turno-hora {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--c-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+}
+
+.turno-flecha {
+  color: #ccc;
+  font-size: 18px;
+  flex-shrink: 0;
+  padding-top: 14px;
+}
+
+.turno-nocturno-badge {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #555;
+  background: rgba(1,33,51,0.07);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* ---- Botones de acción — PROTAGONISTAS ---- */
+.asistencia-actions {
+  padding: 24px 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Botón base */
+.asistencia-btn {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 26px;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  text-align: left;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.asistencia-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  transition: left 0.5s ease;
+}
+
+.asistencia-btn:hover::before {
+  left: 100%;
+}
+
+.asistencia-btn i {
+  font-size: 36px;
+  flex-shrink: 0;
+  color: #fff;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+}
+
+.asistencia-btn-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.asistencia-btn-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.3px;
+  line-height: 1.1;
+}
+
+.asistencia-btn-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.72);
+  font-weight: 500;
+}
+
+/* Botón Entrada (teal) */
+.asistencia-btn--entrada {
+  background: var(--c-teal);
+  box-shadow: 0 8px 24px rgba(0, 122, 150, 0.38);
+}
+
+.asistencia-btn--entrada:hover {
+  background: #006680;
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(0, 122, 150, 0.48);
+}
+
+.asistencia-btn--entrada:active {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 122, 150, 0.30);
+}
+
+/* Botón Salida (naranja) */
+.asistencia-btn--salida {
+  background: var(--c-accent);
+  box-shadow: 0 8px 24px rgba(239, 127, 27, 0.38);
+}
+
+.asistencia-btn--salida:hover {
+  background: #d96e0d;
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(239, 127, 27, 0.48);
+}
+
+.asistencia-btn--salida:active {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(239, 127, 27, 0.30);
+}
+
+/* Estado deshabilitado (salida sin entrada previa) */
+.asistencia-btn--disabled {
+  background: #e8edf0;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.asistencia-btn--disabled i,
+.asistencia-btn--disabled .asistencia-btn-title,
+.asistencia-btn--disabled .asistencia-btn-sub {
+  color: #9aacb4;
+  filter: none;
+}
+
+/* ---- Estados registrados ---- */
+.asistencia-registered {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 26px;
+  border-radius: 16px;
+}
+
+.asistencia-registered--in {
+  background: rgba(0, 122, 150, 0.06);
+  border: 2px solid rgba(0, 122, 150, 0.18);
+}
+
+.asistencia-registered--out {
+  background: rgba(239, 127, 27, 0.06);
+  border: 2px solid rgba(239, 127, 27, 0.18);
+}
+
+.asistencia-registered-icon {
+  font-size: 36px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.asistencia-registered--in .asistencia-registered-icon {
+  color: var(--c-teal);
+}
+
+.asistencia-registered--out .asistencia-registered-icon {
+  color: var(--c-accent);
+}
+
+.asistencia-registered-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.asistencia-registered-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.asistencia-registered-time {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--c-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.asistencia-registered-loc {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  background: rgba(1,33,51,0.05);
+  padding: 4px 10px;
+  border-radius: 6px;
+  width: fit-content;
+  margin-top: 2px;
+}
+
+.asistencia-registered-loc i {
+  font-size: 13px;
+  color: var(--c-teal);
+}
+
+.asistencia-late-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #b71c1c;
+  font-weight: 600;
+  background: #ffebee;
+  padding: 4px 10px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.asistencia-late-badge i {
+  font-size: 14px;
+}
+
+.asistencia-ontime-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #1b5e20;
+  font-weight: 600;
+  background: #e8f5e9;
+  padding: 4px 10px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.asistencia-ontime-badge i {
+  font-size: 14px;
+  color: #2e7d32;
+}
+
+.asistencia-complete-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #1b5e20;
+  font-weight: 600;
+  background: #e8f5e9;
+  padding: 4px 10px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.asistencia-complete-badge i {
+  font-size: 14px;
+}
+
+/* ---- Estado "sin turno hoy" ---- */
+.asistencia-no-turno {
+  padding: 48px 28px;
+  text-align: center;
+  color: #888;
+}
+
+.asistencia-no-turno i {
+  font-size: 52px;
+  color: #ccc;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.asistencia-no-turno h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--c-secondary);
+  margin: 0 0 8px;
+}
+
+.asistencia-no-turno p {
+  font-size: 14px;
+  margin: 0;
+  opacity: 0.7;
+}
+
+/* ---- Sin jornada ---- */
+.asistencia-sin-jornada {
+  padding: 56px 28px;
+  text-align: center;
+  background: #f5f8fa;
+  border-radius: 20px;
+}
+
+.asistencia-sin-jornada i {
+  font-size: 56px;
+  color: #c5d5db;
+  margin-bottom: 16px;
+  display: block;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+  .asistencia-header {
+    padding: 18px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .asistencia-reloj {
+    font-size: 36px;
+  }
+
+  .asistencia-turno {
+    padding: 14px 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .turno-nocturno-badge {
+    margin-left: 0;
+  }
+
+  .asistencia-actions {
+    padding: 16px 20px;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .asistencia-btn {
+    padding: 18px 22px;
+    gap: 14px;
+  }
+
+  .asistencia-btn i {
+    font-size: 30px;
+  }
+
+  .asistencia-btn-title {
+    font-size: 16px;
+  }
+
+  .asistencia-registered {
+    padding: 18px 22px;
+    gap: 14px;
+  }
+
+  .asistencia-registered-icon {
+    font-size: 30px;
+  }
+
+  .asistencia-registered-time {
+    font-size: 24px;
+  }
+}
+
+
+/* ==========================================================================
+   PERFIL — Mejora visual (Slack-style header card)
+   ========================================================================== */
+
+.perfil-card-header {
+  background: var(--c-primary);
+  border-radius: 16px 16px 0 0;
+  padding: 20px 20px 0;
+  margin: -16px -16px 0;
+}
+
+.perfil-avatar-ring {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: var(--gradient-accent);
+  color: #fff;
+  font-weight: 800;
+  font-size: 22px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 16px rgba(239,127,27,0.35);
+  border: 3px solid #fff;
+  flex-shrink: 0;
+}
+
+.perfil-info-name {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--c-primary);
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.perfil-info-role {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.perfil-info-role i {
+  font-size: 14px;
+  color: var(--c-teal);
+}
+
+.perfil-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(0,122,150,0.09);
+  color: var(--c-teal);
+  border: 1px solid rgba(0,122,150,0.18);
+}
+
+.perfil-tag i {
+  font-size: 13px;
+}
+
+.perfil-stats-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.perfil-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.perfil-stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #999;
+}
+
+.perfil-stat-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-primary);
+}
+
+
+/* ==========================================================================
+   TABS — Estilo Monday/Asana (sin emojis)
+   ========================================================================== */
+
+.tabs-valirica {
+  display: flex;
+  gap: 4px;
+  background: #f1f3f5;
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.tab-valirica {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.18s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.tab-valirica i {
+  font-size: 15px;
+}
+
+.tab-valirica.active {
+  background: #fff;
+  color: var(--c-primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+
+.tab-valirica:hover:not(.active) {
+  background: rgba(255,255,255,0.6);
+  color: var(--c-primary);
+}
+
+
+/* ==========================================================================
+   META ITEMS — Mejora visual
+   ========================================================================== */
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--c-primary);
+  margin: 0 0 10px 0;
+}
+
+.section-label i {
+  font-size: 15px;
+  color: var(--c-teal);
+}
+
+.meta-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.meta-status-badge.done { background: #e8f5e9; color: #2e7d32; }
+.meta-status-badge.dev  { background: #e3f2fd; color: #1565c0; }
+.meta-status-badge.pause { background: #f5f5f5; color: #666; }
+.meta-status-badge.help { background: #fff3e0; color: #e65100; }
+
+/* Toast de notificación (reemplaza alert) */
+.v-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(30px);
+  background: var(--c-primary);
+  color: #fff;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 99999;
+  box-shadow: 0 8px 32px rgba(1,33,51,0.30);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  max-width: calc(100vw - 48px);
+  pointer-events: none;
+}
+
+.v-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.v-toast.error {
+  background: #c62828;
+}
+
+.v-toast i {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
 
 </style>
 
@@ -2615,37 +3306,37 @@ try {
 <nav class="employee-subnav" aria-label="Acciones del empleado">
 
 <button class="subnav-item is-primary" data-action="asistencia">
-  <span class="subnav-icon">⏱️</span>
+  <span class="subnav-icon"><i class="ph ph-clock-clockwise" style="font-size:22px;"></i></span>
   <span class="subnav-label">Asistencia</span>
 </button>
 
 <button class="subnav-item is-primary" data-action="crear-meta">
-  <span class="subnav-icon">🎯</span>
+  <span class="subnav-icon"><i class="ph ph-target" style="font-size:22px;"></i></span>
   <span class="subnav-label">Crear meta</span>
 </button>
 
 <button class="subnav-item is-primary" data-action="crear-tarea">
-  <span class="subnav-icon">✅</span>
+  <span class="subnav-icon"><i class="ph ph-check-square" style="font-size:22px;"></i></span>
   <span class="subnav-label">Nueva tarea</span>
 </button>
 
 <button class="subnav-item" data-action="equipo">
-  <span class="subnav-icon">🤝</span>
+  <span class="subnav-icon"><i class="ph ph-users-three" style="font-size:22px;"></i></span>
   <span class="subnav-label">Tu equipo</span>
 </button>
 
 <button class="subnav-item" data-action="permisos">
-  <span class="subnav-icon">🗓️</span>
-  <span class="subnav-label">Permisos & Vacaciones</span>
+  <span class="subnav-icon"><i class="ph ph-calendar" style="font-size:22px;"></i></span>
+  <span class="subnav-label">Permisos &amp; Vacaciones</span>
 </button>
 
 <button class="subnav-item" data-action="beneficios">
-  <span class="subnav-icon">🎁</span>
+  <span class="subnav-icon"><i class="ph ph-gift" style="font-size:22px;"></i></span>
   <span class="subnav-label">Beneficios</span>
 </button>
 
 <button class="subnav-item" data-action="queja">
-  <span class="subnav-icon">🗣️</span>
+  <span class="subnav-icon"><i class="ph ph-chat-circle-text" style="font-size:22px;"></i></span>
   <span class="subnav-label">Queja o reclamo</span>
 </button>
 
@@ -2668,160 +3359,149 @@ try {
        ========================================================= -->
 
   <?php if ($jornada_asignada): ?>
-  <section id="seccion-asistencia" style="margin-bottom: 32px;">
-    <div style="background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%); border-radius: 16px; padding: 32px; color: white; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);">
+  <section id="seccion-asistencia" class="asistencia-section">
+    <div class="asistencia-card">
 
-      <!-- Header -->
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
-        <div>
-          <h2 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700;">
-            ⏱️ Asistencia de Hoy
-          </h2>
-          <p style="margin: 0; opacity: 0.9; font-size: 14px;">
-            <?= date('l, d \d\e F Y') ?> •
-            <span style="background: <?= htmlspecialchars($jornada_asignada['color_hex']) ?>; padding: 2px 8px; border-radius: 4px; font-weight: 600;">
+      <!-- ── Banner superior: color primario Valirica ── -->
+      <div class="asistencia-header">
+        <div class="asistencia-header-info">
+          <div class="asistencia-fecha">
+            <i class="ph ph-calendar-blank"></i>
+            <?= date('l, d \d\e F Y') ?>
+          </div>
+          <div>
+            <span class="asistencia-jornada-pill"
+                  style="background: <?= htmlspecialchars($jornada_asignada['color_hex'] ?: '#007a96') ?>;">
               <?= htmlspecialchars($jornada_asignada['jornada_nombre']) ?>
             </span>
-          </p>
+          </div>
         </div>
-        <div id="reloj-asistencia" style="font-size: 48px; font-variant-numeric: tabular-nums;">
+        <div id="reloj-asistencia" class="asistencia-reloj">
           <?= date('H:i:s') ?>
         </div>
       </div>
 
-      <!-- Información del turno de hoy -->
       <?php if ($turno_hoy): ?>
-      <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-        <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px; text-transform: uppercase; font-weight: 600;">
-          Tu horario de hoy
+
+      <!-- ── Franja de turno ── -->
+      <div class="asistencia-turno">
+        <div class="turno-bloque">
+          <span class="turno-label">
+            <i class="ph ph-arrow-right-to-bracket"></i>
+            Entrada programada
+          </span>
+          <span class="turno-hora"><?= substr($turno_hoy['hora_inicio'], 0, 5) ?></span>
         </div>
-        <div style="display: flex; gap: 32px; align-items: center;">
-          <div>
-            <div style="font-size: 12px; opacity: 0.8;">Entrada</div>
-            <div style="font-size: 28px; font-weight: 700;">
-              <?= substr($turno_hoy['hora_inicio'], 0, 5) ?>
-            </div>
-          </div>
-          <div style="font-size: 24px; opacity: 0.5;">→</div>
-          <div>
-            <div style="font-size: 12px; opacity: 0.8;">Salida</div>
-            <div style="font-size: 28px; font-weight: 700;">
-              <?= substr($turno_hoy['hora_fin'], 0, 5) ?>
-            </div>
-          </div>
-          <?php if ($turno_hoy['cruza_medianoche']): ?>
-          <div style="margin-left: auto; font-size: 12px; opacity: 0.8;">
-            🌙 Turno nocturno
-          </div>
-          <?php endif; ?>
+
+        <div class="turno-flecha">
+          <i class="ph ph-arrow-right"></i>
         </div>
+
+        <div class="turno-bloque">
+          <span class="turno-label">
+            <i class="ph ph-arrow-left-from-bracket"></i>
+            Salida programada
+          </span>
+          <span class="turno-hora"><?= substr($turno_hoy['hora_fin'], 0, 5) ?></span>
+        </div>
+
+        <?php if ($turno_hoy['cruza_medianoche']): ?>
+        <div class="turno-nocturno-badge">
+          <i class="ph ph-moon-stars"></i>
+          Turno nocturno
+        </div>
+        <?php endif; ?>
       </div>
 
-      <!-- Estado y botones -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <!-- ── Botones de acción — protagonistas de la pantalla ── -->
+      <div class="asistencia-actions">
 
-        <!-- Botón de Entrada -->
-        <div>
-          <?php if (!$asistencia_hoy || !$asistencia_hoy['hora_entrada']): ?>
-          <button
-            onclick="abrirModalUbicacion()"
-            id="btn-entrada"
-            style="
-              width: 100%;
-              padding: 20px;
-              background: #00D98F;
-              border: none;
-              border-radius: 12px;
-              color: white;
-              font-size: 16px;
-              font-weight: 700;
-              cursor: pointer;
-              box-shadow: 0 4px 12px rgba(0, 217, 143, 0.4);
-              transition: all 0.2s ease;
-            "
-            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 217, 143, 0.5)'"
-            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0, 217, 143, 0.4)'"
-          >
-            ✅ Marcar Entrada
-          </button>
-          <?php else: ?>
-          <div style="padding: 20px; background: rgba(255,255,255,0.2); border-radius: 12px; text-align: center;">
-            <div style="font-size: 12px; opacity: 0.9; margin-bottom: 4px;">Entrada registrada</div>
-            <div style="font-size: 24px; font-weight: 700;">
-              <?= substr($asistencia_hoy['hora_entrada'], 0, 5) ?>
-            </div>
+        <!-- ENTRADA -->
+        <?php if (!$asistencia_hoy || !$asistencia_hoy['hora_entrada']): ?>
+        <button class="asistencia-btn asistencia-btn--entrada"
+                onclick="abrirModalUbicacion()"
+                id="btn-entrada">
+          <i class="ph-fill ph-sign-in"></i>
+          <span class="asistencia-btn-text">
+            <span class="asistencia-btn-title">Iniciar Jornada</span>
+            <span class="asistencia-btn-sub">Registrar hora de entrada</span>
+          </span>
+        </button>
+
+        <?php else: ?>
+        <div class="asistencia-registered asistencia-registered--in">
+          <i class="ph-fill ph-check-circle asistencia-registered-icon"></i>
+          <div class="asistencia-registered-info">
+            <span class="asistencia-registered-label">Entrada registrada</span>
+            <span class="asistencia-registered-time"><?= substr($asistencia_hoy['hora_entrada'], 0, 5) ?></span>
             <?php if ($asistencia_hoy['estado'] === 'tarde'): ?>
-            <div style="font-size: 11px; opacity: 0.8; margin-top: 4px;">
-              ⚠️ <?= $asistencia_hoy['minutos_tarde_entrada'] ?> min de retraso
-            </div>
+            <span class="asistencia-late-badge">
+              <i class="ph ph-warning-circle"></i>
+              <?= $asistencia_hoy['minutos_tarde_entrada'] ?> min de retraso
+            </span>
             <?php else: ?>
-            <div style="font-size: 11px; opacity: 0.8; margin-top: 4px;">
-              ✅ A tiempo
-            </div>
+            <span class="asistencia-ontime-badge">
+              <i class="ph ph-check-circle"></i>
+              A tiempo
+            </span>
             <?php endif; ?>
             <?php if (!empty($asistencia_hoy['ubicacion_tipo'])): ?>
-            <div style="font-size: 11px; opacity: 0.9; margin-top: 6px; background: rgba(255,255,255,0.15); padding: 4px 8px; border-radius: 6px; display: inline-block;">
-              <?= $asistencia_hoy['ubicacion_tipo'] === 'oficina' ? '🏢 Oficina' : '🏠 ' . htmlspecialchars($asistencia_hoy['ubicacion_detalle'] ?: 'Remoto') ?>
-            </div>
+            <span class="asistencia-registered-loc">
+              <?php if ($asistencia_hoy['ubicacion_tipo'] === 'oficina'): ?>
+              <i class="ph ph-buildings"></i> Oficina
+              <?php else: ?>
+              <i class="ph ph-house-line"></i>
+              <?= htmlspecialchars($asistencia_hoy['ubicacion_detalle'] ?: 'Remoto') ?>
+              <?php endif; ?>
+            </span>
             <?php endif; ?>
           </div>
-          <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+        <!-- SALIDA -->
+        <?php if ($asistencia_hoy && $asistencia_hoy['hora_entrada'] && !$asistencia_hoy['hora_salida']): ?>
+        <button class="asistencia-btn asistencia-btn--salida"
+                onclick="marcarAsistencia('salida')"
+                id="btn-salida">
+          <i class="ph-fill ph-sign-out"></i>
+          <span class="asistencia-btn-text">
+            <span class="asistencia-btn-title">Finalizar Jornada</span>
+            <span class="asistencia-btn-sub">Registrar hora de salida</span>
+          </span>
+        </button>
+
+        <?php elseif ($asistencia_hoy && $asistencia_hoy['hora_salida']): ?>
+        <div class="asistencia-registered asistencia-registered--out">
+          <i class="ph-fill ph-check-circle asistencia-registered-icon"></i>
+          <div class="asistencia-registered-info">
+            <span class="asistencia-registered-label">Salida registrada</span>
+            <span class="asistencia-registered-time"><?= substr($asistencia_hoy['hora_salida'], 0, 5) ?></span>
+            <span class="asistencia-complete-badge">
+              <i class="ph ph-check-circle"></i>
+              Jornada completa
+            </span>
+          </div>
         </div>
 
-        <!-- Botón de Salida -->
-        <div>
-          <?php if ($asistencia_hoy && $asistencia_hoy['hora_entrada'] && !$asistencia_hoy['hora_salida']): ?>
-          <button
-            onclick="marcarAsistencia('salida')"
-            id="btn-salida"
-            style="
-              width: 100%;
-              padding: 20px;
-              background: #FF6B35;
-              border: none;
-              border-radius: 12px;
-              color: white;
-              font-size: 16px;
-              font-weight: 700;
-              cursor: pointer;
-              box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
-              transition: all 0.2s ease;
-            "
-            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 107, 53, 0.5)'"
-            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255, 107, 53, 0.4)'"
-          >
-            🚪 Marcar Salida
-          </button>
-          <?php elseif ($asistencia_hoy && $asistencia_hoy['hora_salida']): ?>
-          <div style="padding: 20px; background: rgba(255,255,255,0.2); border-radius: 12px; text-align: center;">
-            <div style="font-size: 12px; opacity: 0.9; margin-bottom: 4px;">Salida registrada</div>
-            <div style="font-size: 24px; font-weight: 700;">
-              <?= substr($asistencia_hoy['hora_salida'], 0, 5) ?>
-            </div>
-            <div style="font-size: 11px; opacity: 0.8; margin-top: 4px;">
-              ✅ Jornada completa
-            </div>
-          </div>
-          <?php else: ?>
-          <div style="padding: 20px; background: rgba(255,255,255,0.1); border-radius: 12px; text-align: center; opacity: 0.5;">
-            <div style="font-size: 12px; margin-bottom: 4px;">Marca tu entrada primero</div>
-            <div style="font-size: 24px; font-weight: 700;">🚪</div>
-          </div>
-          <?php endif; ?>
+        <?php else: ?>
+        <div class="asistencia-btn asistencia-btn--disabled">
+          <i class="ph ph-sign-out"></i>
+          <span class="asistencia-btn-text">
+            <span class="asistencia-btn-title">Finalizar Jornada</span>
+            <span class="asistencia-btn-sub">Primero inicia tu jornada</span>
+          </span>
         </div>
+        <?php endif; ?>
 
       </div>
 
       <?php else: ?>
       <!-- No hay turno hoy -->
-      <div style="text-align: center; padding: 32px;">
-        <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">📅</div>
-        <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">
-          No hay turno configurado para hoy
-        </div>
-        <div style="font-size: 14px; opacity: 0.8;">
-          <?= date('l') ?> • Día libre
-        </div>
+      <div class="asistencia-no-turno">
+        <i class="ph ph-calendar-x"></i>
+        <h3>No hay turno configurado para hoy</h3>
+        <p><?= date('l') ?> &mdash; Día libre</p>
       </div>
       <?php endif; ?>
 
@@ -2829,74 +3509,122 @@ try {
   </section>
 
   <!-- Modal de ubicación para check-in -->
-  <div id="modal-ubicacion" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:16px; padding:24px; max-width:400px; width:90%; margin:20px;">
-      <h3 style="margin:0 0 20px; color:#184656; font-size:18px;">
-        📍 ¿Desde dónde trabajas hoy?
-      </h3>
+  <div id="modal-ubicacion" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(1,33,51,0.55); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:20px; padding:28px; max-width:420px; width:90%; margin:20px; box-shadow:0 20px 60px rgba(1,33,51,0.25);">
 
-      <div style="display:flex; flex-direction:column; gap:12px;">
+      <!-- Header -->
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid #f0f0f0;">
+        <div style="width:44px; height:44px; background:rgba(0,122,150,0.10); border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <i class="ph ph-map-pin" style="font-size:22px; color:var(--c-teal);"></i>
+        </div>
+        <div>
+          <h3 style="margin:0 0 2px; color:var(--c-primary); font-size:17px; font-weight:800;">
+            ¿Desde dónde trabajas hoy?
+          </h3>
+          <p style="margin:0; font-size:12px; color:#888; font-weight:500;">
+            Selecciona tu ubicación de trabajo
+          </p>
+        </div>
+      </div>
+
+      <!-- Opciones -->
+      <div style="display:flex; flex-direction:column; gap:10px;">
+
         <button onclick="seleccionarUbicacion('oficina')" style="
           padding:16px 20px;
-          background:linear-gradient(135deg, #667EEA, #764BA2);
+          background:var(--c-primary);
           color:#fff;
           border:none;
-          border-radius:12px;
+          border-radius:14px;
           font-size:15px;
-          font-weight:600;
+          font-weight:700;
           cursor:pointer;
           display:flex;
           align-items:center;
-          gap:12px;
-        ">
-          <span style="font-size:24px;">🏢</span>
-          <span>Desde la oficina</span>
+          gap:14px;
+          font-family:inherit;
+          transition: all 0.18s ease;
+          box-shadow: 0 4px 14px rgba(1,33,51,0.25);
+        "
+        onmouseover="this.style.background='#023a57'; this.style.transform='translateY(-1px)'"
+        onmouseout="this.style.background='var(--c-primary)'; this.style.transform='translateY(0)'"
+        >
+          <div style="width:38px; height:38px; background:rgba(255,255,255,0.15); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <i class="ph-fill ph-buildings" style="font-size:20px;"></i>
+          </div>
+          <div style="text-align:left;">
+            <div style="font-size:15px; font-weight:700;">Desde la oficina</div>
+            <div style="font-size:12px; opacity:0.75; font-weight:400; margin-top:1px;">Trabajo presencial</div>
+          </div>
         </button>
 
         <button onclick="mostrarCampoOtroLugar()" id="btn-otro-lugar" style="
           padding:16px 20px;
-          background:#f5f5f5;
-          color:#333;
-          border:2px solid #e0e0e0;
-          border-radius:12px;
+          background:#f5f8fa;
+          color:var(--c-primary);
+          border:2px solid #e0e8ed;
+          border-radius:14px;
           font-size:15px;
-          font-weight:600;
+          font-weight:700;
           cursor:pointer;
           display:flex;
           align-items:center;
-          gap:12px;
-        ">
-          <span style="font-size:24px;">🏠</span>
-          <span>Desde otro lugar</span>
+          gap:14px;
+          font-family:inherit;
+          transition: all 0.18s ease;
+        "
+        onmouseover="this.style.borderColor='var(--c-teal)'; this.style.background='rgba(0,122,150,0.05)'"
+        onmouseout="this.style.borderColor='#e0e8ed'; this.style.background='#f5f8fa'"
+        >
+          <div style="width:38px; height:38px; background:rgba(0,122,150,0.10); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <i class="ph-fill ph-house-line" style="font-size:20px; color:var(--c-teal);"></i>
+          </div>
+          <div style="text-align:left;">
+            <div style="font-size:15px; font-weight:700;">Desde otro lugar</div>
+            <div style="font-size:12px; color:#888; font-weight:400; margin-top:1px;">Casa, coworking, etc.</div>
+          </div>
         </button>
 
-        <div id="campo-otro-lugar" style="display:none; margin-top:8px;">
+        <div id="campo-otro-lugar" style="display:none; margin-top:4px;">
           <input
             type="text"
             id="input-ubicacion-detalle"
-            placeholder="¿Desde dónde? Ej: Casa, Coworking, etc."
+            placeholder="Ej: Casa, Coworking, Cliente, etc."
             style="
               width:100%;
               padding:14px 16px;
-              border:2px solid #667EEA;
-              border-radius:10px;
+              border:2px solid var(--c-teal);
+              border-radius:12px;
               font-size:14px;
               box-sizing:border-box;
+              font-family:inherit;
+              color:var(--c-primary);
+              outline:none;
             "
           >
           <button onclick="confirmarOtroLugar()" style="
             width:100%;
-            margin-top:12px;
+            margin-top:10px;
             padding:14px;
-            background:#00D98F;
+            background:var(--c-teal);
             color:#fff;
             border:none;
-            border-radius:10px;
+            border-radius:12px;
             font-size:15px;
-            font-weight:600;
+            font-weight:700;
             cursor:pointer;
-          ">
-            ✅ Confirmar entrada
+            font-family:inherit;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            transition: all 0.18s ease;
+          "
+          onmouseover="this.style.background='#006680'"
+          onmouseout="this.style.background='var(--c-teal)'"
+          >
+            <i class="ph ph-check-circle" style="font-size:18px;"></i>
+            Confirmar entrada
           </button>
         </div>
       </div>
@@ -2904,13 +3632,20 @@ try {
       <button onclick="cerrarModalUbicacion()" style="
         width:100%;
         margin-top:16px;
-        padding:12px;
+        padding:11px;
         background:transparent;
-        color:#666;
+        color:#999;
         border:none;
-        font-size:14px;
+        font-size:13px;
+        font-weight:600;
         cursor:pointer;
-      ">
+        font-family:inherit;
+        border-radius:8px;
+        transition: color 0.15s;
+      "
+      onmouseover="this.style.color='var(--c-primary)'"
+      onmouseout="this.style.color='#999'"
+      >
         Cancelar
       </button>
     </div>
@@ -2954,11 +3689,37 @@ try {
     if (e.target === this) cerrarModalUbicacion();
   });
 
+  // Toast de notificación profesional (reemplaza alert)
+  function vToast(msg, tipo = 'success') {
+    let t = document.getElementById('v-toast-asistencia');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'v-toast-asistencia';
+      t.className = 'v-toast';
+      document.body.appendChild(t);
+    }
+    t.className = 'v-toast' + (tipo === 'error' ? ' error' : '');
+    t.innerHTML = `<i class="ph-fill ph-${tipo === 'error' ? 'x-circle' : 'check-circle'}"></i><span>${msg}</span>`;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => t.classList.add('show'));
+    });
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 4000);
+  }
+
   function marcarAsistencia(tipo, ubicacionTipo = '', ubicacionDetalle = '') {
     const btn = tipo === 'entrada' ? document.getElementById('btn-entrada') : document.getElementById('btn-salida');
+    if (!btn) return;
+
+    const titleEl = btn.querySelector('.asistencia-btn-title');
+    const subEl   = btn.querySelector('.asistencia-btn-sub');
+    const titleOrig = titleEl ? titleEl.textContent : '';
+    const subOrig   = subEl   ? subEl.textContent   : '';
+
     btn.disabled = true;
-    btn.style.opacity = '0.6';
-    btn.innerHTML = tipo === 'entrada' ? '⏳ Marcando...' : '⏳ Registrando...';
+    btn.style.opacity = '0.65';
+    if (titleEl) titleEl.textContent = 'Registrando...';
+    if (subEl)   subEl.textContent   = 'Por favor espera';
 
     const formData = new FormData();
     formData.append('action_asistencia', tipo);
@@ -2974,21 +3735,25 @@ try {
     .then(r => r.json())
     .then(data => {
       if (data.success) {
-        alert(data.message);
-        location.reload();
+        // Eliminar emojis del mensaje del backend antes de mostrarlo
+        const msgLimpio = (data.message || '').replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim();
+        vToast(msgLimpio || (tipo === 'entrada' ? 'Entrada registrada correctamente' : 'Salida registrada correctamente'));
+        setTimeout(() => location.reload(), 1500);
       } else {
-        alert('Error: ' + data.message);
+        vToast(data.message || 'No se pudo registrar', 'error');
         btn.disabled = false;
         btn.style.opacity = '1';
-        btn.innerHTML = tipo === 'entrada' ? '✅ Marcar Entrada' : '🚪 Marcar Salida';
+        if (titleEl) titleEl.textContent = titleOrig;
+        if (subEl)   subEl.textContent   = subOrig;
       }
     })
     .catch(err => {
       console.error(err);
-      alert('Error al procesar la solicitud');
+      vToast('Error de conexión. Intenta de nuevo.', 'error');
       btn.disabled = false;
       btn.style.opacity = '1';
-      btn.innerHTML = tipo === 'entrada' ? '✅ Marcar Entrada' : '🚪 Marcar Salida';
+      if (titleEl) titleEl.textContent = titleOrig;
+      if (subEl)   subEl.textContent   = subOrig;
     });
   }
 
@@ -3010,13 +3775,13 @@ try {
 
   <?php else: ?>
   <!-- No tiene jornada asignada -->
-  <section style="margin-bottom: 32px;">
-    <div style="background: #f5f7fa; border-radius: 16px; padding: 48px; text-align: center;">
-      <div style="font-size: 64px; margin-bottom: 16px; opacity: 0.3;">⏱️</div>
-      <h3 style="margin: 0 0 12px 0; color: var(--c-secondary); font-size: 20px;">
-        No tienes una jornada asignada
+  <section style="margin-bottom: 28px;">
+    <div class="asistencia-sin-jornada">
+      <i class="ph ph-clock"></i>
+      <h3 style="margin: 0 0 10px; color: var(--c-secondary); font-size: 18px; font-weight: 700;">
+        Sin jornada asignada
       </h3>
-      <p style="margin: 0; color: var(--c-body); opacity: 0.7;">
+      <p style="margin: 0; color: var(--c-body); opacity: 0.65; font-size: 14px;">
         Contacta a tu supervisor para que te asigne un horario de trabajo
       </p>
     </div>
@@ -3033,123 +3798,62 @@ try {
 
        ===================== -->
 
-  <div class="card card-flat" id="card-perfil">
+  <div class="card" id="card-perfil" style="padding:0; overflow:hidden;">
 
+    <!-- Franja superior brand -->
+    <div style="background: var(--c-primary); height: 6px; width: 100%;"></div>
 
- 
+    <div style="padding: 20px;">
+      <!-- Avatar + info principal -->
+      <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
 
-    <!-- Header interno (actualmente vacío, se mantiene) -->
+        <!-- Avatar -->
+        <div class="perfil-avatar-ring" aria-hidden="true">
+          <?php echo htmlspecialchars($avatar_initials); ?>
+        </div>
 
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-
-      <h3 style="margin:0;color:var(--c-secondary)"></h3>
-
-    </div>
-
- 
-
-    <!-- Contenido perfil -->
-
-    <div class="perfil-wrap" style="margin-top:12px">
-
- 
-
-      <!-- Avatar -->
-
-      <div class="avatar" aria-hidden="true">
-
-        <?php echo htmlspecialchars($avatar_initials); ?>
-
+        <!-- Info -->
+        <div style="flex:1; min-width:0;">
+          <div class="perfil-info-name">
+            <?php echo htmlspecialchars($nombre_emp); ?>
+          </div>
+          <div class="perfil-info-role" style="margin-top:4px;">
+            <i class="ph ph-briefcase"></i>
+            <?php echo htmlspecialchars($cargo_emp); ?>
+            <?php if ($area_emp && $area_emp !== '—'): ?>
+            <span style="color:#ddd; margin: 0 2px;">·</span>
+            <i class="ph ph-building-office"></i>
+            <?php echo htmlspecialchars($area_emp); ?>
+            <?php endif; ?>
+          </div>
+        </div>
       </div>
 
- 
+      <!-- Tags de perfil cognitivo (compactos) -->
+      <div style="display:flex; flex-wrap:wrap; gap:8px; padding-top:14px; border-top:1px solid #f0f0f0;">
 
-      <!-- Info empleado -->
+        <!-- Motivación -->
+        <span class="perfil-tag">
+          <i class="ph ph-lightning"></i>
+          Motivación: <?php echo (int)$energia_pct; ?>%
+        </span>
 
-      <div>
+        <!-- Estilo de aprendizaje -->
+        <?php if ($estilo_emp_aprend !== 'Sin datos'): ?>
+        <span class="perfil-tag">
+          <i class="ph ph-brain"></i>
+          <?php echo htmlspecialchars($estilo_emp_aprend); ?>
+        </span>
+        <?php endif; ?>
 
- 
-
-        <div class="perfil-name">
-
-          <?php echo htmlspecialchars($nombre_emp); ?>
-
-        </div>
-
- 
-
-        <div class="perfil-role">
-
-          <?php echo htmlspecialchars($cargo_emp); ?>
-
-          —
-
-          <?php echo htmlspecialchars($area_emp); ?>
-
-        </div>
-
- 
-
-        <!-- Chips informativos -->
-
-        <div class="chip-row" role="list">
-
- 
-
-          <!-- Chip: Energía -->
-
-          <span class="chip" role="listitem" title="Energía">
-
-            <img
-
-              src="<?php echo htmlspecialchars($energia_icon); ?>"
-
-              alt="Energía"
-
-            >
-
-            <span>
-
-              <strong>Energía</strong>
-
-              — <?php echo (int)$energia_pct; ?>%
-
-            </span>
-
-          </span>
-
- 
-
-          <!-- Chip: Estilo de aprendizaje -->
-
-          <span class="chip" role="listitem" title="Estilo de aprendizaje del empleado">
-
-            <strong>Estilo:</strong>&nbsp;
-
-            <?php echo htmlspecialchars($estilo_emp_aprend); ?>
-
-          </span>
-
- 
-
-          <!-- Chip: Cultura natural -->
-
-          <span class="chip" role="listitem" title="Tipo de cultura natural del empleado">
-
-            <strong>Cultura:</strong>&nbsp;
-
-            <?php echo htmlspecialchars($tipo_cultura_natural); ?>
-
-          </span>
-
- 
-
-        </div>
+        <!-- Cultura natural -->
+        <span class="perfil-tag">
+          <i class="ph ph-compass"></i>
+          <?php echo htmlspecialchars($tipo_cultura_natural); ?>
+        </span>
 
       </div>
-
     </div>
-
   </div>
 
  
@@ -3170,15 +3874,15 @@ try {
       </h3>
 
       <!-- Tabs de navegación -->
-      <div id="tabs-ejecucion" style="display:flex;gap:4px;background:#f1f1f1;padding:4px;border-radius:10px;">
-        <button class="tab-btn active" data-tab="metas" style="padding:8px 16px;border:none;background:#fff;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;color:#184656;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-          🎯 Metas
+      <div id="tabs-ejecucion" class="tabs-valirica">
+        <button class="tab-btn tab-valirica active" data-tab="metas">
+          <i class="ph ph-target"></i> Metas
         </button>
-        <button class="tab-btn" data-tab="tareas" style="padding:8px 16px;border:none;background:transparent;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;color:#666;">
-          ✅ Tareas
+        <button class="tab-btn tab-valirica" data-tab="tareas">
+          <i class="ph ph-check-square"></i> Tareas
         </button>
-        <button class="tab-btn" data-tab="proyectos" style="padding:8px 16px;border:none;background:transparent;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;color:#666;">
-          📁 Proyectos
+        <button class="tab-btn tab-valirica" data-tab="proyectos">
+          <i class="ph ph-folder-open"></i> Proyectos
         </button>
       </div>
     </div>
@@ -3200,15 +3904,12 @@ try {
  
 
         <h4
-
           id="meta-personal-title"
-
-          style="margin:0 0 8px 0;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-primary)"
-
+          class="section-label"
+          style="margin:0 0 10px 0;"
         >
-
+          <i class="ph ph-user-circle"></i>
           Metas personales
-
         </h4>
 
  
@@ -3272,11 +3973,8 @@ try {
                   <?php if ($help_req): ?>
 
                   <span class="meta-help-badge">
-
-                    <span class="meta-help-icon">🚨</span>
-
+                    <i class="ph-fill ph-bell-ringing meta-help-icon" style="font-size:13px;"></i>
                     Ayuda solicitada
-
                   </span>
 
                   <?php endif; ?>
@@ -3396,47 +4094,29 @@ try {
                   data-status="pause"
 
                   aria-pressed="<?php echo $status==='pause' ? 'true':'false'; ?>"
-
+                  title="Pausar"
                 >
-
-                  ⏸
-
+                  <i class="ph ph-pause-circle" style="font-size:15px;"></i>
                 </button>
 
- 
-
                 <button
-
                   class="meta-btn status-btn"
-
                   data-meta-id="<?php echo (int)$mp['id']; ?>"
-
                   data-status="dev"
-
                   aria-pressed="<?php echo $status==='dev' ? 'true':'false'; ?>"
-
+                  title="En desarrollo"
                 >
-
-                  ▶
-
+                  <i class="ph ph-play-circle" style="font-size:15px;"></i>
                 </button>
 
- 
-
                 <button
-
                   class="meta-btn status-btn"
-
                   data-meta-id="<?php echo (int)$mp['id']; ?>"
-
                   data-status="done"
-
                   aria-pressed="<?php echo $status==='done' ? 'true':'false'; ?>"
-
+                  title="Finalizar"
                 >
-
-                  ✓
-
+                  <i class="ph ph-check-circle" style="font-size:15px;"></i>
                 </button>
 
               </div>
@@ -3468,15 +4148,12 @@ try {
  
 
   <h4
-
     id="meta-equipo-title"
-
-    style="margin:8px 0 8px 0;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-primary)"
-
+    class="section-label"
+    style="margin:0 0 10px 0;"
   >
-
+    <i class="ph ph-users-three"></i>
     Metas de equipo
-
   </h4>
 
  
@@ -3549,10 +4226,9 @@ try {
 
 
 
-        <div class="muted" style="font-size:12px;margin-top:4px;">
-
-          📅 <?php echo $due; ?>
-
+        <div class="muted" style="font-size:12px;margin-top:4px;display:flex;align-items:center;gap:5px;">
+          <i class="ph ph-calendar-blank" style="font-size:13px;color:var(--c-teal);"></i>
+          <?php echo $due; ?>
         </div>
 
       </div>
@@ -3618,8 +4294,8 @@ try {
               <option value="baja">Baja</option>
             </select>
           </div>
-          <button onclick="openCreateTareaModal()" style="padding:8px 16px;background:linear-gradient(135deg,#667EEA,#764BA2);color:#fff;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;">
-            + Nueva tarea
+          <button onclick="openCreateTareaModal()" style="padding:8px 16px;background:var(--c-teal);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;">
+            <i class="ph ph-plus" style="font-size:14px;"></i>Nueva tarea
           </button>
         </div>
 
@@ -3710,7 +4386,7 @@ try {
     overlay.innerHTML = `
       <div class="modal-content">
         <div class="modal-header">
-          <div class="modal-icon">🎯</div>
+          <div class="modal-icon"><i class="ph ph-target" style="font-size:28px;color:var(--c-teal);"></i></div>
           <h3 class="modal-title">Nueva meta personal</h3>
         </div>
 
@@ -3800,7 +4476,7 @@ try {
         console.log('📦 Respuesta get_area_metas:', r);
 
         if (r.ok && r.metas){
-          select.innerHTML = '<option value="personal">📌 Meta Personal (sin vincular a meta de área)</option>';
+          select.innerHTML = '<option value="personal">Meta Personal (sin vincular a meta de área)</option>';
 
           console.log(`✅ Metas encontradas: ${r.metas.length}`);
 
@@ -3809,18 +4485,18 @@ try {
               console.log('  → Meta:', meta.descripcion);
               const option = document.createElement('option');
               option.value = meta.id;
-              option.textContent = `🎯 ${meta.descripcion}`;
+              option.textContent = meta.descripcion;
               select.appendChild(option);
             });
           }
         } else {
           console.warn('⚠️ No se obtuvieron metas o respuesta no válida:', r);
-          select.innerHTML = '<option value="personal">📌 Meta Personal (sin vincular)</option>';
+          select.innerHTML = '<option value="personal">Meta Personal (sin vincular)</option>';
         }
       })
       .catch(err => {
         console.error('❌ Error al cargar metas:', err);
-        select.innerHTML = '<option value="personal">📌 Meta Personal (sin vincular)</option>';
+        select.innerHTML = '<option value="personal">Meta Personal (sin vincular)</option>';
       });
   }
 
@@ -3843,7 +4519,7 @@ try {
     }
 
     btn.disabled = true;
-    btn.textContent = '⏳ Guardando...';
+    btn.textContent = 'Guardando...';
 
     const fd = new FormData();
     fd.append('action', 'create_meta_personal');
@@ -3862,7 +4538,7 @@ try {
         }
 
         closeCreateMetaModal();
-        alert('✅ Meta creada correctamente');
+        alert('Meta creada correctamente');
         location.reload();
       })
       .catch(() => {
@@ -4038,16 +4714,14 @@ try {
       const tabName = btn.dataset.tab;
 
       // Actualizar botones activos
+      // Actualizar estado visual de tabs (las clases CSS manejan el estilo)
       tabsContainer.querySelectorAll('.tab-btn').forEach(b => {
         b.classList.remove('active');
-        b.style.background = 'transparent';
-        b.style.color = '#666';
-        b.style.boxShadow = 'none';
+        b.style.background = '';
+        b.style.color = '';
+        b.style.boxShadow = '';
       });
       btn.classList.add('active');
-      btn.style.background = '#fff';
-      btn.style.color = '#184656';
-      btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
 
       // Mostrar/ocultar contenido
       document.querySelectorAll('.tab-content').forEach(content => {
@@ -4086,7 +4760,7 @@ try {
 
     container.innerHTML = `
       <div style="text-align:center;padding:40px;color:#999;">
-        <div style="font-size:32px;margin-bottom:8px;">⏳</div>
+        <i class="ph ph-spinner" style="font-size:32px;margin-bottom:8px;display:block;color:#ccc;"></i>
         <p>Cargando tareas...</p>
       </div>
     `;
@@ -4109,7 +4783,7 @@ try {
       if (!data.ok) {
         container.innerHTML = `
           <div style="text-align:center;padding:40px;color:#C62828;">
-            <div style="font-size:32px;margin-bottom:8px;">❌</div>
+            <i class="ph ph-warning-circle" style="font-size:32px;margin-bottom:8px;display:block;"></i>
             <p>${data.error || 'Error al cargar tareas'}</p>
           </div>
         `;
@@ -4119,10 +4793,10 @@ try {
       if (!data.tareas || data.tareas.length === 0) {
         container.innerHTML = `
           <div style="text-align:center;padding:40px;color:#999;">
-            <div style="font-size:48px;margin-bottom:12px;">✨</div>
+            <i class="ph ph-check-circle" style="font-size:48px;margin-bottom:12px;display:block;color:#ccc;"></i>
             <p>No tienes tareas asignadas</p>
-            <button onclick="openCreateTareaModal()" style="margin-top:12px;padding:10px 20px;background:#667EEA;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;">
-              Crear tu primera tarea
+            <button onclick="openCreateTareaModal()" style="margin-top:12px;padding:10px 20px;background:var(--c-teal);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-family:inherit;">
+              Crear primera tarea
             </button>
           </div>
         `;
@@ -4136,7 +4810,7 @@ try {
       console.error('Error al cargar tareas:', err);
       container.innerHTML = `
         <div style="text-align:center;padding:40px;color:#C62828;">
-          <div style="font-size:32px;margin-bottom:8px;">❌</div>
+          <i class="ph ph-wifi-slash" style="font-size:32px;margin-bottom:8px;display:block;"></i>
           <p>Error de conexión</p>
         </div>
       `;
@@ -4165,16 +4839,20 @@ try {
 
     // Indicador de deadline
     let deadlineClass = '';
-    let deadlineIcon = '📅';
+    let deadlineIconCls = 'ph ph-calendar-blank';
+    let deadlineIconColor = '#999';
     if (tarea.indicador_deadline === 'vencida') {
       deadlineClass = 'color:#C62828;font-weight:700;';
-      deadlineIcon = '🔴';
+      deadlineIconCls = 'ph-fill ph-warning-circle';
+      deadlineIconColor = '#C62828';
     } else if (tarea.indicador_deadline === 'vence_hoy') {
       deadlineClass = 'color:#EF6C00;font-weight:700;';
-      deadlineIcon = '🟠';
+      deadlineIconCls = 'ph-fill ph-clock';
+      deadlineIconColor = '#EF6C00';
     } else if (tarea.indicador_deadline === 'proxima_vencer') {
       deadlineClass = 'color:#F9A825;';
-      deadlineIcon = '🟡';
+      deadlineIconCls = 'ph ph-clock';
+      deadlineIconColor = '#F9A825';
     }
 
     const deadlineText = tarea.deadline
@@ -4206,18 +4884,20 @@ try {
               font-weight:600;
             ">${estado.text}</span>
           </div>
-          <div style="font-size:12px;color:#666;">
-            📁 ${escapeHtml(tarea.proyecto_titulo || 'Sin proyecto')}
+          <div style="font-size:12px;color:#666;display:flex;align-items:center;gap:5px;">
+            <i class="ph ph-folder-open" style="font-size:13px;color:var(--c-teal);"></i>
+            ${escapeHtml(tarea.proyecto_titulo || 'Sin proyecto')}
           </div>
-          <div style="font-size:12px;color:#666;margin-top:2px;">
-          👤 ${tarea.responsable_nombre ? escapeHtml(tarea.responsable_nombre) : '<span style="color:#EF7F1B;">Sin asignar</span>'}
-        </div>
+          <div style="font-size:12px;color:#666;margin-top:2px;display:flex;align-items:center;gap:5px;">
+            <i class="ph ph-user" style="font-size:13px;color:var(--c-teal);"></i>
+            ${tarea.responsable_nombre ? escapeHtml(tarea.responsable_nombre) : '<span style="color:#EF7F1B;font-weight:600;">Sin asignar</span>'}
+          </div>
         </div>
 
         <div style="display:flex;align-items:center;gap:16px;">
           <div style="text-align:center;">
             <div style="font-size:11px;color:#999;">Deadline</div>
-            <div style="font-size:13px;${deadlineClass}">${deadlineIcon} ${deadlineText}</div>
+            <div style="font-size:13px;${deadlineClass};display:flex;align-items:center;gap:4px;"><i class="${deadlineIconCls}" style="font-size:14px;color:${deadlineIconColor};"></i>${deadlineText}</div>
           </div>
 
           ${tarea.estado !== 'completada' && tarea.estado !== 'cancelada' ? `
@@ -4230,7 +4910,7 @@ try {
           ">
             <option value="pendiente" ${tarea.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
             <option value="en_progreso" ${tarea.estado === 'en_progreso' ? 'selected' : ''}>En progreso</option>
-            <option value="completada">Completar ✓</option>
+            <option value="completada">Marcar completada</option>
           </select>
           ` : ''}
         </div>
@@ -4295,10 +4975,10 @@ const PROYECTOS_CSS = `
     --space-5: 24px;
     --space-6: 32px;
 
-    /* Colores - Paleta Semántica */
-    --color-primary: #667EEA;
-    --color-primary-dark: #5469d4;
-    --color-secondary: #764BA2;
+    /* Colores - Paleta Valirica */
+    --color-primary: #007a96;
+    --color-primary-dark: #006680;
+    --color-secondary: #012133;
     --color-accent: #EF7F1B;
     --color-accent-dark: #d66f15;
 
@@ -4724,7 +5404,7 @@ const PROYECTOS_CSS = `
   }
 
   .btn-primary:hover {
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 122, 150, 0.4);
     transform: translateY(-1px);
   }
 
@@ -4852,7 +5532,7 @@ const PROYECTOS_CSS = `
 
   .form-input:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    box-shadow: 0 0 0 3px rgba(0, 122, 150, 0.15);
   }
 
   .modal-actions {
@@ -5098,7 +5778,7 @@ window.cargarMisProyectos = async function() {
     if (!data.ok) {
       container.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">⚠️</div>
+          <i class="ph ph-warning-circle empty-state-icon" style="font-size:56px;color:#f59e0b;"></i>
           <div class="empty-state-title">Error al cargar</div>
           <div class="empty-state-text">${data.error || 'No se pudieron cargar los proyectos'}</div>
         </div>
@@ -5109,7 +5789,7 @@ window.cargarMisProyectos = async function() {
     if (!data.proyectos || data.proyectos.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">📁</div>
+          <i class="ph ph-folder-open empty-state-icon" style="font-size:56px;color:#ccc;"></i>
           <div class="empty-state-title">Sin proyectos</div>
           <div class="empty-state-text">No participas en ningún proyecto aún</div>
         </div>
@@ -5126,7 +5806,7 @@ window.cargarMisProyectos = async function() {
     console.error('Error al cargar proyectos:', err);
     container.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">🔌</div>
+        <i class="ph ph-wifi-slash empty-state-icon" style="font-size:56px;color:#ccc;"></i>
         <div class="empty-state-title">Error de conexión</div>
         <div class="empty-state-text">Verifica tu conexión a internet e intenta de nuevo</div>
       </div>
@@ -5164,7 +5844,7 @@ function renderProyectoItem(proy, index = 0) {
   const tareasHTML = todasLasTareas.length > 0
     ? todasLasTareas.map(t => renderTareaEnProyecto(t)).join('')
     : `<tr><td colspan="4" class="empty-state" style="padding:40px;">
-         <div style="font-size:32px;opacity:0.4;margin-bottom:8px;">📋</div>
+         <i class="ph ph-check-square" style="font-size:32px;opacity:0.3;margin-bottom:8px;display:block;"></i>
          <div style="color:var(--text-muted);font-size:var(--text-sm);">No hay tareas en este proyecto</div>
        </td></tr>`;
 
@@ -5442,7 +6122,7 @@ function showToast(message, type = 'success') {
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.innerHTML = `
-    ${type === 'success' ? '✓' : '✕'}
+    <i class="ph-fill ph-${type === 'success' ? 'check-circle' : 'x-circle'}"></i>
     <span>${message}</span>
   `;
   document.body.appendChild(toast);
@@ -5470,7 +6150,7 @@ window.abrirModalEditarProyecto = function(proyectoId, titulo, estado, fechaFin)
   overlay.innerHTML = `
     <div class="modal-content">
       <div class="modal-header">
-        <span style="font-size:28px;">📝</span>
+        <i class="ph ph-pencil-simple" style="font-size:26px;color:var(--c-teal);"></i>
         <h3>Editar proyecto</h3>
       </div>
 
@@ -5619,7 +6299,7 @@ window.guardarEdicionProyecto = async function(proyectoId, btn) {
     overlay.innerHTML = `
       <div class="modal-content" style="max-width:550px;">
         <div class="modal-header">
-          <div class="modal-icon">✅</div>
+          <div class="modal-icon"><i class="ph ph-check-square" style="font-size:28px;color:var(--c-teal);"></i></div>
           <h3 class="modal-title">Nueva tarea</h3>
         </div>
 
@@ -5642,7 +6322,7 @@ window.guardarEdicionProyecto = async function(proyectoId, btn) {
 
           <!-- Formulario nuevo proyecto (oculto por defecto) -->
           <div id="nuevo-proyecto-form" style="display:none;background:#f9f9f9;padding:16px;border-radius:12px;margin-top:12px;">
-            <h4 style="margin:0 0 12px;font-size:14px;color:#184656;">📁 Crear nuevo proyecto</h4>
+            <h4 style="margin:0 0 12px;font-size:14px;color:#184656;display:flex;align-items:center;gap:8px;"><i class="ph ph-folder-plus" style="color:var(--c-teal);"></i>Crear nuevo proyecto</h4>
             <input id="nuevo-proyecto-titulo" type="text" placeholder="Título del proyecto" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:8px;">
             <textarea id="nuevo-proyecto-desc" placeholder="Descripción (opcional)" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;resize:vertical;min-height:60px;"></textarea>
             <div style="display:flex;gap:8px;margin-top:8px;">
@@ -5759,7 +6439,7 @@ async function cargarProyectosParaSelector() {
     const data = await response.json();
 
     select.innerHTML = '<option value="">-- Selecciona un proyecto --</option>';
-    select.innerHTML += '<option value="nuevo">➕ Crear proyecto nuevo...</option>';
+    select.innerHTML += '<option value="nuevo">+ Crear proyecto nuevo...</option>';
 
 
 // ✅ CÓDIGO CORREGIDO (solo proyectos donde SOY LÍDER)
@@ -5849,13 +6529,13 @@ async function onProyectoChange() {
           // Primera opción: Sin asignar
           const noAsignarOption = document.createElement('option');
           noAsignarOption.value = '';
-          noAsignarOption.textContent = '🔓 Sin asignar (asignar después)';
+          noAsignarOption.textContent = 'Sin asignar (asignar después)';
           selectElement.appendChild(noAsignarOption);
         
           // Segunda opción: Autoasignarse
           const selfOption = document.createElement('option');
           selfOption.value = EMPLEADO_ID;
-          selfOption.textContent = '👤 Yo mismo';
+          selfOption.textContent = 'Yo mismo';
           selectElement.appendChild(selfOption);
         
           // Resto del equipo
@@ -5916,7 +6596,7 @@ else {
       }
 
       btn.disabled = true;
-      btn.textContent = '⏳ Creando proyecto...';
+      btn.textContent = 'Creando proyecto...';
 
       try {
         const fd = new FormData();
@@ -5964,7 +6644,7 @@ else {
 const responsableFinal = responsableId || null;
 
     btn.disabled = true;
-    btn.textContent = '⏳ Guardando tarea...';
+    btn.textContent = 'Guardando tarea...';
 
     try {
       const fd = new FormData();
@@ -5992,7 +6672,7 @@ const responsableFinal = responsableId || null;
       }
 
       closeCreateTareaModal();
-      alert('✅ Tarea creada correctamente');
+      alert('Tarea creada correctamente');
 
       // Cambiar al tab de tareas y recargar
       const tabTareas = document.querySelector('[data-tab="tareas"]');
@@ -6039,7 +6719,7 @@ const responsableFinal = responsableId || null;
     overlay.innerHTML = `
       <div class="modal-content" style="max-width:500px;">
         <div class="modal-header">
-          <div class="modal-icon">✏️</div>
+          <div class="modal-icon"><i class="ph ph-pencil-simple" style="font-size:26px;color:var(--c-teal);"></i></div>
           <h3 class="modal-title">Editar proyecto</h3>
         </div>
 
@@ -6066,11 +6746,11 @@ const responsableFinal = responsableId || null;
               id="edit-proyecto-estado" 
               style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;"
             >
-              <option value="planificacion" ${estado === 'planificacion' ? 'selected' : ''}>📋 Planificación</option>
-              <option value="en_progreso" ${estado === 'en_progreso' ? 'selected' : ''}>🚀 En progreso</option>
-              <option value="pausado" ${estado === 'pausado' ? 'selected' : ''}>⏸️ Pausado</option>
-              <option value="completado" ${estado === 'completado' ? 'selected' : ''}>✅ Completado</option>
-              <option value="cancelado" ${estado === 'cancelado' ? 'selected' : ''}>❌ Cancelado</option>
+              <option value="planificacion" ${estado === 'planificacion' ? 'selected' : ''}>Planificación</option>
+              <option value="en_progreso" ${estado === 'en_progreso' ? 'selected' : ''}>En progreso</option>
+              <option value="pausado" ${estado === 'pausado' ? 'selected' : ''}>Pausado</option>
+              <option value="completado" ${estado === 'completado' ? 'selected' : ''}>Completado</option>
+              <option value="cancelado" ${estado === 'cancelado' ? 'selected' : ''}>Cancelado</option>
             </select>
           </label>
 
@@ -6124,7 +6804,7 @@ const responsableFinal = responsableId || null;
     }
 
     btn.disabled = true;
-    btn.textContent = '⏳ Guardando...';
+    btn.textContent = 'Guardando...';
 
     try {
       const fd = new FormData();
@@ -6152,7 +6832,7 @@ const responsableFinal = responsableId || null;
       }
 
       cerrarModalEditarProyecto();
-      alert('✅ Proyecto actualizado correctamente');
+      alert('Proyecto actualizado correctamente');
       cargarMisProyectos(); // Recargar lista
 
     } catch (err) {
