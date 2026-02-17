@@ -330,162 +330,7 @@ $stmt_prox->close();
 .pv-file-upload input[type="file"] {
     display: none;
 }
-
-.pv-floating-btn {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: linear-gradient(135deg, #EF7F1B 0%, #d96a12 50%, #c55a0f 100%);
-    color: white;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    border: none;
-    font-size: 32px;
-    font-weight: 300;
-    line-height: 1;
-    cursor: pointer;
-    box-shadow: 0 10px 26px rgba(239, 127, 27, 0.35);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.pv-floating-btn:hover {
-    transform: scale(1.1) rotate(90deg);
-    box-shadow: 0 16px 40px rgba(239, 127, 27, 0.5);
-}
-
-.pv-floating-btn.active {
-    transform: rotate(45deg);
-    background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
-}
-
-.pv-badge {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    background: #EF4444;
-    color: white;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
-    animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-    50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-}
-
-/* Menú flotante desplegable */
-.pv-floating-menu {
-    position: fixed;
-    bottom: 94px;
-    right: 24px;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    z-index: 998;
-    opacity: 0;
-    transform: translateY(10px) scale(0.95);
-    pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
-    min-width: 260px;
-}
-
-.pv-floating-menu.active {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    pointer-events: all;
-}
-
-.pv-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 20px;
-    border: none;
-    background: white;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: 600;
-    color: #1F2937;
-    border-bottom: 1px solid #F3F4F6;
-}
-
-.pv-menu-item:last-child {
-    border-bottom: none;
-}
-
-.pv-menu-item:hover {
-    background: linear-gradient(90deg, #FFF5F0 0%, #FFF9F5 100%);
-    color: #EF7F1B;
-}
-
-.pv-menu-item:active {
-    transform: scale(0.98);
-}
-
-.pv-menu-icon {
-    font-size: 22px;
-    width: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.pv-menu-text {
-    flex: 1;
-}
-
-.pv-menu-subtitle {
-    font-size: 12px;
-    font-weight: 400;
-    color: #6B7280;
-    margin-top: 2px;
-}
 </style>
-
-<!-- ========================================================================== -->
-<!-- BOTÓN FLOTANTE Y MENÚ DESPLEGABLE -->
-<!-- ========================================================================== -->
-<button class="pv-floating-btn" id="pvFloatingBtn" onclick="toggleFloatingMenu()">
-    +
-    <?php if (count($notificaciones_empleado) > 0): ?>
-        <span class="pv-badge"><?= count($notificaciones_empleado) ?></span>
-    <?php endif; ?>
-</button>
-
-<!-- Menú flotante -->
-<div class="pv-floating-menu" id="pvFloatingMenu">
-    <button class="pv-menu-item" onclick="selectMenuOption('permisos')">
-        <span class="pv-menu-icon">📋</span>
-        <div class="pv-menu-text">
-            <div>Permisos y Vacaciones</div>
-            <div class="pv-menu-subtitle">Solicitar ausencias y ver historial</div>
-        </div>
-    </button>
-    <button class="pv-menu-item" onclick="selectMenuOption('metas')">
-        <span class="pv-menu-icon">🎯</span>
-        <div class="pv-menu-text">
-            <div>Metas Personales</div>
-            <div class="pv-menu-subtitle">Crear nuevas metas y tareas</div>
-        </div>
-    </button>
-</div>
 
 <!-- ========================================================================== -->
 <!-- MODAL DE PERMISOS Y VACACIONES -->
@@ -668,6 +513,20 @@ $stmt_prox->close();
 <!-- JAVASCRIPT -->
 <!-- ========================================================================== -->
 <script>
+// Badge de notificaciones en el tab Permisos
+(function() {
+    const pvCount = <?= count($notificaciones_empleado) ?>;
+    if (pvCount > 0) {
+        const tabBtn = document.querySelector('[data-tab="permisos"]');
+        if (tabBtn && !tabBtn.querySelector('.tab-notif')) {
+            const badge = document.createElement('span');
+            badge.className = 'tab-notif';
+            badge.textContent = pvCount;
+            tabBtn.appendChild(badge);
+        }
+    }
+})();
+
 // Abrir/Cerrar Modal
 function openPermisosVacacionesModal() {
     document.getElementById('pvModal').style.display = 'block';
@@ -677,48 +536,6 @@ function openPermisosVacacionesModal() {
 function closePermisosVacacionesModal() {
     document.getElementById('pvModal').style.display = 'none';
 }
-
-// Toggle menú flotante
-function toggleFloatingMenu() {
-    const menu = document.getElementById('pvFloatingMenu');
-    const btn = document.getElementById('pvFloatingBtn');
-
-    menu.classList.toggle('active');
-    btn.classList.toggle('active');
-}
-
-// Seleccionar opción del menú
-function selectMenuOption(option) {
-    const menu = document.getElementById('pvFloatingMenu');
-    const btn = document.getElementById('pvFloatingBtn');
-
-    // Cerrar menú
-    menu.classList.remove('active');
-    btn.classList.remove('active');
-
-    // Ejecutar acción correspondiente
-    if (option === 'permisos') {
-        openPermisosVacacionesModal();
-    } else if (option === 'metas') {
-        // Llamar a la función de crear meta del dashboard
-        if (typeof openCreateMetaModal === 'function') {
-            openCreateMetaModal();
-        } else {
-            console.error('Función openCreateMetaModal no encontrada');
-        }
-    }
-}
-
-// Cerrar menú al hacer clic fuera
-document.addEventListener('click', function(event) {
-    const menu = document.getElementById('pvFloatingMenu');
-    const btn = document.getElementById('pvFloatingBtn');
-
-    if (menu && btn && !menu.contains(event.target) && !btn.contains(event.target)) {
-        menu.classList.remove('active');
-        btn.classList.remove('active');
-    }
-});
 
 // Cambiar entre tabs
 function switchPVTab(tabName) {

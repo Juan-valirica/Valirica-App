@@ -3159,6 +3159,114 @@ try {
   color: var(--c-primary);
 }
 
+/* Badge de notificaciones en tab Permisos */
+.tab-notif {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  background: #EF4444;
+  color: #fff;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 5px;
+  margin-left: 2px;
+  line-height: 1;
+}
+
+/* Panel de acceso rápido — Tab Permisos */
+.permisos-tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 640px;
+}
+
+.permisos-tab-intro {
+  margin: 0;
+  font-size: 13px;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.permisos-tab-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.permisos-action-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1.5px solid #F0F0F0;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+  width: 100%;
+}
+
+.permisos-action-card:hover {
+  border-color: var(--c-primary);
+  box-shadow: 0 2px 12px rgba(239,127,27,0.10);
+  background: #FFFAF6;
+}
+
+.permisos-action-card--secondary:hover {
+  border-color: #8B9CF8;
+  box-shadow: 0 2px 12px rgba(59,91,219,0.07);
+  background: #F8F9FF;
+}
+
+.permisos-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #FFF5EE;
+  color: var(--c-primary);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.permisos-action-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.permisos-action-body strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.permisos-action-body span {
+  font-size: 12px;
+  color: #6B7280;
+  font-weight: 400;
+}
+
+.permisos-action-arrow {
+  font-size: 16px;
+  color: #D1D5DB;
+  flex-shrink: 0;
+  transition: transform 0.18s;
+}
+
+.permisos-action-card:hover .permisos-action-arrow {
+  transform: translateX(3px);
+  color: var(--c-primary);
+}
 
 /* ==========================================================================
    META ITEMS — Mejora visual
@@ -3860,6 +3968,9 @@ try {
         <button class="tab-btn tab-valirica" data-tab="proyectos">
           <i class="ph ph-folder-open"></i> Proyectos
         </button>
+        <button class="tab-btn tab-valirica" data-tab="permisos">
+          <i class="ph ph-calendar-check"></i> Permisos
+        </button>
       </div>
     </div>
 
@@ -4312,6 +4423,54 @@ try {
         </div>
       </div>
     </div><!-- Fin tab-content-proyectos -->
+
+    <!-- ==================== TAB: PERMISOS ==================== -->
+    <div id="tab-content-permisos" class="tab-content" style="display:none;">
+      <div class="permisos-tab-panel">
+
+        <p class="permisos-tab-intro">Gestiona tus ausencias desde aquí. Selecciona qué tipo de solicitud necesitas.</p>
+
+        <div class="permisos-tab-actions">
+
+          <button class="permisos-action-card" onclick="openPermisosVacacionesModal(); setTimeout(()=>switchPVTab('permiso'),80);">
+            <span class="permisos-action-icon"><i class="ph ph-clock"></i></span>
+            <div class="permisos-action-body">
+              <strong>Solicitar Permiso</strong>
+              <span>Médico, personal, académico y más</span>
+            </div>
+            <i class="ph ph-arrow-right permisos-action-arrow"></i>
+          </button>
+
+          <button class="permisos-action-card" onclick="openPermisosVacacionesModal(); setTimeout(()=>switchPVTab('vacacion'),80);">
+            <span class="permisos-action-icon" style="background:var(--c-primary-light,#fff5ee);color:var(--c-primary)"><i class="ph ph-sun-horizon"></i></span>
+            <div class="permisos-action-body">
+              <strong>Solicitar Vacaciones</strong>
+              <span>Planifica tus días de descanso</span>
+            </div>
+            <i class="ph ph-arrow-right permisos-action-arrow"></i>
+          </button>
+
+          <button class="permisos-action-card permisos-action-card--secondary" onclick="openPermisosVacacionesModal(); setTimeout(()=>switchPVTab('notificaciones'),80);">
+            <span class="permisos-action-icon" style="background:#f0f4ff;color:#3B5BDB"><i class="ph ph-bell"></i></span>
+            <div class="permisos-action-body">
+              <strong>Notificaciones y Historial</strong>
+              <span>Revisa el estado de tus solicitudes</span>
+            </div>
+            <i class="ph ph-arrow-right permisos-action-arrow"></i>
+          </button>
+
+          <button class="permisos-action-card permisos-action-card--secondary" onclick="openPermisosVacacionesModal(); setTimeout(()=>switchPVTab('proximos'),80);">
+            <span class="permisos-action-icon" style="background:#f0fdf4;color:#16A34A"><i class="ph ph-calendar"></i></span>
+            <div class="permisos-action-body">
+              <strong>Próximas Ausencias</strong>
+              <span>Consulta lo que tienes agendado</span>
+            </div>
+            <i class="ph ph-arrow-right permisos-action-arrow"></i>
+          </button>
+
+        </div>
+      </div>
+    </div><!-- Fin tab-content-permisos -->
 
 </div>
 
