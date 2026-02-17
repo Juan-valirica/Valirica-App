@@ -152,7 +152,7 @@ if ($area_seleccionada === 'custom') {
 
     // Equipo personalizado → TODOS los miembros
     $stmt_eq = $conn->prepare("
-        SELECT id, nombre_persona, apellido, cargo
+        SELECT id, nombre_persona, apellido, cargo, 0 AS es_lider
         FROM equipo
         WHERE usuario_id = ?
         ORDER BY nombre_persona ASC
@@ -164,12 +164,12 @@ if ($area_seleccionada === 'custom') {
     // Filtrar por área usando tabla junction equipo_areas_trabajo
     $area_sel_int = (int)$area_seleccionada;
     $stmt_eq = $conn->prepare("
-        SELECT DISTINCT e.id, e.nombre_persona, e.apellido, e.cargo
+        SELECT DISTINCT e.id, e.nombre_persona, e.apellido, e.cargo, eat.es_lider
         FROM equipo e
         INNER JOIN equipo_areas_trabajo eat ON e.id = eat.equipo_id
         WHERE e.usuario_id = ?
           AND eat.area_id = ?
-        ORDER BY e.nombre_persona ASC
+        ORDER BY eat.es_lider DESC, e.nombre_persona ASC
     ");
     if ($stmt_eq) {
         $stmt_eq->bind_param("ii", $user_id, $area_sel_int);
@@ -1529,6 +1529,9 @@ list($mot_label, $mot_class, $mot_icon) =
             />
             <span>
               <?= h($nombre_completo) ?>
+              <?php if (!empty($m['es_lider'])): ?>
+                <small style="color: #92400E; background: #FEF3C7; padding: 1px 6px; border-radius: 8px; font-weight: 600; border: 1px solid #F59E0B;">&#9733; L&iacute;der</small>
+              <?php endif; ?>
               <?php if (!empty($m['cargo'])): ?>
                 <small><?= h($m['cargo']) ?></small>
               <?php endif; ?>

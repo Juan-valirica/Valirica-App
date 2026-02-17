@@ -10,6 +10,8 @@
  *   - save_areas:       Guarda (reemplaza) las áreas de un miembro
  *   - add_area:         Agrega una área a un miembro
  *   - remove_area:      Quita una área de un miembro
+ *   - set_lider:        Marca/desmarca un miembro como líder de un área
+ *   - get_area_lider:   Obtiene el líder de un área específica
  */
 session_start();
 require 'config.php';
@@ -69,7 +71,7 @@ try {
             if ($equipo_id <= 0) throw new Exception('equipo_id requerido');
 
             $stmt = $conn->prepare("
-                SELECT at2.id, at2.nombre_area
+                SELECT at2.id, at2.nombre_area, eat.es_lider
                 FROM equipo_areas_trabajo eat
                 INNER JOIN areas_trabajo at2 ON eat.area_id = at2.id
                 INNER JOIN equipo e ON eat.equipo_id = e.id
@@ -82,7 +84,7 @@ try {
 
             $areas = [];
             while ($row = $res->fetch_assoc()) {
-                $areas[] = ['id' => (int)$row['id'], 'nombre' => $row['nombre_area']];
+                $areas[] = ['id' => (int)$row['id'], 'nombre' => $row['nombre_area'], 'es_lider' => (int)$row['es_lider']];
             }
             $stmt->close();
 
@@ -130,17 +132,31 @@ try {
 
             $conn->begin_transaction();
 
+            // Guardar estado de es_lider antes de borrar
+            $lider_map = [];
+            $stmtLider = $conn->prepare("SELECT area_id, es_lider FROM equipo_areas_trabajo WHERE equipo_id = ?");
+            $stmtLider->bind_param("i", $equipo_id);
+            $stmtLider->execute();
+            $resLider = stmt_get_result($stmtLider);
+            while ($lr = $resLider->fetch_assoc()) {
+                if ((int)$lr['es_lider'] === 1) {
+                    $lider_map[(int)$lr['area_id']] = 1;
+                }
+            }
+            $stmtLider->close();
+
             // Borrar asignaciones anteriores
             $del = $conn->prepare("DELETE FROM equipo_areas_trabajo WHERE equipo_id = ?");
             $del->bind_param("i", $equipo_id);
             $del->execute();
             $del->close();
 
-            // Insertar nuevas
+            // Insertar nuevas (preservando es_lider si existía)
             if (!empty($area_ids)) {
-                $ins = $conn->prepare("INSERT INTO equipo_areas_trabajo (equipo_id, area_id) VALUES (?, ?)");
+                $ins = $conn->prepare("INSERT INTO equipo_areas_trabajo (equipo_id, area_id, es_lider) VALUES (?, ?, ?)");
                 foreach ($area_ids as $aid) {
-                    $ins->bind_param("ii", $equipo_id, $aid);
+                    $lider_val = isset($lider_map[$aid]) ? 1 : 0;
+                    $ins->bind_param("iii", $equipo_id, $aid, $lider_val);
                     $ins->execute();
                 }
                 $ins->close();
@@ -220,6 +236,89 @@ try {
             $del->close();
 
             echo json_encode(['ok' => true, 'message' => 'Área removida']);
+            break;
+
+        /* ========== Marcar/desmarcar líder de un área ========== */
+        case 'set_lider':
+            $equipo_id = (int)($_POST['equipo_id'] ?? 0);
+            $area_id   = (int)($_POST['area_id'] ?? 0);
+            $es_lider  = (int)($_POST['es_lider'] ?? 0);
+            if ($equipo_id <= 0 || $area_id <= 0) throw new Exception('equipo_id y area_id requeridos');
+
+            // Validar que el miembro pertenece al usuario
+            $chk = $conn->prepare("SELECT id FROM equipo WHERE id = ? AND usuario_id = ?");
+            $chk->bind_param("ii", $equipo_id, $user_id);
+            $chk->execute();
+            if (!stmt_get_result($chk)->fetch_assoc()) {
+                $chk->close();
+                throw new Exception('Miembro no encontrado');
+            }
+            $chk->close();
+
+            // Validar que la asignación existe
+            $chk2 = $conn->prepare("SELECT id FROM equipo_areas_trabajo WHERE equipo_id = ? AND area_id = ?");
+            $chk2->bind_param("ii", $equipo_id, $area_id);
+            $chk2->execute();
+            if (!stmt_get_result($chk2)->fetch_assoc()) {
+                $chk2->close();
+                throw new Exception('El miembro no está asignado a esta área');
+            }
+            $chk2->close();
+
+            $conn->begin_transaction();
+
+            if ($es_lider) {
+                // Quitar líder anterior de esta área (solo puede haber uno)
+                $reset = $conn->prepare("
+                    UPDATE equipo_areas_trabajo eat
+                    INNER JOIN equipo e ON eat.equipo_id = e.id
+                    SET eat.es_lider = 0
+                    WHERE eat.area_id = ? AND e.usuario_id = ?
+                ");
+                $reset->bind_param("ii", $area_id, $user_id);
+                $reset->execute();
+                $reset->close();
+            }
+
+            // Establecer el nuevo valor
+            $upd = $conn->prepare("UPDATE equipo_areas_trabajo SET es_lider = ? WHERE equipo_id = ? AND area_id = ?");
+            $upd->bind_param("iii", $es_lider, $equipo_id, $area_id);
+            $upd->execute();
+            $upd->close();
+
+            $conn->commit();
+
+            echo json_encode(['ok' => true, 'message' => $es_lider ? 'Líder asignado' : 'Líder removido']);
+            break;
+
+        /* ========== Obtener líder de un área ========== */
+        case 'get_area_lider':
+            $area_id = (int)($_REQUEST['area_id'] ?? 0);
+            if ($area_id <= 0) throw new Exception('area_id requerido');
+
+            $stmt = $conn->prepare("
+                SELECT e.id, e.nombre_persona, e.apellido, e.cargo
+                FROM equipo_areas_trabajo eat
+                INNER JOIN equipo e ON eat.equipo_id = e.id
+                WHERE eat.area_id = ? AND eat.es_lider = 1 AND e.usuario_id = ?
+                LIMIT 1
+            ");
+            $stmt->bind_param("ii", $area_id, $user_id);
+            $stmt->execute();
+            $row = stmt_get_result($stmt)->fetch_assoc();
+            $stmt->close();
+
+            $lider = null;
+            if ($row) {
+                $lider = [
+                    'id'       => (int)$row['id'],
+                    'nombre'   => $row['nombre_persona'],
+                    'apellido' => $row['apellido'] ?? '',
+                    'cargo'    => $row['cargo'] ?? '',
+                ];
+            }
+
+            echo json_encode(['ok' => true, 'lider' => $lider]);
             break;
 
         default:

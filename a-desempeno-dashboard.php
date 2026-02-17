@@ -7847,7 +7847,8 @@ document.addEventListener('keydown', function(e) {
     $stmt_people = $conn->prepare("
         SELECT e.id, e.nombre_persona, e.apellido, e.cargo,
                GROUP_CONCAT(at2.id ORDER BY at2.nombre_area SEPARATOR ',') AS areas_ids,
-               GROUP_CONCAT(at2.nombre_area ORDER BY at2.nombre_area SEPARATOR '||') AS areas_nombres
+               GROUP_CONCAT(at2.nombre_area ORDER BY at2.nombre_area SEPARATOR '||') AS areas_nombres,
+               GROUP_CONCAT(COALESCE(eat.es_lider, 0) ORDER BY at2.nombre_area SEPARATOR ',') AS areas_lider
         FROM equipo e
         LEFT JOIN equipo_areas_trabajo eat ON e.id = eat.equipo_id
         LEFT JOIN areas_trabajo at2 ON eat.area_id = at2.id
@@ -7918,6 +7919,7 @@ document.addEventListener('keydown', function(e) {
           <?php foreach ($people_list as $person):
             $p_areas_ids = $person['areas_ids'] ? explode(',', $person['areas_ids']) : [];
             $p_areas_nombres = $person['areas_nombres'] ? explode('||', $person['areas_nombres']) : [];
+            $p_areas_lider = !empty($person['areas_lider']) ? explode(',', $person['areas_lider']) : [];
           ?>
           <tr
             class="people-row"
@@ -7940,17 +7942,20 @@ document.addEventListener('keydown', function(e) {
               <?php if (empty($p_areas_nombres)): ?>
                 <span style="color: #9CA3AF; font-size: 13px; font-style: italic;">Sin áreas</span>
               <?php else: ?>
-                <?php foreach ($p_areas_nombres as $an): ?>
+                <?php foreach ($p_areas_nombres as $idx => $an):
+                  $is_lider = isset($p_areas_lider[$idx]) && (int)$p_areas_lider[$idx] === 1;
+                ?>
                   <span style="
                     display: inline-block;
-                    background: #EFF6FF;
-                    color: #1D4ED8;
+                    background: <?= $is_lider ? '#FEF3C7' : '#EFF6FF' ?>;
+                    color: <?= $is_lider ? '#92400E' : '#1D4ED8' ?>;
                     padding: 3px 10px;
                     border-radius: 12px;
                     font-size: 12px;
                     font-weight: 500;
                     margin: 2px 4px 2px 0;
-                  "><?= h(trim($an)) ?></span>
+                    <?= $is_lider ? 'border: 1px solid #F59E0B;' : '' ?>
+                  "><?= $is_lider ? '&#9733; ' : '' ?><?= h(trim($an)) ?><?= $is_lider ? ' (Líder)' : '' ?></span>
                 <?php endforeach; ?>
               <?php endif; ?>
             </td>
@@ -8016,6 +8021,9 @@ document.addEventListener('keydown', function(e) {
           <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
             Selecciona las áreas de trabajo:
           </label>
+          <p style="margin: 0 0 8px; color: #9CA3AF; font-size: 12px;">
+            Haz clic en &#9733; para asignar como líder del área
+          </p>
           <div id="areaCheckboxList" style="
             max-height: 300px;
             overflow-y: auto;
@@ -8024,13 +8032,12 @@ document.addEventListener('keydown', function(e) {
             padding: 8px;
           ">
             <?php foreach ($areas_list as $area): ?>
-            <label style="
+            <div style="
               display: flex;
               align-items: center;
               gap: 10px;
               padding: 10px 12px;
               border-radius: 6px;
-              cursor: pointer;
               transition: background 0.15s;
               font-size: 14px;
               color: #374151;
@@ -8038,15 +8045,34 @@ document.addEventListener('keydown', function(e) {
               onmouseover="this.style.background='#F3F4F6'"
               onmouseout="this.style.background='transparent'"
             >
-              <input
-                type="checkbox"
-                name="area_ids[]"
-                value="<?= (int)$area['id'] ?>"
-                class="area-checkbox"
-                style="width: 18px; height: 18px; accent-color: #184656; cursor: pointer;"
-              >
-              <span><?= h($area['nombre_area']) ?></span>
-            </label>
+              <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 1;">
+                <input
+                  type="checkbox"
+                  name="area_ids[]"
+                  value="<?= (int)$area['id'] ?>"
+                  class="area-checkbox"
+                  style="width: 18px; height: 18px; accent-color: #184656; cursor: pointer;"
+                >
+                <span><?= h($area['nombre_area']) ?></span>
+              </label>
+              <button
+                type="button"
+                class="lider-star"
+                data-area-id="<?= (int)$area['id'] ?>"
+                onclick="toggleLider(this)"
+                title="Marcar como líder de esta área"
+                style="
+                  background: none;
+                  border: none;
+                  font-size: 20px;
+                  cursor: pointer;
+                  color: #D1D5DB;
+                  transition: color 0.2s;
+                  padding: 0 4px;
+                  line-height: 1;
+                "
+              >&#9733;</button>
+            </div>
             <?php endforeach; ?>
           </div>
         </div>
@@ -8101,9 +8127,13 @@ document.addEventListener('keydown', function(e) {
       document.getElementById('areaModalTitle').textContent = 'Asignar áreas';
       document.getElementById('areaModalSubtitle').textContent = nombre;
 
-      // Reset checkboxes
+      // Reset checkboxes y estrellas
       document.querySelectorAll('.area-checkbox').forEach(function(cb) {
         cb.checked = false;
+      });
+      document.querySelectorAll('.lider-star').forEach(function(star) {
+        star.style.color = '#D1D5DB';
+        star.dataset.active = '0';
       });
 
       // Marcar las áreas actuales
@@ -8114,8 +8144,64 @@ document.addEventListener('keydown', function(e) {
         }
       });
 
+      // Cargar estados de líder desde el servidor
+      fetch('ajax_equipo_areas.php?action=get_member_areas&equipo_id=' + equipoId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.ok && data.areas) {
+            data.areas.forEach(function(a) {
+              if (a.es_lider) {
+                var star = document.querySelector('.lider-star[data-area-id="' + a.id + '"]');
+                if (star) {
+                  star.style.color = '#F59E0B';
+                  star.dataset.active = '1';
+                }
+              }
+            });
+          }
+        });
+
       var modal = document.getElementById('areaAssignModal');
       modal.style.display = 'flex';
+    }
+
+    function toggleLider(star) {
+      var isActive = star.dataset.active === '1';
+      var areaId = star.dataset.areaId;
+      var equipoId = document.getElementById('areaModalEquipoId').value;
+
+      // Verificar que el checkbox de esta área esté marcado
+      var cb = document.querySelector('.area-checkbox[value="' + areaId + '"]');
+      if (!cb || !cb.checked) {
+        alert('Primero debes asignar esta área al miembro');
+        return;
+      }
+
+      var newVal = isActive ? 0 : 1;
+
+      fetch('ajax_equipo_areas.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'action=set_lider&equipo_id=' + equipoId + '&area_id=' + areaId + '&es_lider=' + newVal
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) {
+          if (newVal) {
+            // Desactivar otras estrellas de esta área (solo un líder por área)
+            star.style.color = '#F59E0B';
+            star.dataset.active = '1';
+          } else {
+            star.style.color = '#D1D5DB';
+            star.dataset.active = '0';
+          }
+        } else {
+          alert('Error: ' + (data.error || 'Desconocido'));
+        }
+      })
+      .catch(function(err) {
+        alert('Error de conexión: ' + err.message);
+      });
     }
 
     function closeAreaModal() {
@@ -8169,15 +8255,27 @@ document.addEventListener('keydown', function(e) {
       var cell = document.getElementById('areas-cell-' + equipoId);
       if (!cell) return;
 
+      // Obtener estados de líder actuales del modal
+      var liderMap = {};
+      document.querySelectorAll('.lider-star').forEach(function(star) {
+        if (star.dataset.active === '1') {
+          liderMap[star.dataset.areaId] = true;
+        }
+      });
+
       if (selectedIds.length === 0) {
         cell.innerHTML = '<span style="color: #9CA3AF; font-size: 13px; font-style: italic;">Sin áreas</span>';
       } else {
-        // Obtener nombres de áreas desde los checkboxes
         var html = '';
         document.querySelectorAll('.area-checkbox').forEach(function(cb) {
           if (selectedIds.indexOf(cb.value) !== -1) {
             var name = cb.parentElement.querySelector('span').textContent.trim();
-            html += '<span style="display:inline-block;background:#EFF6FF;color:#1D4ED8;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500;margin:2px 4px 2px 0;">' + name + '</span>';
+            var isLider = liderMap[cb.value] || false;
+            if (isLider) {
+              html += '<span style="display:inline-block;background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500;margin:2px 4px 2px 0;border:1px solid #F59E0B;">&#9733; ' + name + ' (L\u00edder)</span>';
+            } else {
+              html += '<span style="display:inline-block;background:#EFF6FF;color:#1D4ED8;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500;margin:2px 4px 2px 0;">' + name + '</span>';
+            }
           }
         });
         cell.innerHTML = html;
