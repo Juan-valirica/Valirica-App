@@ -1,0 +1,211 @@
+Pregunta;Modelo;Dimensión evaluada;Tipo de respuesta;ID HTML;ID BD;Tag Procesamiento;alta_baja
+“Tomo decisiones difíciles con rapidez cuando la situación lo requiere.“;DISC;Dominancia;Selección forzada;pregunta_1;1;disc_d;
+“Me siento capaz de liderar incluso en momentos de caos.“;DISC;Dominancia;Selección forzada;pregunta_2;2;disc_d;
+“Me motiva enfrentar grandes retos y superarlos.“;DISC;Dominancia;Selección forzada;pregunta_3;3;disc_d;
+“Me gusta que las cosas avancen con rapidez y eficiencia.“;DISC;Dominancia;Selección forzada;pregunta_4;4;disc_d;
+“Me siento cómodo asumiendo el control en situaciones críticas.“;DISC;Dominancia;Selección forzada;pregunta_5;5;disc_d;
+“Me gusta resolver conflictos con firmeza y enfoque.“;DISC;Dominancia;Selección forzada;pregunta_6;6;disc_d;
+“Soy directo al comunicar mis ideas, con claridad y seguridad.“;DISC;Dominancia;Selección forzada;pregunta_7;7;disc_d;
+“Disfruto tener la responsabilidad de liderar decisiones importantes.“;DISC;Dominancia;Selección forzada;pregunta_8;8;disc_d;
+“Me gusta animar a otros cuando presento nuevas ideas.“;DISC;Influencia;Selección forzada;pregunta_9;9;disc_i;
+“Me esfuerzo por mantener un ambiente optimista en el equipo.“;DISC;Influencia;Selección forzada;pregunta_10;10;disc_i;
+“Me gusta persuadir a otros para que se sumen a mis propuestas.“;DISC;Influencia;Selección forzada;pregunta_11;11;disc_i;
+“Suelo generar confianza rápidamente en quienes me rodean.“;DISC;Influencia;Selección forzada;pregunta_12;12;disc_i;
+“Me llena de energía interactuar con otras personas.“;DISC;Influencia;Selección forzada;pregunta_13;13;disc_i;
+“Disfruto conversar y compartir mis ideas abiertamente.“;DISC;Influencia;Selección forzada;pregunta_14;14;disc_i;
+“Encuentro fácilmente puntos en común con personas nuevas.“;DISC;Influencia;Selección forzada;pregunta_15;15;disc_i;
+“Me entusiasma influir positivamente en el estado de ánimo del equipo.“;DISC;Influencia;Selección forzada;pregunta_16;16;disc_i;
+“Mantengo la calma incluso bajo mucha presión.“;DISC;Estabilidad;Selección forzada;pregunta_17;17;disc_s;
+“Prefiero ambientes laborales donde todo esté planificado.“;DISC;Estabilidad;Selección forzada;pregunta_18;18;disc_s;
+“Evito discusiones para mantener la armonía del grupo.“;DISC;Estabilidad;Selección forzada;pregunta_19;19;disc_s;
+“Me adapto fácilmente a los cambios cuando hay estabilidad.“;DISC;Estabilidad;Selección forzada;pregunta_20;20;disc_s;
+“Me incomoda cambiar de planes constantemente.“;DISC;Estabilidad;Selección forzada;pregunta_21;21;disc_s;
+“Prefiero seguir rutinas y métodos ya establecidos.“;DISC;Estabilidad;Selección forzada;pregunta_22;22;disc_s;
+“Me esfuerzo por mantener relaciones estables y duraderas.“;DISC;Estabilidad;Selección forzada;pregunta_23;23;disc_s;
+“Me siento cómodo en entornos tranquilos y predecibles.“;DISC;Estabilidad;Selección forzada;pregunta_24;24;disc_s;
+“Me apego a las reglas, incluso cuando nadie supervisa.“;DISC;Cumplimiento;Selección forzada;pregunta_25;25;disc_c;
+“Reviso mi trabajo cuidadosamente para asegurar su calidad.“;DISC;Cumplimiento;Selección forzada;pregunta_26;26;disc_c;
+“Me siento incómodo cuando los procesos no están bien definidos.“;DISC;Cumplimiento;Selección forzada;pregunta_27;27;disc_c;
+“Me gusta seguir instrucciones claras paso a paso.“;DISC;Cumplimiento;Selección forzada;pregunta_28;28;disc_c;
+“Prefiero tener claridad total antes de comenzar cualquier tarea.“;DISC;Cumplimiento;Selección forzada;pregunta_29;29;disc_c;
+“Me esfuerzo por mantener altos estándares en todo lo que hago.“;DISC;Cumplimiento;Selección forzada;pregunta_30;30;disc_c;
+“Me resulta importante actuar con precisión y lógica.“;DISC;Cumplimiento;Selección forzada;pregunta_31;31;disc_c;
+“Me enfoco en hacer las cosas bien, más allá de la velocidad.“;DISC;Cumplimiento;Selección forzada;pregunta_32;32;disc_c;
+"""Me siento lleno de energía después de pasar tiempo con otras personas.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_33;33;mbti_e;
+"""Disfruto ser el centro de atención en reuniones o eventos.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_34;34;mbti_e;
+"""Me es fácil iniciar conversaciones con personas que no conozco.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_35;35;mbti_e;
+"""Me gusta compartir mis ideas en voz alta mientras las desarrollo.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_36;36;mbti_e;
+"""Prefiero espacios laborales donde haya mucho movimiento y gente.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_37;37;mbti_e;
+"""Me siento cómodo hablando en público sin mucha preparación.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_38;38;mbti_e;
+"""Disfruto planear actividades grupales o sociales.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_39;39;mbti_e;
+"""Me resulta natural expresarme con entusiasmo cuando algo me emociona.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_40;40;mbti_e;
+"""Necesito tiempo a solas para recargarme después de estar con otros.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_41;41;mbti_i;
+"""Me siento más cómodo observando que participando activamente.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_42;42;mbti_i;
+"""Prefiero pensar bien antes de hablar en una conversación.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_43;43;mbti_i;
+"""Me cuesta disfrutar reuniones con muchas personas al mismo tiempo.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_44;44;mbti_i;
+"""Encuentro valor en reflexionar profundamente antes de actuar.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_45;45;mbti_i;
+"""Me resulta más fácil escribir lo que pienso que decirlo en voz alta.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_46;46;mbti_i;
+"""Disfruto pasar tiempo en silencio o en actividades solitarias.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_47;47;mbti_i;
+"""Prefiero escuchar a los demás antes de compartir mi punto de vista.""";MBTI;Extroversión vs. Introversión;Likert;pregunta_48;48;mbti_i;
+"""Prefiero hechos comprobables antes que teorías o suposiciones.""";MBTI;Sensación vs. Intuición;Likert;pregunta_49;49;mbti_s;
+"""Me concentro en lo que está ocurriendo en el presente.""";MBTI;Sensación vs. Intuición;Likert;pregunta_50;50;mbti_s;
+"""Confío más en la experiencia que en la intuición.""";MBTI;Sensación vs. Intuición;Likert;pregunta_51;51;mbti_s;
+"""Me fijo en los detalles cuando observo algo nuevo.""";MBTI;Sensación vs. Intuición;Likert;pregunta_52;52;mbti_s;
+"""Disfruto trabajar con información concreta y específica.""";MBTI;Sensación vs. Intuición;Likert;pregunta_53;53;mbti_s;
+"""Me siento cómodo siguiendo instrucciones paso a paso.""";MBTI;Sensación vs. Intuición;Likert;pregunta_54;54;mbti_s;
+"""Me gusta saber con precisión qué se espera de mí.""";MBTI;Sensación vs. Intuición;Likert;pregunta_55;55;mbti_s;
+"""Tiendo a basar mis decisiones en datos reales, no en corazonadas.""";MBTI;Sensación vs. Intuición;Likert;pregunta_56;56;mbti_s;
+"""Me gusta explorar nuevas ideas, incluso si no tienen aplicación inmediata.""";MBTI;Sensación vs. Intuición;Likert;pregunta_57;57;mbti_n;
+"""Frecuentemente veo conexiones entre cosas que parecen no estar relacionadas.""";MBTI;Sensación vs. Intuición;Likert;pregunta_58;58;mbti_n;
+"""Prefiero imaginar posibilidades futuras que enfocarme solo en el presente.""";MBTI;Sensación vs. Intuición;Likert;pregunta_59;59;mbti_n;
+"""Tiendo a pensar en el panorama general más que en los detalles.""";MBTI;Sensación vs. Intuición;Likert;pregunta_60;60;mbti_n;
+"""Confío en mis corazonadas cuando tomo decisiones importantes.""";MBTI;Sensación vs. Intuición;Likert;pregunta_61;61;mbti_n;
+"""Disfruto reflexionar sobre el significado profundo de las cosas.""";MBTI;Sensación vs. Intuición;Likert;pregunta_62;62;mbti_n;
+"""Tengo facilidad para proponer ideas creativas y poco convencionales.""";MBTI;Sensación vs. Intuición;Likert;pregunta_63;63;mbti_n;
+"""Me interesa más el potencial de algo que su situación actual.""";MBTI;Sensación vs. Intuición;Likert;pregunta_64;64;mbti_n;
+"""Tomo decisiones basándome en lógica más que en emociones.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_65;65;mbti_t;
+"""Puedo dar retroalimentación directa sin sentirme incómodo.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_66;66;mbti_t;
+"""Valoro más la justicia que la empatía en entornos profesionales.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_67;67;mbti_t;
+"""Prefiero resolver problemas con objetividad.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_68;68;mbti_t;
+"""Me concentro en lo que funciona, no en cómo se sienten los demás.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_69;69;mbti_t;
+"""Soy capaz de separar mis emociones cuando debo tomar decisiones importantes.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_70;70;mbti_t;
+"""Me interesa más que algo sea eficiente que emocionalmente satisfactorio.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_71;71;mbti_t;
+"""Evalúo los hechos antes de considerar las emociones involucradas.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_72;72;mbti_t;
+"""Tomo decisiones considerando cómo afectarán a los demás.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_73;73;mbti_f;
+"""Me esfuerzo por mantener la armonía en mis relaciones.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_74;74;mbti_f;
+"""A menudo me guío por lo que siento más que por lo que pienso.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_75;75;mbti_f;
+"""Me resulta difícil ser directo si eso puede herir a alguien.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_76;76;mbti_f;
+"""Valoro la empatía por encima de la lógica.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_77;77;mbti_f;
+"""Prefiero trabajar con personas que se preocupan por el bienestar del grupo.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_78;78;mbti_f;
+"""Mis emociones suelen influir en mis decisiones.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_79;79;mbti_f;
+"""Busco conectar con los demás a nivel emocional.""";MBTI;Pensamiento vs. Sentimiento;Likert;pregunta_80;80;mbti_f;
+"""Prefiero tener un plan definido antes de empezar algo.""";MBTI;Juicio vs. Percepción;Likert;pregunta_81;81;mbti_j;
+"""Me siento incómodo cuando no hay estructura clara.""";MBTI;Juicio vs. Percepción;Likert;pregunta_82;82;mbti_j;
+"""Disfruto cumplir con los plazos y metas propuestas.""";MBTI;Juicio vs. Percepción;Likert;pregunta_83;83;mbti_j;
+"""Organizo mis tareas por prioridades desde el inicio.""";MBTI;Juicio vs. Percepción;Likert;pregunta_84;84;mbti_j;
+"""Me gusta que las cosas estén bien ordenadas.""";MBTI;Juicio vs. Percepción;Likert;pregunta_85;85;mbti_j;
+"""Evito improvisar si puedo planear con anticipación.""";MBTI;Juicio vs. Percepción;Likert;pregunta_86;86;mbti_j;
+"""Necesito claridad sobre los pasos que debo seguir.""";MBTI;Juicio vs. Percepción;Likert;pregunta_87;87;mbti_j;
+"""Soy de quienes terminan las cosas antes del plazo límite.""";MBTI;Juicio vs. Percepción;Likert;pregunta_88;88;mbti_j;
+"""Me siento cómodo adaptándome sobre la marcha.""";MBTI;Juicio vs. Percepción;Likert;pregunta_89;89;mbti_p;
+"""Prefiero mantener mis opciones abiertas por si surge algo mejor.""";MBTI;Juicio vs. Percepción;Likert;pregunta_90;90;mbti_p;
+"""Disfruto improvisar en lugar de seguir un plan rígido.""";MBTI;Juicio vs. Percepción;Likert;pregunta_91;91;mbti_p;
+"""Me resulta fácil cambiar de rumbo si es necesario.""";MBTI;Juicio vs. Percepción;Likert;pregunta_92;92;mbti_p;
+"""No me estreso si los planes cambian en el último momento.""";MBTI;Juicio vs. Percepción;Likert;pregunta_93;93;mbti_p;
+"""Valoro la flexibilidad más que la organización estricta.""";MBTI;Juicio vs. Percepción;Likert;pregunta_94;94;mbti_p;
+"""Suelo dejar espacio para nuevas ideas incluso al final de un proyecto.""";MBTI;Juicio vs. Percepción;Likert;pregunta_95;95;mbti_p;
+"""Me siento productivo en ambientes espontáneos y dinámicos.""";MBTI;Juicio vs. Percepción;Likert;pregunta_96;96;mbti_p;
+"""Confío en mis decisiones incluso cuando otros dudan.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_97;97;mbti_a;
+"""Me mantengo firme en lo que creo, aunque haya oposición.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_98;98;mbti_a;
+"""Asumo la responsabilidad de mis errores sin problema.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_99;99;mbti_a;
+"""Me siento tranquilo bajo presión.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_100;100;mbti_a;
+"""Puedo expresar desacuerdo sin perder la calma.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_101;101;mbti_a;
+"""Me enfrento a los desafíos con determinación.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_102;102;mbti_a;
+"""Me siento seguro al tomar decisiones importantes.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_103;103;mbti_a;
+"""Soy constante en mis metas sin necesidad de aprobación externa.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_104;104;mbti_a;
+"""Suelo pensar en los riesgos antes de actuar.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_105;105;mbti_c;
+"""Me preocupa cometer errores que afecten a otros.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_106;106;mbti_c;
+"""Dudo antes de tomar decisiones importantes.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_107;107;mbti_c;
+"""Prefiero tener garantías antes de asumir un compromiso.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_108;108;mbti_c;
+"""Me esfuerzo por evitar conflictos o situaciones impredecibles.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_109;109;mbti_c;
+"""Pienso mucho en las consecuencias antes de hablar.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_110;110;mbti_c;
+"""Evito tomar decisiones apresuradas.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_111;111;mbti_c;
+"""Reviso cuidadosamente todo antes de dar el siguiente paso.""";MBTI;Acertivo vs. Cauteloso;Likert;pregunta_112;112;mbti_c;
+"""Prefiero que las decisiones las tomen los líderes sin consultar al equipo.""";Hofstede;Distancia de poder;Likert;pregunta_113;113;hofstede_poder;alta
+"""Me siento cómodo siguiendo órdenes sin cuestionarlas.""";Hofstede;Individualismo vs. Colectivismo;Likert;pregunta_114;114;hofstede_individualismo;alta
+"""Es importante para mí conocer mi lugar dentro de la jerarquía.""";Hofstede;Orientación a resultados vs. bienestar;Likert;pregunta_115;115;hofstede_resultados;alta
+"""Los equipos funcionan mejor cuando hay un líder claro y fuerte.""";Hofstede;Tolerancia a la incertidumbre;Likert;pregunta_116;116;hofstede_incertidumbre;alta
+"""Me incomoda cuando los roles no están bien definidos.""";Hofstede;Orientación largo plazo;Likert;pregunta_117;117;hofstede_largo_plazo;alta
+"""Creo que las decisiones deben venir de los niveles más altos.""";Hofstede;Espontaneidad vs. estructura;Likert;pregunta_118;118;hofstede_espontaneidad;alta
+"""Me cuesta expresarme libremente si hay personas de mayor rango presentes.""";Hofstede;Distancia de poder;Likert;pregunta_119;119;hofstede_poder;alta
+"""Las empresas necesitan estructuras jerárquicas para funcionar bien.""";Hofstede;Individualismo vs. Colectivismo;Likert;pregunta_120;120;hofstede_individualismo;alta
+"""Me motiva más alcanzar metas personales que grupales.""";Hofstede;Orientación a resultados vs. bienestar;Likert;pregunta_121;121;hofstede_resultados;alta
+"""Prefiero asumir responsabilidades de manera individual.""";Hofstede;Tolerancia a la incertidumbre;Likert;pregunta_122;122;hofstede_incertidumbre;alta
+"""Me motiva saber que mi trabajo tiene un impacto en el equipo.""";Hofstede;Orientación largo plazo;Likert;pregunta_123;123;hofstede_largo_plazo;baja
+"""Prefiero colaborar en grupo antes que trabajar solo.""";Hofstede;Espontaneidad vs. estructura;Likert;pregunta_124;124;hofstede_espontaneidad;baja
+"""Me importa sentirme parte de una comunidad laboral.""";Hofstede;Distancia de poder;Likert;pregunta_125;125;hofstede_poder;baja
+"""Creo que las decisiones deben tomarse pensando en el bienestar del equipo.""";Hofstede;Individualismo vs. Colectivismo;Likert;pregunta_126;126;hofstede_individualismo;baja
+"""Me cuesta tomar decisiones que beneficien solo a unos pocos.""";Hofstede;Orientación a resultados vs. bienestar;Likert;pregunta_127;127;hofstede_resultados;baja
+"""Me siento incómodo cuando se celebran más los logros individuales que los colectivos.""";Hofstede;Tolerancia a la incertidumbre;Likert;pregunta_128;128;hofstede_incertidumbre;baja
+"""Valoro más el rendimiento que el bienestar emocional.""";Hofstede;Orientación largo plazo;Likert;pregunta_129;129;hofstede_largo_plazo;baja
+"""Prefiero enfocarme en metas ambiciosas, aunque generen estrés.""";Hofstede;Espontaneidad vs. estructura;Likert;pregunta_130;130;hofstede_espontaneidad;alta
+"""Creo que el éxito laboral se mide por los resultados, no por las relaciones.""";Hofstede;Distancia de poder;Likert;pregunta_131;131;hofstede_poder;alta
+"""La competencia interna puede ser positiva para el crecimiento.""";Hofstede;Individualismo vs. Colectivismo;Likert;pregunta_132;132;hofstede_individualismo;alta
+"""Es más importante lograr metas que evitar conflictos.""";Hofstede;Orientación a resultados vs. bienestar;Likert;pregunta_133;133;hofstede_resultados;alta
+"""Me enfoco más en ganar que en disfrutar el proceso.""";Hofstede;Tolerancia a la incertidumbre;Likert;pregunta_134;134;hofstede_incertidumbre;alta
+"""El bienestar emocional del equipo debe estar por encima del logro de objetivos.""";Hofstede;Orientación largo plazo;Likert;pregunta_135;135;hofstede_largo_plazo;alta
+"""Una buena cultura laboral se basa más en cuidar a las personas que en exigir resultados.""";Hofstede;Espontaneidad vs. estructura;Likert;pregunta_136;136;hofstede_espontaneidad;baja
+"""Me incomoda cuando no hay un plan claro de trabajo.""";Hofstede;Distancia de poder;Likert;pregunta_137;137;hofstede_poder;baja
+"""Me gusta anticiparme a posibles riesgos.""";Hofstede;Individualismo vs. Colectivismo;Likert;pregunta_138;138;hofstede_individualismo;alta
+"""Prefiero tener reglas claras, aunque limiten la creatividad.""";Hofstede;Orientación a resultados vs. bienestar;Likert;pregunta_139;139;hofstede_resultados;alta
+"""Me cuesta adaptarme cuando las cosas cambian constantemente.""";Hofstede;Tolerancia a la incertidumbre;Likert;pregunta_140;140;hofstede_incertidumbre;alta
+"""Tengo la capacidad de avanzar incluso si hay muchas cosas inciertas.""";Hofstede;Orientación largo plazo;Likert;pregunta_141;141;hofstede_largo_plazo;alta
+"""Me motivan los desafíos que implican improvisar.""";Hofstede;Espontaneidad vs. estructura;Likert;pregunta_142;142;hofstede_espontaneidad;baja
+"""Me siento cómodo trabajando sin una estructura definida.""";Hofstede;Distancia de poder;Likert;pregunta_143;143;hofstede_poder;baja
+"""Prefiero que el entorno laboral sea flexible, aunque implique ambigüedad.""";Hofstede;Individualismo vs. Colectivismo;Likert;pregunta_144;144;hofstede_individualismo;baja
+"""Prefiero proyectos con beneficios inmediatos.""";Hofstede;Orientación a resultados vs. bienestar;Likert;pregunta_145;145;hofstede_resultados;baja
+"""Me cuesta visualizar metas a largo plazo.""";Hofstede;Tolerancia a la incertidumbre;Likert;pregunta_146;146;hofstede_incertidumbre;baja
+"""Tiendo a actuar con una visión estratégica del futuro.""";Hofstede;Orientación largo plazo;Likert;pregunta_147;147;hofstede_largo_plazo;baja
+"""Valoro más la planificación a largo plazo que los resultados inmediatos.""";Hofstede;Espontaneidad vs. estructura;Likert;pregunta_148;148;hofstede_espontaneidad;alta
+"""Pienso más en el impacto futuro que en el reconocimiento actual.""";Hofstede;Distancia de poder;Likert;pregunta_149;149;hofstede_poder;alta
+"""Me frustra cuando un proyecto no tiene resultados visibles pronto.""";Hofstede;Individualismo vs. Colectivismo;Likert;pregunta_150;150;hofstede_individualismo;alta
+"""Me esfuerzo por construir logros sostenibles, aunque tarden más.""";Hofstede;Orientación a resultados vs. bienestar;Likert;pregunta_151;151;hofstede_resultados;alta
+"""Me motiva ver avances rápidos, aunque sean pequeños.""";Hofstede;Tolerancia a la incertidumbre;Likert;pregunta_152;152;hofstede_incertidumbre;alta
+"""Me gusta tener libertad para hacer las cosas a mi manera.""";Hofstede;Orientación largo plazo;Likert;pregunta_153;153;hofstede_largo_plazo;baja
+"""Prefiero que las normas se adapten a cada caso particular.""";Hofstede;Espontaneidad vs. estructura;Likert;pregunta_154;154;hofstede_espontaneidad;alta
+"""Me siento incómodo si hay demasiadas reglas.""";Hofstede;Distancia de poder;Likert;pregunta_155;155;hofstede_poder;baja
+"""Necesito estructura y límites claros para dar lo mejor de mí.""";Hofstede;Individualismo vs. Colectivismo;Likert;pregunta_156;156;hofstede_individualismo;alta
+"""Me frustra cuando hay poca claridad en las normas.""";Hofstede;Orientación a resultados vs. bienestar;Likert;pregunta_157;157;hofstede_resultados;baja
+"""Me motiva poder tomar decisiones sin seguir un protocolo fijo.""";Hofstede;Tolerancia a la incertidumbre;Likert;pregunta_158;158;hofstede_incertidumbre;baja
+"""Soy más creativo cuando puedo romper reglas establecidas.""";Hofstede;Orientación largo plazo;Likert;pregunta_159;159;hofstede_largo_plazo;baja
+"""Rindo mejor cuando tengo autonomía para decidir cómo actuar.""";Hofstede;Espontaneidad vs. estructura;Likert;pregunta_160;160;hofstede_espontaneidad;alta
+"""Cuando hay un conflicto, intento que se haga lo que considero correcto.""";Conflicto;Competitivo;Likert;pregunta_161;161;conflicto_competitivo;alta
+"""Me esfuerzo por defender mi posición, aunque otros no estén de acuerdo.""";Conflicto;Competitivo;Likert;pregunta_162;162;conflicto_competitivo;alta
+"""Suelo actuar con firmeza para proteger mis ideas o intereses.""";Conflicto;Competitivo;Likert;pregunta_163;163;conflicto_competitivo;baja
+"""Busco soluciones donde todos ganen cuando hay un desacuerdo.""";Conflicto;Colaborativo;Likert;pregunta_164;164;conflicto_colaborativo;
+"""Me gusta escuchar con atención antes de proponer una solución.""";Conflicto;Colaborativo;Likert;pregunta_165;165;conflicto_colaborativo;
+"""Me esfuerzo por entender el punto de vista del otro, incluso si no estoy de acuerdo.""";Conflicto;Colaborativo;Likert;pregunta_166;166;conflicto_colaborativo;
+"""A veces prefiero evitar conflictos para no generar tensión.""";Conflicto;Evasivo;Likert;pregunta_167;167;conflicto_evitativo;
+"""Si el problema no es urgente, suelo dejarlo pasar.""";Conflicto;Evasivo;Likert;pregunta_168;168;conflicto_evitativo;
+"""Evito discutir aunque sepa que tengo razón.""";Conflicto;Evasivo;Likert;pregunta_169;169;conflicto_evitativo;
+"""Prefiero ceder en una discusión si eso mantiene la armonía.""";Conflicto;Acomodativo;Likert;pregunta_170;170;conflicto_complaciente;
+"""Si alguien está molesto, hago lo posible por calmarlo, aunque no sea mi culpa.""";Conflicto;Acomodativo;Likert;pregunta_171;171;conflicto_complaciente;
+"""Pongo las necesidades de otros por encima de las mías para evitar confrontaciones.""";Conflicto;Acomodativo;Likert;pregunta_172;172;conflicto_complaciente;
+"""En los conflictos, trato de negociar un punto medio.""";Conflicto;Compromiso;Likert;pregunta_173;173;conflicto_negociador;
+"""Estoy dispuesto a ceder parcialmente para llegar a un acuerdo.""";Conflicto;Compromiso;Likert;pregunta_174;174;conflicto_negociador;
+“Prefiero resolver los desacuerdos buscando una solución equilibrada, aunque implique ajustar mis expectativas.”;Conflicto;Compromiso;Likert;pregunta_175;175;conflicto_negociador;
+"""Me ayuda mucho ver esquemas, gráficos o imágenes para entender un tema.""";Orientación Sensorial;Visual;Selección forzada;pregunta_176;176;orientación_v;
+"""Prefiero leer instrucciones antes de hacer algo nuevo.""";Orientación Sensorial;Visual;Selección forzada;pregunta_177;177;orientación_v;
+"""Tomo apuntes detallados cuando asisto a una capacitación.""";Orientación Sensorial;Visual;Selección forzada;pregunta_178;178;orientación_v;
+"""Memorizo mejor cuando visualizo mentalmente la información.""";Orientación Sensorial;Visual;Selección forzada;pregunta_179;179;orientación_v;
+"""Cuando me explican algo, necesito ver cómo se escribe o se representa gráficamente.""";Orientación Sensorial;Visual;Selección forzada;pregunta_180;180;orientación_v;
+"""Recuerdo con facilidad lo que escucho, incluso si no lo anoto.""";Orientación Sensorial;Auditivo;Selección forzada;pregunta_181;181;orientación_a;
+"""Aprendo mejor cuando escucho a alguien explicar un tema.""";Orientación Sensorial;Auditivo;Selección forzada;pregunta_182;182;orientación_a;
+"""Prefiero participar en discusiones y sesiones habladas para entender bien.""";Orientación Sensorial;Auditivo;Selección forzada;pregunta_183;183;orientación_a;
+"""Me ayuda repetir en voz alta lo que quiero memorizar.""";Orientación Sensorial;Auditivo;Selección forzada;pregunta_184;184;orientación_a;
+"""Prefiero que me expliquen oralmente los pasos antes de leerlos.""";Orientación Sensorial;Auditivo;Selección forzada;pregunta_185;185;orientación_a;
+"""Necesito hacer las cosas por mí mismo para entenderlas bien.""";Orientación Sensorial;Kinestésica;Selección forzada;pregunta_186;186;orientación_k;
+"""Me resulta difícil aprender si no puedo aplicar lo que estoy viendo.""";Orientación Sensorial;Kinestésica;Selección forzada;pregunta_187;187;orientación_k;
+"""Aprendo mejor cuando practico con ejemplos reales o simulaciones.""";Orientación Sensorial;Kinestésica;Selección forzada;pregunta_188;188;orientación_k;
+"""Me impaciento si hay demasiada teoría y poca acción.""";Orientación Sensorial;Kinestésica;Selección forzada;pregunta_189;189;orientación_k;
+"""Prefiero descubrir el funcionamiento de algo probándolo por mi cuenta.""";Orientación Sensorial;Kinestésica;Selección forzada;pregunta_190;190;orientación_k;
+“En este momento, siento que tengo la energía física suficiente para sobrellevar mi rutina laboral.“;Maslow;Fisiológicas;Likert;pregunta_191;191;maslow_fis;
+“Últimamente, he podido dormir y alimentarme de forma que me siento equilibrado.“;Maslow;Fisiológicas;Likert;pregunta_192;192;maslow_fis;
+“Me siento estable emocional y económicamente para planear los próximos meses con tranquilidad.“;Maslow;Seguridad;Likert;pregunta_193;193;maslow_seg;
+“Mi entorno laboral actual me hace sentir protegido frente a cambios imprevistos.“;Maslow;Seguridad;Likert;pregunta_194;194;maslow_seg;
+“Me siento parte de mi equipo, incluso más allá de lo laboral.“;Maslow;Afiliación;Likert;pregunta_195;195;maslow_afi;
+“En mi día a día, tengo interacciones sociales que me nutren y me hacen sentir conectado.“;Maslow;Afiliación;Likert;pregunta_196;196;maslow_afi;
+“Me doy cuenta cuando busco aprobación o reconocimiento por lo que hago.“;Maslow;Reconocimiento;Likert;pregunta_197;197;maslow_rec;
+“Siento que necesito que otros valoren mi trabajo para sentirme completo.“;Maslow;Reconocimiento;Likert;pregunta_198;198;maslow_rec;
+“Estoy en un momento de mi vida en el que quiero aprender, crecer y retarme.“;Maslow;Autorrealización;Likert;pregunta_199;199;maslow_aut;
+“Actualmente, siento que estoy desarrollando mi máximo potencial.“;Maslow;Autorrealización;Likert;pregunta_200;200;maslow_aut;
+“Prefiero que mi trabajo tenga sentido personal, aunque no siempre sea fácil.“;Pink;Propósito;Likert;pregunta_201;201;pink_purp;
+“A veces me cuesta ver cómo lo que hago impacta más allá de mi tarea puntual.“;Pink;Propósito;Likert;pregunta_202;202;pink_purp;
+“Me siento más motivado cuando tengo libertad para decidir cómo hacer mi trabajo.“;Pink;Autonomía;Likert;pregunta_203;203;pink_auto;
+“Me siento más cómodo cuando me dicen exactamente cómo hacer cada paso.“;Pink;Autonomía;Likert;pregunta_204;204;pink_auto;
+“Disfruto mejorando mis habilidades, incluso cuando nadie lo nota.“;Pink;Maestría;Likert;pregunta_205;205;pink_maes;
+“Me frustra invertir tiempo en tareas que no me hacen sentir más capaz.“;Pink;Maestría;Likert;pregunta_206;206;pink_maes;
+“En este momento valoro cuidar mi salud física y mental de forma activa.“;Pink;Salud física;Likert;pregunta_207;207;pink_fis;
+“Suelo postergar lo relacionado con mi bienestar físico frente a otras prioridades.“;Pink;Salud física;Likert;pregunta_208;208;pink_fis;
+“Las relaciones laborales me dan energía en lugar de drenarla.“;Pink;Relacional;Likert;pregunta_209;209;pink_rel;
+“Prefiero mantener cierta distancia emocional en el entorno de trabajo.“;Pink;Relacional;Likert;pregunta_210;210;pink_rel;

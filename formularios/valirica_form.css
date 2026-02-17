@@ -1,0 +1,70 @@
+
+@import url("https://use.typekit.net/qrv8fyz.css");
+
+body {
+    background-color: #FFF4EE;
+    font-family: "Gelica", sans-serif, Arial, Helvetica;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.form-container {
+    width: 100%;
+    max-width: 700px;
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.1);
+}
+
+.titulo-principal {
+    font-size: 50px;
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.descripcion {
+    text-align: center;
+    font-size: 25px;
+    margin-bottom: 30px;
+}
+
+label {
+    display: block;
+    font-size: 25px;
+    margin-top: 20px;
+    color: #004758;
+}
+
+input[type="text"],
+input[type="email"],
+select {
+    width: 100%;
+    padding: 10px;
+    font-size: 25px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-top: 5px;
+}
+
+button {
+    margin-top: 30px;
+    font-size: 25px;
+    font-family: "Gelica", sans-serif;
+    background-color: #FF7800;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #e06500;
+}

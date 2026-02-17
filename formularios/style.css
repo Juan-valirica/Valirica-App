@@ -1,0 +1,90 @@
+
+@import url("https://use.typekit.net/qrv8fyz.css");
+
+body {
+    font-family: "Gelica", sans-serif, Arial, Helvetica;
+    background-color: #f9f9f9;
+    color: #222;
+    margin: 0;
+    padding: 0;
+}
+
+.valirica-formulario {
+    max-width: 800px;
+    margin: 40px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #004758;
+    margin-bottom: 10px;
+}
+
+header p {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+h2 {
+    color: #004758;
+    margin-bottom: 15px;
+}
+
+p {
+    color: #666;
+}
+
+.bloque-preguntas {
+    margin-bottom: 20px;
+}
+
+button {
+    background-color: #004758;
+    color: white;
+    padding: 10px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-right: 10px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #003545;
+}
+
+#progress-bar-container {
+    height: 8px;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+#progress-bar {
+    width: 0%;
+    height: 100%;
+    background-color: #FF7800;
+    transition: width 0.4s ease;
+}
+
+.modulo {
+    display: none;
+}
+
+.modulo.active {
+    display: block;
+}
+
+input[type="radio"], input[type="checkbox"] {
+    margin-right: 8px;
+}
