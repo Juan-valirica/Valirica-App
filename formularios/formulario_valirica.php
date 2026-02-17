@@ -605,6 +605,7 @@ tbody tr + tr td{ border-top:1px solid #F1F1F1; }
         action="procesar_resultados.php?equipo_id=<?= $equipo_id ?>"
         id="formularioValirica"
         method="POST"
+        novalidate
       >
         <input
           name="equipo_id"
@@ -1979,30 +1980,49 @@ tbody tr + tr td{ border-top:1px solid #F1F1F1; }
     btnEnviar.style.display = i === modulos.length - 1 ? 'inline-block' : 'none';
   }
 
-  btnSiguiente.addEventListener('click', () => {
-    const actualModulo = modulos[actual];
-    
-    // Si el módulo es informativo (bienvenida), avanzar sin validar
-if (actualModulo.dataset.skipValidation === "true") {
-  actual++;
-  mostrarModulo(actual);
-  return;
-}
+  function validarModulo(modulo) {
+    // Si el módulo es informativo (bienvenida), no validar
+    if (modulo.dataset.skipValidation === "true") return true;
 
-    
-    const inputs = actualModulo.querySelectorAll('input, select');
-    let valid = false;
+    const selects = modulo.querySelectorAll('select');
+    const radios = modulo.querySelectorAll('input[type="radio"]');
 
-    inputs.forEach(input => {
-      if ((input.type === 'radio' && input.checked) || (input.tagName === 'SELECT' && input.value !== '')) {
-        valid = true;
+    // Módulos de ranking (conflicto/maslow): validar que TODOS los selects estén llenos
+    if (selects.length > 1) {
+      const vacios = Array.from(selects).filter(s => s.value === '');
+      if (vacios.length > 0) {
+        alert("Por favor completa todas las afirmaciones de este bloque antes de continuar.");
+        vacios[0].focus();
+        return false;
       }
-    });
-
-    if (!valid) {
-      alert("Por favor responde esta pregunta antes de continuar.");
-      return;
+      return true;
     }
+
+    // Módulos con un solo select
+    if (selects.length === 1) {
+      if (selects[0].value === '') {
+        alert("Por favor responde esta pregunta antes de continuar.");
+        return false;
+      }
+      return true;
+    }
+
+    // Módulos con radio buttons
+    if (radios.length > 0) {
+      const nombre = radios[0].name;
+      const seleccionado = modulo.querySelector('input[type="radio"]:checked');
+      if (!seleccionado) {
+        alert("Por favor responde esta pregunta antes de continuar.");
+        return false;
+      }
+      return true;
+    }
+
+    return true;
+  }
+
+  btnSiguiente.addEventListener('click', () => {
+    if (!validarModulo(modulos[actual])) return;
 
     if (actual < modulos.length - 1) {
       actual++;
@@ -2014,6 +2034,18 @@ if (actualModulo.dataset.skipValidation === "true") {
     if (actual > 0) {
       actual--;
       mostrarModulo(actual);
+    }
+  });
+
+  // Validación al enviar: verificar TODOS los módulos
+  document.getElementById('formularioValirica').addEventListener('submit', (e) => {
+    for (let i = 0; i < modulos.length; i++) {
+      if (!validarModulo(modulos[i])) {
+        e.preventDefault();
+        actual = i;
+        mostrarModulo(actual);
+        return;
+      }
     }
   });
 
@@ -2036,63 +2068,6 @@ if (actualModulo.dataset.skipValidation === "true") {
   });
 </script>
 
-<script>
- 
-
-  Sortable.create(document.getElementById('sortable-conflicto-1'), {
-    animation: 150,
-    onEnd: () => {
-      const valores = [5.0, 4.0, 3.0, 2.0, 1.0];
-      document.querySelectorAll('#sortable-conflicto-1 li').forEach((el, index) => {
-        const id = el.getAttribute('data-id');
-        document.getElementById('input_' + id).value = valores[index];
-      });
-    }
-  });
-
-  Sortable.create(document.getElementById('sortable-conflicto-2'), {
-    animation: 150,
-    onEnd: () => {
-      const valores = [5.0, 4.0, 3.0, 2.0, 1.0];
-      document.querySelectorAll('#sortable-conflicto-2 li').forEach((el, index) => {
-        const id = el.getAttribute('data-id');
-        document.getElementById('input_' + id).value = valores[index];
-      });
-    }
-  });
-
-  Sortable.create(document.getElementById('sortable-conflicto-3'), {
-    animation: 150,
-    onEnd: () => {
-      const valores = [5.0, 4.0, 3.0, 2.0, 1.0];
-      document.querySelectorAll('#sortable-conflicto-3 li').forEach((el, index) => {
-        const id = el.getAttribute('data-id');
-        document.getElementById('input_' + id).value = valores[index];
-      });
-    }
-  });
-
-  Sortable.create(document.getElementById('sortable-maslow-1'), {
-    animation: 150,
-    onEnd: () => {
-      const valores = [5.0, 4.0, 3.0, 2.0, 1.0];
-      document.querySelectorAll('#sortable-maslow-1 li').forEach((el, index) => {
-        const id = el.getAttribute('data-id');
-        document.getElementById('input_' + id).value = valores[index];
-      });
-    }
-  });
-
-  Sortable.create(document.getElementById('sortable-maslow-2'), {
-    animation: 150,
-    onEnd: () => {
-      const valores = [5.0, 4.0, 3.0, 2.0, 1.0];
-      document.querySelectorAll('#sortable-maslow-2 li').forEach((el, index) => {
-        const id = el.getAttribute('data-id');
-        document.getElementById('input_' + id).value = valores[index];
-      });
-    }
-  });
-</script>
+<!-- Sortable eliminado: los bloques de conflicto y maslow usan selects, no listas sortable -->
 </body>
 </html>
