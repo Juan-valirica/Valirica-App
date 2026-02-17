@@ -11,14 +11,14 @@ if (!$user_id) {
 $stmt = $conn->prepare("SELECT * FROM analisis_proposito WHERE usuario_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$analisis = $stmt->get_result()->fetch_assoc();
+$analisis = stmt_get_result($stmt)->fetch_assoc();
 $stmt->close();
 
 
 $stmt = $conn->prepare("SELECT cultura_empresa_tipo FROM usuarios WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$result = $stmt->get_result();
+$result = stmt_get_result($stmt);
 $user_info = $result->fetch_assoc();
 $cultura_tipo = $user_info['cultura_empresa_tipo'];
 

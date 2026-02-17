@@ -80,7 +80,7 @@ $viewer_id = (int)$_SESSION['user_id'];
 $stmt = $conn->prepare("SELECT id, empresa, rol, logo FROM usuarios WHERE id = ? LIMIT 1");
 $stmt->bind_param("i", $viewer_id);
 $stmt->execute();
-$viewer = $stmt->get_result()->fetch_assoc() ?: [];
+$viewer = stmt_get_result($stmt)->fetch_assoc() ?: [];
 $stmt->close();
 
 $_SESSION['role'] = strtolower((string)($viewer['rol'] ?? ''));
@@ -144,7 +144,7 @@ if ($company_id > 0 && $sig === '') {
   $stmt = $conn->prepare("SELECT id FROM usuarios WHERE id = ? AND provider_id = ? LIMIT 1");
   $stmt->bind_param("ii", $company_id, $viewer_id);
   $stmt->execute();
-  $exists = (bool)$stmt->get_result()->fetch_assoc();
+  $exists = (bool)stmt_get_result($stmt)->fetch_assoc();
   $stmt->close();
 
   if ($exists) {
@@ -168,7 +168,7 @@ if ($company_id <= 0 && $sig === '') {
   ");
   $stmt->bind_param("i", $viewer_id);
   $stmt->execute();
-  $companies = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+  $companies = stmt_get_result($stmt)->fetch_all(MYSQLI_ASSOC);
   $stmt->close();
   ?>
   <!DOCTYPE html>
@@ -966,7 +966,7 @@ $stmt = $conn->prepare("
 ");
 $stmt->bind_param("ii", $company_id, $viewer_id);
 $stmt->execute();
-$company = $stmt->get_result()->fetch_assoc() ?: null;
+$company = stmt_get_result($stmt)->fetch_assoc() ?: null;
 $stmt->close();
 
 if (!$company) {
@@ -997,7 +997,7 @@ if ($ci_fk) {
   $stCI = $conn->prepare($sqlCI);
   $stCI->bind_param("i", $company_id);
   $stCI->execute();
-  $ci = $stCI->get_result()->fetch_assoc() ?: null;
+  $ci = stmt_get_result($stCI)->fetch_assoc() ?: null;
   $stCI->close();
   if ($ci) {
     $prop      = trim((string)($ci['proposito'] ?? ''));
@@ -1026,12 +1026,12 @@ function get_company_metrics(mysqli $conn, int $company_id): array {
   try {
     $stmt = $conn->prepare("SELECT COUNT(*) c FROM equipo WHERE `$fk` = ? $whereEstado");
     $stmt->bind_param("i", $company_id); $stmt->execute();
-    $team_count = (int)($stmt->get_result()->fetch_assoc()['c'] ?? 0);
+    $team_count = (int)(stmt_get_result($stmt)->fetch_assoc()['c'] ?? 0);
     $stmt->close();
   } catch (\Throwable $e) {
     $stmt = $conn->prepare("SELECT COUNT(*) c FROM equipo WHERE `$fk` = ?");
     $stmt->bind_param("i", $company_id); $stmt->execute();
-    $team_count = (int)($stmt->get_result()->fetch_assoc()['c'] ?? 0);
+    $team_count = (int)(stmt_get_result($stmt)->fetch_assoc()['c'] ?? 0);
     $stmt->close();
   }
 
@@ -1046,7 +1046,7 @@ function get_company_metrics(mysqli $conn, int $company_id): array {
       WHERE `$fk` = ? $whereEstado
     ";
     $st = $conn->prepare($sqlAlign); $st->bind_param("i", $company_id);
-    $st->execute(); $r = $st->get_result()->fetch_assoc(); $st->close();
+    $st->execute(); $r = stmt_get_result($st)->fetch_assoc(); $st->close();
     if ($r && $r['a'] !== null) $align_avg = (float)$r['a'];
   } catch (\Throwable $e) { $align_avg = null; }
 
@@ -1055,7 +1055,7 @@ function get_company_metrics(mysqli $conn, int $company_id): array {
       try {
         $st = $conn->prepare("SELECT AVG(`$col`) a FROM equipo WHERE `$fk` = ? $whereEstado");
         $st->bind_param("i", $company_id); $st->execute();
-        $r = $st->get_result()->fetch_assoc(); $st->close();
+        $r = stmt_get_result($st)->fetch_assoc(); $st->close();
         if ($r && $r['a'] !== null) { $align_avg = (float)$r['a']; break; }
       } catch (\Throwable $e) { /* siguiente */ }
     }
@@ -1066,7 +1066,7 @@ function get_company_metrics(mysqli $conn, int $company_id): array {
     try {
       $st = $conn->prepare("SELECT AVG(`$mcol`) m FROM equipo WHERE `$fk` = ? $whereEstado");
       $st->bind_param("i", $company_id); $st->execute();
-      $r = $st->get_result()->fetch_assoc(); $st->close();
+      $r = stmt_get_result($st)->fetch_assoc(); $st->close();
       if ($r && $r['m'] !== null) { $motiv_avg = (float)$r['m']; break; }
     } catch (\Throwable $e) { /* siguiente */ }
   }
@@ -1118,7 +1118,7 @@ $stmt_cultura = $conn->prepare("
 ");
 $stmt_cultura->bind_param("i", $user_id);
 $stmt_cultura->execute();
-$result_cultura = $stmt_cultura->get_result();
+$result_cultura = stmt_get_result($stmt_cultura);
 $cultura_ideal_mapa = $result_cultura->fetch_assoc() ?? [];
 $stmt_cultura->close();
 
@@ -1145,7 +1145,7 @@ $stmt_valores = $conn->prepare("
 ");
 $stmt_valores->bind_param("i", $user_id);
 $stmt_valores->execute();
-$result_valores = $stmt_valores->get_result();
+$result_valores = stmt_get_result($stmt_valores);
 
 $valores_puntos = [];
 while ($v = $result_valores->fetch_assoc()) {
@@ -1181,7 +1181,7 @@ function promedio_valores_marca(array $claves, mysqli $conn, int $uid): float {
     $stmt = $conn->prepare("SELECT $campos FROM valores_marca WHERE usuario_id = ?");
     $stmt->bind_param("i", $uid);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($fila = $res->fetch_assoc()) {
         foreach ($claves as $clave) { $sumas[$clave] += (int)$fila[$clave]; }
         $count++;
@@ -1218,7 +1218,7 @@ $q = $conn->prepare("
 ");
 $q->bind_param("i", $user_id);
 $q->execute();
-$rs = $q->get_result();
+$rs = stmt_get_result($q);
 
 while ($r = $rs->fetch_assoc()) {
     $indiv = (float)($r['individualismo']   ?? 0);   // -1..+1 (externo +)
@@ -1292,7 +1292,7 @@ $stmt_team = $conn->prepare("
 $stmt_team->bind_param("i", $company_id);
 
     $stmt_team->execute();
-    $res_team = $stmt_team->get_result();
+    $res_team = stmt_get_result($stmt_team);
 
 
     // 2) Cultura ideal de esa Company (para comparar)
@@ -1319,7 +1319,7 @@ $stmt_ideal = $conn->prepare("
 
     $stmt_ideal->bind_param("i", $company_id);
     $stmt_ideal->execute();
-    $res_ideal    = $stmt_ideal->get_result();
+    $res_ideal    = stmt_get_result($stmt_ideal);
     $cultura_ideal = $res_ideal->fetch_assoc() ?: [];
     $stmt_ideal->close();
 
@@ -1466,7 +1466,7 @@ try {
   $stmt_rf = $conn->prepare($sqlRF);
   $stmt_rf->bind_param("i", $company_id);
   $stmt_rf->execute();
-  $res_rf = $stmt_rf->get_result();
+  $res_rf = stmt_get_result($stmt_rf);
 
   $cols_motiv = ['motivacion_pct','motivacion_porcentaje','motivacion_total','motivacion','motivacion_media'];
 
@@ -1720,7 +1720,7 @@ try {
   ");
   $stV->bind_param("i", $company_id);
   $stV->execute();
-  $rsV = $stV->get_result();
+  $rsV = stmt_get_result($stV);
   while ($rowV = $rsV->fetch_assoc()) {
     $t = trim((string)$rowV['titulo']);
     if ($t !== '' && !in_array($t, $vals_list, true)) $vals_list[] = $t;

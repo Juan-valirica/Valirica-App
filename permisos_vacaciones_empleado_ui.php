@@ -13,7 +13,7 @@ $stmt_balance = $conn->prepare("
 ");
 $stmt_balance->bind_param("i", $empleado_id);
 $stmt_balance->execute();
-$balance_vacaciones = $stmt_balance->get_result()->fetch_assoc();
+$balance_vacaciones = stmt_get_result($stmt_balance)->fetch_assoc();
 $stmt_balance->close();
 
 // Obtener notificaciones no leídas
@@ -26,7 +26,7 @@ $stmt_notif = $conn->prepare("
 ");
 $stmt_notif->bind_param("i", $empleado_id);
 $stmt_notif->execute();
-$result_notif = $stmt_notif->get_result();
+$result_notif = stmt_get_result($stmt_notif);
 while ($row = $result_notif->fetch_assoc()) {
     $notificaciones_empleado[] = $row;
 }
@@ -47,7 +47,7 @@ $stmt_prox = $conn->prepare("
 ");
 $stmt_prox->bind_param("ii", $empleado_id, $empleado_id);
 $stmt_prox->execute();
-$result_prox = $stmt_prox->get_result();
+$result_prox = stmt_get_result($stmt_prox);
 while ($row = $result_prox->fetch_assoc()) {
     $proximos_permisos[] = $row;
 }

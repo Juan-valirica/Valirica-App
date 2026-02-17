@@ -110,7 +110,7 @@ $usuario_id = $user_id; // Necesario para reutilizar el mismo header del dashboa
 
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$u = $stmt->get_result()->fetch_assoc() ?: [];
+$u = stmt_get_result($stmt)->fetch_assoc() ?: [];
 $stmt->close();
 
 $empresa = $u['empresa'] ?? 'Nombre de la empresa';
@@ -145,7 +145,7 @@ $stmt_cultura = $conn->prepare("
 ");
 $stmt_cultura->bind_param("i", $user_id);
 $stmt_cultura->execute();
-$result_cultura = $stmt_cultura->get_result();
+$result_cultura = stmt_get_result($stmt_cultura);
 $cultura_ideal = $result_cultura->fetch_assoc() ?? [];
 $stmt_cultura->close();
 
@@ -176,7 +176,7 @@ $stmt_valores = $conn->prepare("
 ");
 $stmt_valores->bind_param("i", $user_id);
 $stmt_valores->execute();
-$result_valores = $stmt_valores->get_result();
+$result_valores = stmt_get_result($stmt_valores);
 
 $valores_puntos = [];
 $valores_list = [];
@@ -231,7 +231,7 @@ $stmt_equipo = $conn->prepare("
 ");
 $stmt_equipo->bind_param("i", $user_id);
 $stmt_equipo->execute();
-$res_equipo = $stmt_equipo->get_result();
+$res_equipo = stmt_get_result($stmt_equipo);
 
 $total_alineacion = 0; $n = 0;
 while ($row = $res_equipo->fetch_assoc()) {
@@ -275,7 +275,7 @@ list($energia_icon, $energia_status) = battery_icon_for_pct($energia_equipo);
 $stmt_sen = $conn->prepare("SELECT AVG(visual) visual, AVG(auditivo) auditivo, AVG(kinestesico) kinestesico FROM equipo WHERE usuario_id = ?");
 $stmt_sen->bind_param("i", $user_id);
 $stmt_sen->execute();
-$sen = $stmt_sen->get_result()->fetch_assoc() ?: ['visual'=>0,'auditivo'=>0,'kinestesico'=>0];
+$sen = stmt_get_result($stmt_sen)->fetch_assoc() ?: ['visual'=>0,'auditivo'=>0,'kinestesico'=>0];
 $stmt_sen->close();
 $prom_sens = ['visual'=>(float)$sen['visual'], 'auditivo'=>(float)$sen['auditivo'], 'kinestesico'=>(float)$sen['kinestesico']];
 $hay_datos_sensoriales = array_sum($prom_sens) > 0;
@@ -302,7 +302,7 @@ function promedio_valores_marca(array $claves, mysqli $conn, int $uid): float {
     $stmt = $conn->prepare("SELECT $campos FROM valores_marca WHERE usuario_id = ?");
     $stmt->bind_param("i", $uid);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($fila = $res->fetch_assoc()) {
         foreach ($claves as $clave) { $sumas[$clave] += (int)$fila[$clave]; }
         $count++;
@@ -317,7 +317,7 @@ function promedio_valores_marca(array $claves, mysqli $conn, int $uid): float {
 $stmt = $conn->prepare("SELECT proposito, proposito_enfoque, proposito_motivacion, proposito_tiempo, proposito_disrupcion, proposito_inmersion FROM cultura_ideal WHERE usuario_id = ?");
 $stmt->bind_param("i", $uid);
 $stmt->execute();
-$datos_proposito = $stmt->get_result()->fetch_assoc() ?: [];
+$datos_proposito = stmt_get_result($stmt)->fetch_assoc() ?: [];
 $stmt->close();
 
 $proposito_txt        = trim((string)($datos_proposito['proposito'] ?? ''));
@@ -331,7 +331,7 @@ $proposito_inmersion  = (float)($datos_proposito['proposito_inmersion'] ?? 0);
 $stmt = $conn->prepare("SELECT titulo, descripcion, aplicacion, activador, proposito, rol, institucional FROM valores_marca WHERE usuario_id = ?");
 $stmt->bind_param("i", $uid);
 $stmt->execute();
-$res_val = $stmt->get_result();
+$res_val = stmt_get_result($stmt);
 
 $valores_puntos = [];
 $valores_list   = []; // para mostrar títulos/descripciones
@@ -394,7 +394,7 @@ $q = $conn->prepare("
 ");
 $q->bind_param("i", $uid);
 $q->execute();
-$rs = $q->get_result();
+$rs = stmt_get_result($q);
 
 // Nueva lógica: para cada miembro detectamos la escala y usamos la función v2
 while ($r = $rs->fetch_assoc()) {

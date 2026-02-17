@@ -21,7 +21,7 @@ $stmt = $conn->prepare("
     LEFT JOIN analisis_proposito ap ON u.id = ap.usuario_id
 ");
 $stmt->execute();
-$result = $stmt->get_result();
+$result = stmt_get_result($stmt);
 $empresas = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 ?>

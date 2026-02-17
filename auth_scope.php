@@ -33,7 +33,7 @@ if (!function_exists('provider_can_access_company')) {
     $stmt = $conn->prepare("SELECT 1 FROM usuarios WHERE id = ? AND provider_id = ? LIMIT 1");
     $stmt->bind_param("ii", $company_id, $provider_user_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     return ($res && $res->num_rows > 0);
   }
 }
@@ -100,7 +100,7 @@ if (!function_exists('resolve_company_scope_or_403')) {
       ");
       $stmt->bind_param("i", $uid);
       $stmt->execute();
-      $res = $stmt->get_result();
+      $res = stmt_get_result($stmt);
       if (!$res || !$res->num_rows) {
         http_response_code(403); exit('Forbidden: employee not linked to a company');
       }
@@ -123,7 +123,7 @@ if (!function_exists('get_company_header')) {
     $stmt = $conn->prepare("SELECT id, empresa, logo FROM usuarios WHERE id = ? LIMIT 1");
     $stmt->bind_param("i", $company_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     return ($res && $res->num_rows) ? $res->fetch_assoc() : null;
   }
 }

@@ -17,7 +17,7 @@ $stmt = $conn->prepare("SELECT empresa, logo, cultura_empresa_tipo FROM usuarios
 
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$result = $stmt->get_result();
+$result = stmt_get_result($stmt);
 if ($result->num_rows > 0) {
     $user_info = $result->fetch_assoc();
     $empresa = htmlspecialchars($user_info['empresa']);

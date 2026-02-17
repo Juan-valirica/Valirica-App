@@ -56,7 +56,7 @@ $sql = "SELECT id, nombre_persona, apellido, clave_acceso
 $stmt = $conn->prepare($sql);
 $stmt->bind_param('s', $correo);
 $stmt->execute();
-$res = $stmt->get_result();
+$res = stmt_get_result($stmt);
 
 // Respuesta genérica para evitar enumeración de usuarios
 if (!$res || $res->num_rows === 0) {
@@ -86,7 +86,7 @@ $check = $conn->prepare("SELECT COUNT(*) AS cnt
 
 $check->bind_param('i', $empleado_id);
 $check->execute();
-$countData = $check->get_result()->fetch_assoc();
+$countData = stmt_get_result($check)->fetch_assoc();
 $check->close();
 
 if (($countData['cnt'] ?? 0) >= 3) {

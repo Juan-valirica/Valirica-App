@@ -110,7 +110,7 @@ $usuario_id = $user_id; // Necesario para reutilizar el mismo header del dashboa
 
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$u = $stmt->get_result()->fetch_assoc() ?: [];
+$u = stmt_get_result($stmt)->fetch_assoc() ?: [];
 $stmt->close();
 
 $empresa = $u['empresa'] ?? 'Nombre de la empresa';
@@ -128,7 +128,7 @@ $stmt_areas = $conn->prepare("
 ");
 $stmt_areas->bind_param("i", $user_id);
 $stmt_areas->execute();
-$areas_trabajo = $stmt_areas->get_result()->fetch_all(MYSQLI_ASSOC);
+$areas_trabajo = stmt_get_result($stmt_areas)->fetch_all(MYSQLI_ASSOC);
 $stmt_areas->close();
 
 /* Área seleccionada (GET o default) */
@@ -145,14 +145,14 @@ if (!empty($_GET['equipo_ids']) && is_array($_GET['equipo_ids'])) {
 
 
 
-/* ============ Miembros del equipo según área (por NOMBRE) ============ */
+/* ============ Miembros del equipo según área (vía tabla junction) ============ */
 $equipo_miembros = [];
 
 if ($area_seleccionada === 'custom') {
 
     // Equipo personalizado → TODOS los miembros
     $stmt_eq = $conn->prepare("
-        SELECT id, nombre_persona, apellido, cargo
+        SELECT id, nombre_persona, apellido, cargo, 0 AS es_lider
         FROM equipo
         WHERE usuario_id = ?
         ORDER BY nombre_persona ASC
@@ -161,40 +161,24 @@ if ($area_seleccionada === 'custom') {
 
 } else {
 
-    // Obtener el nombre real del área desde areas_trabajo
-    $stmt_area = $conn->prepare("
-        SELECT nombre_area
-        FROM areas_trabajo
-        WHERE id = ? AND usuario_id = ?
-        LIMIT 1
+    // Filtrar por área usando tabla junction equipo_areas_trabajo
+    $area_sel_int = (int)$area_seleccionada;
+    $stmt_eq = $conn->prepare("
+        SELECT DISTINCT e.id, e.nombre_persona, e.apellido, e.cargo, eat.es_lider
+        FROM equipo e
+        INNER JOIN equipo_areas_trabajo eat ON e.id = eat.equipo_id
+        WHERE e.usuario_id = ?
+          AND eat.area_id = ?
+        ORDER BY eat.es_lider DESC, e.nombre_persona ASC
     ");
-    $stmt_area->bind_param("ii", $area_seleccionada, $user_id);
-    $stmt_area->execute();
-    $area_row = $stmt_area->get_result()->fetch_assoc();
-    $stmt_area->close();
-
-    $nombre_area = $area_row['nombre_area'] ?? '';
-
-    // Si el área existe, filtramos por NOMBRE
-    if ($nombre_area !== '') {
-        $stmt_eq = $conn->prepare("
-            SELECT id, nombre_persona, apellido, cargo
-            FROM equipo
-            WHERE usuario_id = ?
-              AND area_trabajo = ?
-            ORDER BY nombre_persona ASC
-        ");
-        $stmt_eq->bind_param("is", $user_id, $nombre_area);
-    } else {
-        // Área inválida → no mostrar nadie
-        $equipo_miembros = [];
-        $stmt_eq = null;
+    if ($stmt_eq) {
+        $stmt_eq->bind_param("ii", $user_id, $area_sel_int);
     }
 }
 
 if ($stmt_eq) {
     $stmt_eq->execute();
-    $equipo_miembros = $stmt_eq->get_result()->fetch_all(MYSQLI_ASSOC);
+    $equipo_miembros = stmt_get_result($stmt_eq)->fetch_all(MYSQLI_ASSOC);
     $stmt_eq->close();
 }
 
@@ -228,7 +212,7 @@ $stmt_cultura = $conn->prepare("
 ");
 $stmt_cultura->bind_param("i", $user_id);
 $stmt_cultura->execute();
-$result_cultura = $stmt_cultura->get_result();
+$result_cultura = stmt_get_result($stmt_cultura);
 $cultura_ideal = $result_cultura->fetch_assoc() ?? [];
 $stmt_cultura->close();
 
@@ -259,7 +243,7 @@ $stmt_valores = $conn->prepare("
 ");
 $stmt_valores->bind_param("i", $user_id);
 $stmt_valores->execute();
-$result_valores = $stmt_valores->get_result();
+$result_valores = stmt_get_result($stmt_valores);
 
 $valores_puntos = [];
 $valores_list = [];
@@ -342,7 +326,7 @@ list($energia_icon, $energia_status) = battery_icon_for_pct($energia_equipo);
 $stmt_sen = $conn->prepare("SELECT AVG(visual) visual, AVG(auditivo) auditivo, AVG(kinestesico) kinestesico FROM equipo WHERE usuario_id = ?");
 $stmt_sen->bind_param("i", $user_id);
 $stmt_sen->execute();
-$sen = $stmt_sen->get_result()->fetch_assoc() ?: ['visual'=>0,'auditivo'=>0,'kinestesico'=>0];
+$sen = stmt_get_result($stmt_sen)->fetch_assoc() ?: ['visual'=>0,'auditivo'=>0,'kinestesico'=>0];
 $stmt_sen->close();
 $prom_sens = ['visual'=>(float)$sen['visual'], 'auditivo'=>(float)$sen['auditivo'], 'kinestesico'=>(float)$sen['kinestesico']];
 $hay_datos_sensoriales = array_sum($prom_sens) > 0;
@@ -366,7 +350,7 @@ function promedio_valores_marca(array $claves, mysqli $conn, int $uid): float {
     $stmt = $conn->prepare("SELECT $campos FROM valores_marca WHERE usuario_id = ?");
     $stmt->bind_param("i", $uid);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($fila = $res->fetch_assoc()) {
         foreach ($claves as $clave) { $sumas[$clave] += (int)$fila[$clave]; }
         $count++;
@@ -381,7 +365,7 @@ function promedio_valores_marca(array $claves, mysqli $conn, int $uid): float {
 $stmt = $conn->prepare("SELECT proposito, proposito_enfoque, proposito_motivacion, proposito_tiempo, proposito_disrupcion, proposito_inmersion FROM cultura_ideal WHERE usuario_id = ?");
 $stmt->bind_param("i", $uid);
 $stmt->execute();
-$datos_proposito = $stmt->get_result()->fetch_assoc() ?: [];
+$datos_proposito = stmt_get_result($stmt)->fetch_assoc() ?: [];
 $stmt->close();
 
 $proposito_txt        = trim((string)($datos_proposito['proposito'] ?? ''));
@@ -395,7 +379,7 @@ $proposito_inmersion  = (float)($datos_proposito['proposito_inmersion'] ?? 0);
 $stmt = $conn->prepare("SELECT titulo, descripcion, aplicacion, activador, proposito, rol, institucional FROM valores_marca WHERE usuario_id = ?");
 $stmt->bind_param("i", $uid);
 $stmt->execute();
-$res_val = $stmt->get_result();
+$res_val = stmt_get_result($stmt);
 
 $valores_puntos = [];
 $valores_list   = []; // para mostrar títulos/descripciones
@@ -456,26 +440,28 @@ if (!empty($_GET['equipo_ids']) && is_array($_GET['equipo_ids'])) {
     $equipo_ids_seleccionados = array_map('intval', $_GET['equipo_ids']);
 }
 
-/* Si hay área seleccionada (no custom), obtenemos su nombre */
-$nombre_area = '';
+/* Si hay área seleccionada (no custom), obtenemos IDs de miembros del área */
+$ids_en_area = [];
 if ($area_seleccionada !== 'custom') {
-    $stmt_area = $conn->prepare("
-        SELECT nombre_area
-        FROM areas_trabajo
-        WHERE id = ? AND usuario_id = ?
-        LIMIT 1
+    $area_sel_int2 = (int)$area_seleccionada;
+    $stmt_area_ids = $conn->prepare("
+        SELECT eat.equipo_id
+        FROM equipo_areas_trabajo eat
+        INNER JOIN equipo e ON eat.equipo_id = e.id
+        WHERE eat.area_id = ? AND e.usuario_id = ?
     ");
-    $stmt_area->bind_param("ii", $area_seleccionada, $uid);
-    $stmt_area->execute();
-    $row_area = $stmt_area->get_result()->fetch_assoc();
-    $stmt_area->close();
-
-    $nombre_area = $row_area['nombre_area'] ?? '';
+    $stmt_area_ids->bind_param("ii", $area_sel_int2, $uid);
+    $stmt_area_ids->execute();
+    $res_area_ids = stmt_get_result($stmt_area_ids);
+    while ($row_a = $res_area_ids->fetch_assoc()) {
+        $ids_en_area[] = (int)$row_a['equipo_id'];
+    }
+    $stmt_area_ids->close();
 }
 
 /* Traemos TODOS los miembros (filtraremos en PHP) */
 $q = $conn->prepare("
-  SELECT id, nombre_persona, area_trabajo,
+  SELECT id, nombre_persona,
          hofstede_poder          AS distancia_poder,
          hofstede_individualismo AS individualismo,
          hofstede_incertidumbre  AS incertidumbre,
@@ -487,21 +473,21 @@ $q = $conn->prepare("
 ");
 $q->bind_param("i", $uid);
 $q->execute();
-$rs = $q->get_result();
+$rs = stmt_get_result($q);
 
 while ($r = $rs->fetch_assoc()) {
 
-    /* ===== FILTRO 1: ÁREA ===== */
+    /* ===== FILTRO 1: ÁREA (vía tabla junction) ===== */
     if ($area_seleccionada !== 'custom') {
-        if ($nombre_area === '' || $r['area_trabajo'] !== $nombre_area) {
-            continue; // ❌ fuera del área
+        if (!in_array((int)$r['id'], $ids_en_area, true)) {
+            continue;
         }
     }
 
     /* ===== FILTRO 2: CHECKBOX ===== */
     if (!empty($equipo_ids_seleccionados)) {
         if (!in_array((int)$r['id'], $equipo_ids_seleccionados, true)) {
-            continue; // ❌ no marcado
+            continue;
         }
     }
 
@@ -597,7 +583,7 @@ if ($team_n > 0) {
     $stmt_team_avg->bind_param($types, ...$equipo_ids_visibles);
     $stmt_team_avg->execute();
 
-    $team_avg = $stmt_team_avg->get_result()->fetch_assoc() ?: $team_avg;
+    $team_avg = stmt_get_result($stmt_team_avg)->fetch_assoc() ?: $team_avg;
 
     $stmt_team_avg->close();
 }
@@ -636,7 +622,7 @@ if (!empty($equipo_ids_visibles)) {
     $stmt = $conn->prepare($sql);
     $stmt->bind_param($types, ...$equipo_ids_visibles);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
 
     while ($row = $res->fetch_assoc()) {
         $suma = 0.0;
@@ -698,7 +684,7 @@ if (!empty($equipo_ids_visibles)) {
     $stmt_p = $conn->prepare($sql_p);
     $stmt_p->bind_param($tp_p, ...$equipo_ids_visibles);
     $stmt_p->execute();
-    $res_p = $stmt_p->get_result();
+    $res_p = stmt_get_result($stmt_p);
 
     while ($row_p = $res_p->fetch_assoc()) {
         $suma_p = 0.0;
@@ -1543,6 +1529,9 @@ list($mot_label, $mot_class, $mot_icon) =
             />
             <span>
               <?= h($nombre_completo) ?>
+              <?php if (!empty($m['es_lider'])): ?>
+                <small style="color: #92400E; background: #FEF3C7; padding: 1px 6px; border-radius: 8px; font-weight: 600; border: 1px solid #F59E0B;">&#9733; L&iacute;der</small>
+              <?php endif; ?>
               <?php if (!empty($m['cargo'])): ?>
                 <small><?= h($m['cargo']) ?></small>
               <?php endif; ?>

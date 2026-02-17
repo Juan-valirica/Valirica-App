@@ -18,7 +18,7 @@ $stmt_p = $conn->prepare("
 ");
 $stmt_p->bind_param("i", $user_id);
 $stmt_p->execute();
-$result_p = $stmt_p->get_result();
+$result_p = stmt_get_result($stmt_p);
 while ($row = $result_p->fetch_assoc()) {
     $permisos_pendientes[] = $row;
 }
@@ -33,7 +33,7 @@ $stmt_v = $conn->prepare("
 ");
 $stmt_v->bind_param("i", $user_id);
 $stmt_v->execute();
-$result_v = $stmt_v->get_result();
+$result_v = stmt_get_result($stmt_v);
 while ($row = $result_v->fetch_assoc()) {
     $vacaciones_pendientes[] = $row;
 }

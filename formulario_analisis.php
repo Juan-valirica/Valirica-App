@@ -18,7 +18,7 @@ if (!$user_id) {
 $stmt = $conn->prepare("SELECT empresa FROM usuarios WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$result = $stmt->get_result();
+$result = stmt_get_result($stmt);
 if ($empresa = $result->fetch_assoc()) {
     $empresa_nombre = $empresa['empresa'];
 } else {
@@ -30,7 +30,7 @@ $stmt->close();
 $stmt = $conn->prepare("SELECT titulo FROM valores_marca WHERE usuario_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$valores_result = $stmt->get_result();
+$valores_result = stmt_get_result($stmt);
 $valores = [];
 while ($row = $valores_result->fetch_assoc()) {
     $valores[] = $row['titulo'];

@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $stmt = $conn->prepare("SELECT usuario_id FROM equipo WHERE id = ?");
         $stmt->bind_param("i", $empleado_id);
         $stmt->execute();
-        $result = $stmt->get_result()->fetch_assoc();
+        $result = stmt_get_result($stmt)->fetch_assoc();
         $usuario_id = $result['usuario_id'];
         $stmt->close();
 
@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $stmt = $conn->prepare("SELECT dias_anticipacion_minima FROM tipos_permisos WHERE id = ?");
         $stmt->bind_param("i", $tipo_permiso_id);
         $stmt->execute();
-        $tipo_info = $stmt->get_result()->fetch_assoc();
+        $tipo_info = stmt_get_result($stmt)->fetch_assoc();
         $stmt->close();
 
         $dias_hasta_inicio = (strtotime($fecha_inicio) - strtotime(date('Y-m-d'))) / 86400;
@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         ");
         $stmt->bind_param("isssss", $empleado_id, $fecha_inicio, $fecha_fin, $fecha_inicio, $fecha_fin, $fecha_inicio);
         $stmt->execute();
-        $solape = $stmt->get_result()->fetch_assoc();
+        $solape = stmt_get_result($stmt)->fetch_assoc();
         $stmt->close();
 
         if ($solape['total'] > 0) {
@@ -181,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $stmt = $conn->prepare("SELECT usuario_id FROM equipo WHERE id = ?");
         $stmt->bind_param("i", $empleado_id);
         $stmt->execute();
-        $result = $stmt->get_result()->fetch_assoc();
+        $result = stmt_get_result($stmt)->fetch_assoc();
         $usuario_id = $result['usuario_id'];
         $stmt->close();
 
@@ -201,7 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         ");
         $stmt->bind_param("ii", $empleado_id, $anio);
         $stmt->execute();
-        $balance = $stmt->get_result()->fetch_assoc();
+        $balance = stmt_get_result($stmt)->fetch_assoc();
         $stmt->close();
 
         if (!$balance) {
@@ -235,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         ");
         $stmt->bind_param("isssss", $empleado_id, $fecha_inicio, $fecha_fin, $fecha_inicio, $fecha_fin, $fecha_inicio);
         $stmt->execute();
-        $solape = $stmt->get_result()->fetch_assoc();
+        $solape = stmt_get_result($stmt)->fetch_assoc();
         $stmt->close();
 
         if ($solape['total'] > 0) {
@@ -316,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         ");
         $stmt->bind_param("ii", $permiso_id, $user_id);
         $stmt->execute();
-        $permiso = $stmt->get_result()->fetch_assoc();
+        $permiso = stmt_get_result($stmt)->fetch_assoc();
         $stmt->close();
 
         if (!$permiso) {
@@ -394,7 +394,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         ");
         $stmt->bind_param("ii", $vacacion_id, $user_id);
         $stmt->execute();
-        $vacacion = $stmt->get_result()->fetch_assoc();
+        $vacacion = stmt_get_result($stmt)->fetch_assoc();
         $stmt->close();
 
         if (!$vacacion) {
@@ -489,7 +489,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'obtener_tipos_permisos') {
     $stmt = $conn->prepare("SELECT * FROM tipos_permisos WHERE activo = TRUE ORDER BY nombre");
     $stmt->execute();
-    $result = $stmt->get_result();
+    $result = stmt_get_result($stmt);
 
     $tipos = [];
     while ($row = $result->fetch_assoc()) {
@@ -518,7 +518,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     ");
     $stmt->bind_param("ii", $empleado_id, $anio);
     $stmt->execute();
-    $balance = $stmt->get_result()->fetch_assoc();
+    $balance = stmt_get_result($stmt)->fetch_assoc();
     $stmt->close();
 
     if (!$balance) {
@@ -565,7 +565,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     ");
     $stmt->bind_param("is", $usuario_id, $tipo_destino);
     $stmt->execute();
-    $result = $stmt->get_result();
+    $result = stmt_get_result($stmt);
 
     $notificaciones = [];
     while ($row = $result->fetch_assoc()) {
@@ -595,7 +595,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     ");
     $stmt->bind_param("ii", $user_id, $user_id);
     $stmt->execute();
-    $result = $stmt->get_result()->fetch_assoc();
+    $result = stmt_get_result($stmt)->fetch_assoc();
     $count = (int)($result['total'] ?? 0);
     $stmt->close();
 

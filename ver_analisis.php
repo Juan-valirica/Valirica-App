@@ -24,7 +24,7 @@ function promedio_valores_marca(array $claves, mysqli $conn, int $user_id): floa
     $stmt = $conn->prepare("SELECT $campos FROM valores_marca WHERE usuario_id = ?");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
 
     while ($fila = $res->fetch_assoc()) {
         foreach ($claves as $clave) {
@@ -59,7 +59,7 @@ $ejeY = round(($proposito_disrupcion + $proposito_inmersion + $proposito_tiempo 
 $stmt = $conn->prepare("SELECT titulo, aplicacion, activador, proposito, rol, institucional FROM valores_marca WHERE usuario_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$res_valores_individuales = $stmt->get_result();
+$res_valores_individuales = stmt_get_result($stmt);
 
 $valores_puntos = [];
 while ($valor = $res_valores_individuales->fetch_assoc()) {
@@ -88,7 +88,7 @@ $stmt->close();
 $stmt = $conn->prepare("SELECT proposito_enfoque, proposito_motivacion, proposito_tiempo, proposito_disrupcion, proposito_inmersion FROM cultura_ideal WHERE usuario_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$datos_proposito = $stmt->get_result()->fetch_assoc();
+$datos_proposito = stmt_get_result($stmt)->fetch_assoc();
 $stmt->close();
 
 // 🔸 Construir array de puntos de propósito con peso 1.3
@@ -318,13 +318,13 @@ $descripcion_cultura = $info_culturas[$cultura_tipo]['descripcion'];
 $stmt = $conn->prepare("SELECT proposito FROM cultura_ideal WHERE usuario_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$datos_cultura = $stmt->get_result()->fetch_assoc();
+$datos_cultura = stmt_get_result($stmt)->fetch_assoc();
 $stmt->close();
 
 $stmt = $conn->prepare("SELECT titulo, descripcion FROM valores_marca WHERE usuario_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$result_valores = $stmt->get_result();
+$result_valores = stmt_get_result($stmt);
 
 $valores = [];
 while ($valor = $result_valores->fetch_assoc()) {

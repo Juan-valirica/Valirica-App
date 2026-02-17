@@ -52,7 +52,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'descargar_historico_asistenci
 
         $stmt_ausentes->bind_param("sssisi", $fecha_str, $fecha_str, $fecha_str, $dia_semana, $fecha_str, $user_id);
         $stmt_ausentes->execute();
-        $result_ausentes = $stmt_ausentes->get_result();
+        $result_ausentes = stmt_get_result($stmt_ausentes);
 
         // Crear registro de ausencia para cada empleado que debería haber trabajado
         if ($result_ausentes->num_rows > 0) {
@@ -129,7 +129,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'descargar_historico_asistenci
 
     $stmt->bind_param("iss", $user_id, $fecha_desde, $fecha_hasta);
     $stmt->execute();
-    $result = $stmt->get_result();
+    $result = stmt_get_result($stmt);
 
     // Generar CSV según normativa española
     $filename = 'Registro_Jornada_Laboral_' . date('Y-m-d') . '.csv';
@@ -309,7 +309,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $stmt_check = $conn->prepare("SELECT id FROM jornadas_trabajo WHERE id = ? AND usuario_id = ?");
         $stmt_check->bind_param("ii", $jornada_id, $user_id);
         $stmt_check->execute();
-        if ($stmt_check->get_result()->num_rows === 0) {
+        if (stmt_get_result($stmt_check)->num_rows === 0) {
             throw new Exception('Jornada no encontrada');
         }
         $stmt_check->close();
@@ -376,7 +376,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         ");
         $stmt_check->bind_param("i", $jornada_id);
         $stmt_check->execute();
-        $result = $stmt_check->get_result()->fetch_assoc();
+        $result = stmt_get_result($stmt_check)->fetch_assoc();
         $stmt_check->close();
 
         if ($result['count'] > 0) {
@@ -472,7 +472,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $stmt_check = $conn->prepare("SELECT id FROM jornadas_trabajo WHERE id = ? AND usuario_id = ?");
         $stmt_check->bind_param("ii", $jornada_id, $user_id);
         $stmt_check->execute();
-        if ($stmt_check->get_result()->num_rows === 0) {
+        if (stmt_get_result($stmt_check)->num_rows === 0) {
             throw new Exception('Jornada no válida');
         }
         $stmt_check->close();
@@ -498,7 +498,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $stmt_emp_check = $conn->prepare("SELECT id FROM equipo WHERE id = ? AND usuario_id = ?");
             $stmt_emp_check->bind_param("ii", $persona_id, $user_id);
             $stmt_emp_check->execute();
-            if ($stmt_emp_check->get_result()->num_rows === 0) {
+            if (stmt_get_result($stmt_emp_check)->num_rows === 0) {
                 $errores[] = "Empleado ID {$persona_id} no válido";
                 $stmt_emp_check->close();
                 continue;
@@ -612,7 +612,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
 
         $stmt->bind_param("ii", $jornada_id, $user_id);
         $stmt->execute();
-        $jornada = $stmt->get_result()->fetch_assoc();
+        $jornada = stmt_get_result($stmt)->fetch_assoc();
         $stmt->close();
 
         if (!$jornada) {
@@ -628,7 +628,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
 
         $stmt_turnos->bind_param("i", $jornada_id);
         $stmt_turnos->execute();
-        $result = $stmt_turnos->get_result();
+        $result = stmt_get_result($stmt_turnos);
 
         $turnos = [];
         while ($row = $result->fetch_assoc()) {
@@ -648,7 +648,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
 
         $stmt_emp->bind_param("i", $jornada_id);
         $stmt_emp->execute();
-        $result_emp = $stmt_emp->get_result();
+        $result_emp = stmt_get_result($stmt_emp);
 
         $empleados = [];
         while ($row = $result_emp->fetch_assoc()) {
@@ -853,7 +853,7 @@ function next_order_index_empresa(mysqli $conn, int $user_id): int {
     $stmt = $conn->prepare("SELECT COALESCE(MAX(order_index), -1) + 1 AS nxt FROM metas WHERE user_id=? AND tipo='empresa'");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $nxt = (int)$stmt->get_result()->fetch_assoc()['nxt'];
+    $nxt = (int)stmt_get_result($stmt)->fetch_assoc()['nxt'];
     $stmt->close();
     return $nxt;
 }
@@ -862,7 +862,7 @@ function next_order_index_child(mysqli $conn, int $parent_meta_id): int {
     $stmt = $conn->prepare("SELECT COALESCE(MAX(order_index), -1) + 1 AS nxt FROM metas WHERE parent_meta_id=?");
     $stmt->bind_param("i", $parent_meta_id);
     $stmt->execute();
-    $nxt = (int)$stmt->get_result()->fetch_assoc()['nxt'];
+    $nxt = (int)stmt_get_result($stmt)->fetch_assoc()['nxt'];
     $stmt->close();
     return $nxt;
 }
@@ -879,7 +879,7 @@ function resolve_meta_area_context(mysqli $conn, int $meta_area_id): array {
     ");
     $stmt->bind_param("i", $meta_area_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     $row = $res->fetch_assoc() ?: ['meta_empresa_id' => null, 'area_id' => null];
     $stmt->close();
     return [
@@ -1123,7 +1123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $stmt = $conn->prepare("SELECT MAX(order_index) as max_order FROM metas WHERE user_id = ? AND tipo = 'empresa'");
         $stmt->bind_param("i", $user_id);
         $stmt->execute();
-        $result = $stmt->get_result();
+        $result = stmt_get_result($stmt);
         if ($row = $result->fetch_assoc()) {
             $order_index = ((int)$row['max_order']) + 1;
         }
@@ -1283,7 +1283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $stmt = $conn->prepare("SELECT id FROM metas WHERE id = ? AND user_id = ? AND tipo = 'empresa'");
         $stmt->bind_param("ii", $parent_meta_id, $user_id);
         $stmt->execute();
-        $result = $stmt->get_result();
+        $result = stmt_get_result($stmt);
         if ($result->num_rows === 0) {
             throw new Exception('Meta de empresa no válida.');
         }
@@ -1293,7 +1293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $stmt = $conn->prepare("SELECT id FROM areas_trabajo WHERE id = ? AND usuario_id = ?");
         $stmt->bind_param("ii", $area_id, $user_id);
         $stmt->execute();
-        $result = $stmt->get_result();
+        $result = stmt_get_result($stmt);
         if ($result->num_rows === 0) {
             throw new Exception('Área de trabajo no válida.');
         }
@@ -1304,7 +1304,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $stmt = $conn->prepare("SELECT MAX(order_index) as max_order FROM metas WHERE parent_meta_id = ? AND tipo = 'area'");
         $stmt->bind_param("i", $parent_meta_id);
         $stmt->execute();
-        $result = $stmt->get_result();
+        $result = stmt_get_result($stmt);
         if ($row = $result->fetch_assoc()) {
             $order_index = ((int)$row['max_order']) + 1;
         }
@@ -1369,7 +1369,7 @@ function db_get_metas_empresa(mysqli $conn, int $user_id): array {
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($r = $res->fetch_assoc()) $out[] = $r;
     $stmt->close();
     return $out;
@@ -1389,7 +1389,7 @@ function db_get_metas_area(mysqli $conn, int $meta_empresa_id): array {
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $meta_empresa_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($r = $res->fetch_assoc()) $out[] = $r;
     $stmt->close();
     return $out;
@@ -1408,7 +1408,7 @@ function db_get_metas_persona(mysqli $conn, int $user_id, int $meta_area_id): ar
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ii", $user_id, $meta_area_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($r = $res->fetch_assoc()) {
         $out[] = $r;
     }
@@ -1436,7 +1436,7 @@ function db_get_metas_persona_by_person(
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("iii", $user_id, $meta_area_id, $persona_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($r = $res->fetch_assoc()) {
         $out[] = $r;
     }
@@ -1452,7 +1452,7 @@ function db_get_areas(mysqli $conn, int $user_id): array {
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($r = $res->fetch_assoc()) $out[] = $r;
     $stmt->close();
     return $out;
@@ -1463,7 +1463,7 @@ function db_get_personas(mysqli $conn, int $user_id): array {
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
     while ($r = $res->fetch_assoc()) $out[] = $r;
     $stmt->close();
     return $out;
@@ -1505,7 +1505,7 @@ try {
     if ($stmt_risk) {
         $stmt_risk->bind_param("i", $user_id);
         $stmt_risk->execute();
-        $res_risk = $stmt_risk->get_result();
+        $res_risk = stmt_get_result($stmt_risk);
         while ($row = $res_risk->fetch_assoc()) {
             $risk_alerts[] = $row;
         }
@@ -1522,7 +1522,7 @@ try {
     if ($stmt_velocity) {
         $stmt_velocity->bind_param("i", $user_id);
         $stmt_velocity->execute();
-        $res_velocity = $stmt_velocity->get_result();
+        $res_velocity = stmt_get_result($stmt_velocity);
         while ($row = $res_velocity->fetch_assoc()) {
             $velocity_data[] = $row;
         }
@@ -1557,7 +1557,7 @@ try {
     if ($stmt_top) {
         $stmt_top->bind_param("i", $user_id);
         $stmt_top->execute();
-        $res_top = $stmt_top->get_result();
+        $res_top = stmt_get_result($stmt_top);
         while ($row = $res_top->fetch_assoc()) {
             $top_performers[] = $row;
         }
@@ -1587,7 +1587,7 @@ try {
     if ($stmt_need) {
         $stmt_need->bind_param("i", $user_id);
         $stmt_need->execute();
-        $res_need = $stmt_need->get_result();
+        $res_need = stmt_get_result($stmt_need);
         while ($row = $res_need->fetch_assoc()) {
             $needs_attention[] = $row;
         }
@@ -1610,7 +1610,7 @@ try {
     if ($stmt_kpi) {
         $stmt_kpi->bind_param("i", $user_id);
         $stmt_kpi->execute();
-        $kpi = $stmt_kpi->get_result()->fetch_assoc();
+        $kpi = stmt_get_result($stmt_kpi)->fetch_assoc();
         $total_goals = (int)($kpi['total'] ?? 0);
         $completed_goals = (int)($kpi['completed'] ?? 0);
         $global_completion = (int)round($kpi['avg_progress'] ?? 0);
@@ -1647,7 +1647,7 @@ try {
     if ($stmt_empresa) {
         $stmt_empresa->bind_param("i", $user_id);
         $stmt_empresa->execute();
-        $metas_by_empresa_count = (int)$stmt_empresa->get_result()->fetch_assoc()['cnt'];
+        $metas_by_empresa_count = (int)stmt_get_result($stmt_empresa)->fetch_assoc()['cnt'];
         $stmt_empresa->close();
     }
 
@@ -1659,7 +1659,7 @@ try {
     if ($stmt_area) {
         $stmt_area->bind_param("i", $user_id);
         $stmt_area->execute();
-        $metas_by_area_count = (int)$stmt_area->get_result()->fetch_assoc()['cnt'];
+        $metas_by_area_count = (int)stmt_get_result($stmt_area)->fetch_assoc()['cnt'];
         $stmt_area->close();
     }
 
@@ -1671,7 +1671,7 @@ try {
     if ($stmt_total) {
         $stmt_total->bind_param("i", $user_id);
         $stmt_total->execute();
-        $metas_total_count = (int)$stmt_total->get_result()->fetch_assoc()['total'];
+        $metas_total_count = (int)stmt_get_result($stmt_total)->fetch_assoc()['total'];
         $metas_by_person_count = $metas_total_count; // Son lo mismo
         $stmt_total->close();
     }
@@ -1684,7 +1684,7 @@ try {
     if ($stmt_completed) {
         $stmt_completed->bind_param("i", $user_id);
         $stmt_completed->execute();
-        $metas_completed_count = (int)$stmt_completed->get_result()->fetch_assoc()['completed'];
+        $metas_completed_count = (int)stmt_get_result($stmt_completed)->fetch_assoc()['completed'];
         $stmt_completed->close();
     }
 
@@ -1698,7 +1698,7 @@ try {
     if ($stmt_overdue) {
         $stmt_overdue->bind_param("i", $user_id);
         $stmt_overdue->execute();
-        $metas_overdue_count = (int)$stmt_overdue->get_result()->fetch_assoc()['overdue'];
+        $metas_overdue_count = (int)stmt_get_result($stmt_overdue)->fetch_assoc()['overdue'];
         $stmt_overdue->close();
     }
 
@@ -1713,7 +1713,7 @@ try {
     if ($stmt_risk) {
         $stmt_risk->bind_param("i", $user_id);
         $stmt_risk->execute();
-        $metas_at_risk_count = (int)$stmt_risk->get_result()->fetch_assoc()['at_risk'];
+        $metas_at_risk_count = (int)stmt_get_result($stmt_risk)->fetch_assoc()['at_risk'];
         $stmt_risk->close();
     }
 
@@ -1731,7 +1731,7 @@ try {
     if ($stmt_ontrack) {
         $stmt_ontrack->bind_param("i", $user_id);
         $stmt_ontrack->execute();
-        $metas_on_track_count = (int)$stmt_ontrack->get_result()->fetch_assoc()['on_track'];
+        $metas_on_track_count = (int)stmt_get_result($stmt_ontrack)->fetch_assoc()['on_track'];
         $stmt_ontrack->close();
     }
 
@@ -1746,7 +1746,7 @@ try {
     if ($stmt_critical) {
         $stmt_critical->bind_param("i", $user_id);
         $stmt_critical->execute();
-        $metas_critical_count = (int)$stmt_critical->get_result()->fetch_assoc()['critical'];
+        $metas_critical_count = (int)stmt_get_result($stmt_critical)->fetch_assoc()['critical'];
         $stmt_critical->close();
     }
 
@@ -1758,7 +1758,7 @@ try {
     if ($stmt_avg) {
         $stmt_avg->bind_param("i", $user_id);
         $stmt_avg->execute();
-        $metas_avg_progress = (int)round($stmt_avg->get_result()->fetch_assoc()['avg_progress'] ?? 0);
+        $metas_avg_progress = (int)round(stmt_get_result($stmt_avg)->fetch_assoc()['avg_progress'] ?? 0);
         $stmt_avg->close();
     }
 
@@ -1811,7 +1811,7 @@ try {
     if ($stmt_alertas) {
         $stmt_alertas->bind_param("i", $user_id);
         $stmt_alertas->execute();
-        $res_alertas = $stmt_alertas->get_result();
+        $res_alertas = stmt_get_result($stmt_alertas);
 
         while ($row = $res_alertas->fetch_assoc()) {
             $metas_alertas[] = $row;
@@ -1861,7 +1861,7 @@ try {
     if ($stmt_crear_ausentes) {
         $stmt_crear_ausentes->bind_param("ii", $dia_hoy_semana, $user_id);
         $stmt_crear_ausentes->execute();
-        $result_crear = $stmt_crear_ausentes->get_result();
+        $result_crear = stmt_get_result($stmt_crear_ausentes);
 
         if ($result_crear->num_rows > 0) {
             $stmt_insert = $conn->prepare("
@@ -1930,7 +1930,7 @@ try {
     if ($stmt_asist_hoy) {
         $stmt_asist_hoy->bind_param("ii", $dia_hoy_semana, $user_id);
         $stmt_asist_hoy->execute();
-        $res = $stmt_asist_hoy->get_result();
+        $res = stmt_get_result($stmt_asist_hoy);
 
         while ($row = $res->fetch_assoc()) {
             $asistencia_hoy[] = $row;
@@ -1965,7 +1965,7 @@ try {
     if ($stmt_total) {
         $stmt_total->bind_param("ii", $dia_hoy_semana, $user_id);
         $stmt_total->execute();
-        $total_personas = (int)$stmt_total->get_result()->fetch_assoc()['total'];
+        $total_personas = (int)stmt_get_result($stmt_total)->fetch_assoc()['total'];
         $stmt_total->close();
     }
 
@@ -1986,7 +1986,7 @@ try {
     if ($stmt_permisos_pend) {
         $stmt_permisos_pend->bind_param("i", $user_id);
         $stmt_permisos_pend->execute();
-        $res = $stmt_permisos_pend->get_result();
+        $res = stmt_get_result($stmt_permisos_pend);
 
         while ($row = $res->fetch_assoc()) {
             $permisos_pendientes[] = $row;
@@ -2011,7 +2011,7 @@ try {
     if ($stmt_permisos_hoy) {
         $stmt_permisos_hoy->bind_param("i", $user_id);
         $stmt_permisos_hoy->execute();
-        $res = $stmt_permisos_hoy->get_result();
+        $res = stmt_get_result($stmt_permisos_hoy);
 
         while ($row = $res->fetch_assoc()) {
             $permisos_hoy[] = $row;
@@ -2039,7 +2039,7 @@ try {
     if ($stmt_vacaciones) {
         $stmt_vacaciones->bind_param("i", $user_id);
         $stmt_vacaciones->execute();
-        $res = $stmt_vacaciones->get_result();
+        $res = stmt_get_result($stmt_vacaciones);
 
         while ($row = $res->fetch_assoc()) {
             $vacaciones_proximas[] = $row;
@@ -2091,7 +2091,7 @@ try {
     if ($stmt_patrones) {
         $stmt_patrones->bind_param("i", $user_id);
         $stmt_patrones->execute();
-        $res = $stmt_patrones->get_result();
+        $res = stmt_get_result($stmt_patrones);
 
         while ($row = $res->fetch_assoc()) {
             $patrones_atencion[] = $row;
@@ -2140,7 +2140,7 @@ try {
     if ($stmt_excelentes) {
         $stmt_excelentes->bind_param("i", $user_id);
         $stmt_excelentes->execute();
-        $res = $stmt_excelentes->get_result();
+        $res = stmt_get_result($stmt_excelentes);
 
         while ($row = $res->fetch_assoc()) {
             $patrones_excelentes[] = $row;
@@ -2166,7 +2166,7 @@ try {
     ");
     $stmt_count_pendientes->bind_param("ii", $user_id, $user_id);
     $stmt_count_pendientes->execute();
-    $result_count = $stmt_count_pendientes->get_result()->fetch_assoc();
+    $result_count = stmt_get_result($stmt_count_pendientes)->fetch_assoc();
     $solicitudes_pendientes_count = (int)($result_count['total'] ?? 0);
     $stmt_count_pendientes->close();
 } catch (Exception $e) {
@@ -2192,7 +2192,7 @@ try {
     if ($stmt_jornadas) {
         $stmt_jornadas->bind_param("i", $user_id);
         $stmt_jornadas->execute();
-        $result = $stmt_jornadas->get_result();
+        $result = stmt_get_result($stmt_jornadas);
 
         while ($row = $result->fetch_assoc()) {
             // Obtener turnos de esta jornada
@@ -2206,7 +2206,7 @@ try {
 
             $stmt_turnos->bind_param("i", $jornada_id);
             $stmt_turnos->execute();
-            $result_turnos = $stmt_turnos->get_result();
+            $result_turnos = stmt_get_result($stmt_turnos);
 
             $turnos = [];
             while ($turno = $result_turnos->fetch_assoc()) {
@@ -2224,7 +2224,7 @@ try {
             ");
             $stmt_count->bind_param("i", $jornada_id);
             $stmt_count->execute();
-            $count_result = $stmt_count->get_result()->fetch_assoc();
+            $count_result = stmt_get_result($stmt_count)->fetch_assoc();
             $stmt_count->close();
 
             $row['turnos'] = $turnos;
@@ -2253,7 +2253,7 @@ try {
     if ($stmt_emp) {
         $stmt_emp->bind_param("i", $user_id);
         $stmt_emp->execute();
-        $total_empleados_con_jornada = (int)$stmt_emp->get_result()->fetch_assoc()['count'];
+        $total_empleados_con_jornada = (int)stmt_get_result($stmt_emp)->fetch_assoc()['count'];
         $stmt_emp->close();
     }
 
@@ -2275,7 +2275,7 @@ try {
     if ($stmt_empleados) {
         $stmt_empleados->bind_param("i", $user_id);
         $stmt_empleados->execute();
-        $result_empleados = $stmt_empleados->get_result();
+        $result_empleados = stmt_get_result($stmt_empleados);
 
         while ($emp = $result_empleados->fetch_assoc()) {
             $empleados_disponibles[] = $emp;
@@ -2505,7 +2505,7 @@ try {
     if ($stmt_notif_count) {
         $stmt_notif_count->bind_param("i", $user_id);
         $stmt_notif_count->execute();
-        $unread_notifications_count = (int)$stmt_notif_count->get_result()->fetch_assoc()['unread_count'];
+        $unread_notifications_count = (int)stmt_get_result($stmt_notif_count)->fetch_assoc()['unread_count'];
         $stmt_notif_count->close();
     }
 
@@ -2547,7 +2547,7 @@ try {
     if ($stmt_notif) {
         $stmt_notif->bind_param("i", $user_id);
         $stmt_notif->execute();
-        $result = $stmt_notif->get_result();
+        $result = stmt_get_result($stmt_notif);
         while ($row = $result->fetch_assoc()) {
             $notifications[] = $row;
         }
@@ -2580,7 +2580,7 @@ $usuario_id = $user_id; // Necesario para reutilizar el mismo header del dashboa
 $stmt = $conn->prepare("SELECT empresa, logo, cultura_empresa_tipo, rol FROM usuarios WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$result = $stmt->get_result();
+$result = stmt_get_result($stmt);
 $u = $result->fetch_assoc() ?: [];
 $stmt->close();
 
@@ -2622,7 +2622,7 @@ $stmt_cultura = $conn->prepare("
 
 $stmt_cultura->bind_param("i", $user_id);
 $stmt_cultura->execute();
-$result_cultura = $stmt_cultura->get_result();
+$result_cultura = stmt_get_result($stmt_cultura);
 $cultura_ideal = $result_cultura->fetch_assoc() ?? [];
 $stmt_cultura->close();
 
@@ -2651,7 +2651,7 @@ $stmt_equipo = $conn->prepare("
 ");
 $stmt_equipo->bind_param("i", $user_id);
 $stmt_equipo->execute();
-$res_equipo = $stmt_equipo->get_result();
+$res_equipo = stmt_get_result($stmt_equipo);
 
 $total_alineacion = 0; 
 $n = 0;
@@ -2701,7 +2701,7 @@ list($energia_icon, $energia_status) = battery_icon_for_pct($energia_equipo);
 $stmt_sen = $conn->prepare("SELECT AVG(visual) visual, AVG(auditivo) auditivo, AVG(kinestesico) kinestesico FROM equipo WHERE usuario_id = ?");
 $stmt_sen->bind_param("i", $user_id);
 $stmt_sen->execute();
-$sen = $stmt_sen->get_result()->fetch_assoc() ?: ['visual'=>0,'auditivo'=>0,'kinestesico'=>0];
+$sen = stmt_get_result($stmt_sen)->fetch_assoc() ?: ['visual'=>0,'auditivo'=>0,'kinestesico'=>0];
 $stmt_sen->close();
 
 $prom_sens = [
@@ -4134,6 +4134,10 @@ details[open] > summary .caret{ transform:rotate(45deg); }
     <a href="?tab=projects" class="tab-link <?= $active_tab === 'projects' ? 'is-active' : '' ?>">
       <span class="tab-icon">📋</span>
       <span>Proyectos</span>
+    </a>
+    <a href="?tab=people" class="tab-link <?= $active_tab === 'people' ? 'is-active' : '' ?>">
+      <span class="tab-icon">👥</span>
+      <span>Equipo</span>
     </a>
   </div>
 </nav>
@@ -7818,6 +7822,478 @@ document.addEventListener('keydown', function(e) {
     </header>
 
     <?php include __DIR__ . '/proyectos_tareas_panel.php'; ?>
+  </section>
+</div>
+
+<!-- ============================================
+     TAB 5: EQUIPO — Gestión de áreas de trabajo
+     ============================================ -->
+<div class="tab-content <?= $active_tab === 'people' ? 'is-active' : '' ?>">
+  <section class="wrap" style="padding-top: var(--space-6); padding-bottom: var(--space-8);">
+    <header style="margin-bottom: var(--space-6);">
+      <h1 style="font-size: 28px; font-weight: 700; color: var(--c-secondary); margin: 0;">
+        Equipo
+      </h1>
+      <p style="color: var(--c-body); opacity: 0.7; margin-top: var(--space-2);">
+        Asigna una o varias áreas de trabajo a cada miembro de tu equipo
+      </p>
+    </header>
+
+    <?php
+    // Obtener áreas disponibles
+    $areas_list = db_get_areas($conn, $user_id);
+
+    // Obtener miembros con sus áreas (vía junction table)
+    $stmt_people = $conn->prepare("
+        SELECT e.id, e.nombre_persona, e.apellido, e.cargo,
+               GROUP_CONCAT(at2.id ORDER BY at2.nombre_area SEPARATOR ',') AS areas_ids,
+               GROUP_CONCAT(at2.nombre_area ORDER BY at2.nombre_area SEPARATOR '||') AS areas_nombres,
+               GROUP_CONCAT(COALESCE(eat.es_lider, 0) ORDER BY at2.nombre_area SEPARATOR ',') AS areas_lider
+        FROM equipo e
+        LEFT JOIN equipo_areas_trabajo eat ON e.id = eat.equipo_id
+        LEFT JOIN areas_trabajo at2 ON eat.area_id = at2.id
+        WHERE e.usuario_id = ?
+        GROUP BY e.id
+        ORDER BY e.nombre_persona ASC
+    ");
+    $stmt_people->bind_param("i", $user_id);
+    $stmt_people->execute();
+    $people_list = stmt_get_result($stmt_people)->fetch_all(MYSQLI_ASSOC);
+    $stmt_people->close();
+    ?>
+
+    <?php if (empty($areas_list)): ?>
+    <div style="
+      background: #FFF7ED;
+      border: 1px solid #FB923C;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      color: #9A3412;
+    ">
+      <p style="margin: 0; font-weight: 600;">No tienes áreas de trabajo creadas.</p>
+      <p style="margin: 8px 0 0; opacity: 0.8;">
+        Ve a <a href="cultura_ideal.php" style="color: #EA580C; text-decoration: underline;">Cultura Ideal</a>
+        para crear tus áreas de trabajo primero.
+      </p>
+    </div>
+    <?php else: ?>
+
+    <!-- Barra de búsqueda -->
+    <div style="margin-bottom: var(--space-4);">
+      <input
+        type="text"
+        id="peopleSearchInput"
+        placeholder="Buscar miembro por nombre o cargo..."
+        style="
+          width: 100%;
+          max-width: 400px;
+          padding: 10px 16px;
+          border: 1px solid #D1D5DB;
+          border-radius: 8px;
+          font-size: 14px;
+          outline: none;
+          transition: border-color 0.2s;
+        "
+        oninput="filterPeopleTable()"
+      >
+    </div>
+
+    <!-- Tabla de miembros -->
+    <div style="
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #E5E7EB;
+      overflow: hidden;
+    ">
+      <table style="width: 100%; border-collapse: collapse;" id="peopleTable">
+        <thead>
+          <tr style="background: #F9FAFB; border-bottom: 2px solid #E5E7EB;">
+            <th style="padding: 14px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #374151;">Nombre</th>
+            <th style="padding: 14px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #374151;">Cargo</th>
+            <th style="padding: 14px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #374151;">Áreas asignadas</th>
+            <th style="padding: 14px 16px; text-align: center; font-size: 13px; font-weight: 600; color: #374151; width: 120px;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($people_list as $person):
+            $p_areas_ids = $person['areas_ids'] ? explode(',', $person['areas_ids']) : [];
+            $p_areas_nombres = $person['areas_nombres'] ? explode('||', $person['areas_nombres']) : [];
+            $p_areas_lider = !empty($person['areas_lider']) ? explode(',', $person['areas_lider']) : [];
+          ?>
+          <tr
+            class="people-row"
+            data-id="<?= (int)$person['id'] ?>"
+            data-nombre="<?= h($person['nombre_persona'] . ' ' . ($person['apellido'] ?? '')) ?>"
+            data-cargo="<?= h($person['cargo'] ?? '') ?>"
+            style="border-bottom: 1px solid #F3F4F6; transition: background 0.15s;"
+            onmouseover="this.style.background='#F9FAFB'"
+            onmouseout="this.style.background='white'"
+          >
+            <td style="padding: 12px 16px;">
+              <div style="font-weight: 600; color: #111827; font-size: 14px;">
+                <?= h($person['nombre_persona']) ?> <?= h($person['apellido'] ?? '') ?>
+              </div>
+            </td>
+            <td style="padding: 12px 16px; color: #6B7280; font-size: 14px;">
+              <?= h($person['cargo'] ?? '—') ?>
+            </td>
+            <td style="padding: 12px 16px;" id="areas-cell-<?= (int)$person['id'] ?>">
+              <?php if (empty($p_areas_nombres)): ?>
+                <span style="color: #9CA3AF; font-size: 13px; font-style: italic;">Sin áreas</span>
+              <?php else: ?>
+                <?php foreach ($p_areas_nombres as $idx => $an):
+                  $is_lider = isset($p_areas_lider[$idx]) && (int)$p_areas_lider[$idx] === 1;
+                ?>
+                  <span style="
+                    display: inline-block;
+                    background: <?= $is_lider ? '#FEF3C7' : '#EFF6FF' ?>;
+                    color: <?= $is_lider ? '#92400E' : '#1D4ED8' ?>;
+                    padding: 3px 10px;
+                    border-radius: 12px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    margin: 2px 4px 2px 0;
+                    <?= $is_lider ? 'border: 1px solid #F59E0B;' : '' ?>
+                  "><?= $is_lider ? '&#9733; ' : '' ?><?= h(trim($an)) ?><?= $is_lider ? ' (Líder)' : '' ?></span>
+                <?php endforeach; ?>
+              <?php endif; ?>
+            </td>
+            <td style="padding: 12px 16px; text-align: center;">
+              <button
+                onclick="openAreaModal(<?= (int)$person['id'] ?>, '<?= h(addslashes($person['nombre_persona'])) ?>', <?= h(json_encode($p_areas_ids)) ?>)"
+                style="
+                  padding: 6px 16px;
+                  background: linear-gradient(135deg, #184656, #1E5A6E);
+                  color: white;
+                  border: none;
+                  border-radius: 6px;
+                  font-size: 13px;
+                  cursor: pointer;
+                  transition: opacity 0.2s;
+                "
+                onmouseover="this.style.opacity='0.85'"
+                onmouseout="this.style.opacity='1'"
+              >
+                Editar áreas
+              </button>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Modal de asignación de áreas -->
+    <div id="areaAssignModal" style="
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+    ">
+      <div style="
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+      ">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <div>
+            <h3 style="margin: 0; font-size: 20px; color: #111827;" id="areaModalTitle">Asignar áreas</h3>
+            <p style="margin: 4px 0 0; color: #6B7280; font-size: 14px;" id="areaModalSubtitle"></p>
+          </div>
+          <button onclick="closeAreaModal()" style="
+            background: none; border: none; font-size: 24px; cursor: pointer;
+            color: #9CA3AF; line-height: 1;
+          ">&times;</button>
+        </div>
+
+        <input type="hidden" id="areaModalEquipoId" value="">
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
+            Selecciona las áreas de trabajo:
+          </label>
+          <p style="margin: 0 0 8px; color: #9CA3AF; font-size: 12px;">
+            Haz clic en &#9733; para asignar como líder del área
+          </p>
+          <div id="areaCheckboxList" style="
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 8px;
+          ">
+            <?php foreach ($areas_list as $area): ?>
+            <div style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              padding: 10px 12px;
+              border-radius: 6px;
+              transition: background 0.15s;
+              font-size: 14px;
+              color: #374151;
+            "
+              onmouseover="this.style.background='#F3F4F6'"
+              onmouseout="this.style.background='transparent'"
+            >
+              <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 1;">
+                <input
+                  type="checkbox"
+                  name="area_ids[]"
+                  value="<?= (int)$area['id'] ?>"
+                  class="area-checkbox"
+                  style="width: 18px; height: 18px; accent-color: #184656; cursor: pointer;"
+                >
+                <span><?= h($area['nombre_area']) ?></span>
+              </label>
+              <button
+                type="button"
+                class="lider-star"
+                data-area-id="<?= (int)$area['id'] ?>"
+                onclick="toggleLider(this)"
+                title="Marcar como líder de esta área"
+                style="
+                  background: none;
+                  border: none;
+                  font-size: 20px;
+                  cursor: pointer;
+                  color: #D1D5DB;
+                  transition: color 0.2s;
+                  padding: 0 4px;
+                  line-height: 1;
+                "
+              >&#9733;</button>
+            </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button
+            onclick="closeAreaModal()"
+            style="
+              padding: 10px 24px;
+              background: #F3F4F6;
+              color: #374151;
+              border: none;
+              border-radius: 8px;
+              font-size: 14px;
+              cursor: pointer;
+            "
+          >Cancelar</button>
+          <button
+            onclick="saveAreas()"
+            id="saveAreasBtn"
+            style="
+              padding: 10px 24px;
+              background: linear-gradient(135deg, #184656, #1E5A6E);
+              color: white;
+              border: none;
+              border-radius: 8px;
+              font-size: 14px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: opacity 0.2s;
+            "
+            onmouseover="this.style.opacity='0.85'"
+            onmouseout="this.style.opacity='1'"
+          >Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    // ============ People Tab: búsqueda y gestión de áreas ============
+    function filterPeopleTable() {
+      const q = document.getElementById('peopleSearchInput').value.toLowerCase();
+      document.querySelectorAll('.people-row').forEach(function(row) {
+        const nombre = (row.dataset.nombre || '').toLowerCase();
+        const cargo = (row.dataset.cargo || '').toLowerCase();
+        row.style.display = (nombre.includes(q) || cargo.includes(q)) ? '' : 'none';
+      });
+    }
+
+    function openAreaModal(equipoId, nombre, currentAreaIds) {
+      document.getElementById('areaModalEquipoId').value = equipoId;
+      document.getElementById('areaModalTitle').textContent = 'Asignar áreas';
+      document.getElementById('areaModalSubtitle').textContent = nombre;
+
+      // Reset checkboxes y estrellas
+      document.querySelectorAll('.area-checkbox').forEach(function(cb) {
+        cb.checked = false;
+      });
+      document.querySelectorAll('.lider-star').forEach(function(star) {
+        star.style.color = '#D1D5DB';
+        star.dataset.active = '0';
+      });
+
+      // Marcar las áreas actuales
+      var ids = (currentAreaIds || []).map(function(v) { return String(v); });
+      document.querySelectorAll('.area-checkbox').forEach(function(cb) {
+        if (ids.indexOf(cb.value) !== -1) {
+          cb.checked = true;
+        }
+      });
+
+      // Cargar estados de líder desde el servidor
+      fetch('ajax_equipo_areas.php?action=get_member_areas&equipo_id=' + equipoId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.ok && data.areas) {
+            data.areas.forEach(function(a) {
+              if (a.es_lider) {
+                var star = document.querySelector('.lider-star[data-area-id="' + a.id + '"]');
+                if (star) {
+                  star.style.color = '#F59E0B';
+                  star.dataset.active = '1';
+                }
+              }
+            });
+          }
+        });
+
+      var modal = document.getElementById('areaAssignModal');
+      modal.style.display = 'flex';
+    }
+
+    function toggleLider(star) {
+      var isActive = star.dataset.active === '1';
+      var areaId = star.dataset.areaId;
+      var equipoId = document.getElementById('areaModalEquipoId').value;
+
+      // Verificar que el checkbox de esta área esté marcado
+      var cb = document.querySelector('.area-checkbox[value="' + areaId + '"]');
+      if (!cb || !cb.checked) {
+        alert('Primero debes asignar esta área al miembro');
+        return;
+      }
+
+      var newVal = isActive ? 0 : 1;
+
+      fetch('ajax_equipo_areas.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'action=set_lider&equipo_id=' + equipoId + '&area_id=' + areaId + '&es_lider=' + newVal
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) {
+          if (newVal) {
+            // Desactivar otras estrellas de esta área (solo un líder por área)
+            star.style.color = '#F59E0B';
+            star.dataset.active = '1';
+          } else {
+            star.style.color = '#D1D5DB';
+            star.dataset.active = '0';
+          }
+        } else {
+          alert('Error: ' + (data.error || 'Desconocido'));
+        }
+      })
+      .catch(function(err) {
+        alert('Error de conexión: ' + err.message);
+      });
+    }
+
+    function closeAreaModal() {
+      document.getElementById('areaAssignModal').style.display = 'none';
+    }
+
+    // Cerrar al hacer clic fuera
+    document.getElementById('areaAssignModal')?.addEventListener('click', function(e) {
+      if (e.target === this) closeAreaModal();
+    });
+
+    function saveAreas() {
+      var equipoId = document.getElementById('areaModalEquipoId').value;
+      var selected = [];
+      document.querySelectorAll('.area-checkbox:checked').forEach(function(cb) {
+        selected.push(cb.value);
+      });
+
+      var btn = document.getElementById('saveAreasBtn');
+      btn.textContent = 'Guardando...';
+      btn.disabled = true;
+
+      var fd = new FormData();
+      fd.append('action', 'save_areas');
+      fd.append('equipo_id', equipoId);
+      selected.forEach(function(id) {
+        fd.append('area_ids[]', id);
+      });
+
+      fetch('ajax_equipo_areas.php', { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.ok) {
+            // Actualizar celda de áreas en la tabla
+            updateAreaCell(equipoId, selected);
+            closeAreaModal();
+          } else {
+            alert('Error: ' + (data.error || 'Desconocido'));
+          }
+        })
+        .catch(function(err) {
+          alert('Error de conexión: ' + err.message);
+        })
+        .finally(function() {
+          btn.textContent = 'Guardar';
+          btn.disabled = false;
+        });
+    }
+
+    function updateAreaCell(equipoId, selectedIds) {
+      var cell = document.getElementById('areas-cell-' + equipoId);
+      if (!cell) return;
+
+      // Obtener estados de líder actuales del modal
+      var liderMap = {};
+      document.querySelectorAll('.lider-star').forEach(function(star) {
+        if (star.dataset.active === '1') {
+          liderMap[star.dataset.areaId] = true;
+        }
+      });
+
+      if (selectedIds.length === 0) {
+        cell.innerHTML = '<span style="color: #9CA3AF; font-size: 13px; font-style: italic;">Sin áreas</span>';
+      } else {
+        var html = '';
+        document.querySelectorAll('.area-checkbox').forEach(function(cb) {
+          if (selectedIds.indexOf(cb.value) !== -1) {
+            var name = cb.parentElement.querySelector('span').textContent.trim();
+            var isLider = liderMap[cb.value] || false;
+            if (isLider) {
+              html += '<span style="display:inline-block;background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500;margin:2px 4px 2px 0;border:1px solid #F59E0B;">&#9733; ' + name + ' (L\u00edder)</span>';
+            } else {
+              html += '<span style="display:inline-block;background:#EFF6FF;color:#1D4ED8;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500;margin:2px 4px 2px 0;">' + name + '</span>';
+            }
+          }
+        });
+        cell.innerHTML = html;
+      }
+
+      // Actualizar el botón para pasar los nuevos IDs
+      var row = cell.closest('tr');
+      if (row) {
+        var btn = row.querySelector('button[onclick*="openAreaModal"]');
+        if (btn) {
+          var nombre = row.dataset.nombre || '';
+          btn.setAttribute('onclick', "openAreaModal(" + equipoId + ", '" + nombre.replace(/'/g, "\\'") + "', " + JSON.stringify(selectedIds) + ")");
+        }
+      }
+    }
+    </script>
+
+    <?php endif; ?>
   </section>
 </div>
 

@@ -15,7 +15,7 @@ if (!isset($_SESSION['user_email']) || !in_array($_SESSION['user_email'], $admin
 // **Obtener todas las marcas registradas**
 $stmt = $conn->prepare("SELECT id, empresa, email, proposito, pdf_analisis, pdf_valores FROM usuarios");
 $stmt->execute();
-$result = $stmt->get_result();
+$result = stmt_get_result($stmt);
 $empresas = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 ?>

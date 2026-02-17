@@ -12,7 +12,7 @@ $datos_existentes = null;
 $stmt = $conn->prepare("SELECT * FROM cultura_ideal WHERE usuario_id = ?");
 $stmt->bind_param("i", $usuario_id);
 $stmt->execute();
-$result = $stmt->get_result();
+$result = stmt_get_result($stmt);
 if ($result->num_rows > 0) {
     $datos_existentes = $result->fetch_assoc();
 }
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) && $_POST[
         if (!$stmtEmp) { throw new RuntimeException('Error preparando consulta de empresa: '.$conn->error); }
         $stmtEmp->bind_param("i", $usuario_id);
         if (!$stmtEmp->execute()) { throw new RuntimeException('Error ejecutando consulta de empresa: '.$stmtEmp->error); }
-        $resEmp = $stmtEmp->get_result();
+        $resEmp = stmt_get_result($stmtEmp);
         $rowEmp = $resEmp ? $resEmp->fetch_assoc() : null;
         $stmtEmp->close();
 
@@ -121,7 +121,7 @@ try {
     if ($stmtList) {
         $stmtList->bind_param("i", $usuario_id);
         if ($stmtList->execute()) {
-            $resList = $stmtList->get_result();
+            $resList = stmt_get_result($stmtList);
             if ($resList) {
                 while ($r = $resList->fetch_assoc()) {
                     $areasExistentes[] = $r['nombre_area'];

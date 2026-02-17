@@ -28,7 +28,7 @@ if (isset($_SESSION['user_id'])) {
     $stmt_user = $conn->prepare("SELECT usuario_id FROM equipo WHERE id = ? LIMIT 1");
     $stmt_user->bind_param("i", $empleado_id);
     $stmt_user->execute();
-    $row_user = $stmt_user->get_result()->fetch_assoc();
+    $row_user = stmt_get_result($stmt_user)->fetch_assoc();
     $stmt_user->close();
 
     if ($row_user) {
@@ -74,7 +74,7 @@ try {
             $stmt_check = $conn->prepare("SELECT id FROM equipo WHERE id = ? AND usuario_id = ?");
             $stmt_check->bind_param("ii", $lider_id, $user_id);
             $stmt_check->execute();
-            if ($stmt_check->get_result()->num_rows === 0) {
+            if (stmt_get_result($stmt_check)->num_rows === 0) {
                 throw new Exception('El líder seleccionado no es válido');
             }
             $stmt_check->close();
@@ -123,7 +123,7 @@ try {
             $stmt_check = $conn->prepare("SELECT id FROM proyectos WHERE id = ? AND usuario_id = ?");
             $stmt_check->bind_param("ii", $proyecto_id, $user_id);
             $stmt_check->execute();
-            if ($stmt_check->get_result()->num_rows === 0) {
+            if (stmt_get_result($stmt_check)->num_rows === 0) {
                 throw new Exception('Proyecto no encontrado');
             }
             $stmt_check->close();
@@ -232,7 +232,7 @@ try {
             $stmt = $conn->prepare($sql);
             $stmt->bind_param($types, ...$params);
             $stmt->execute();
-            $result = $stmt->get_result();
+            $result = stmt_get_result($stmt);
 
             $proyectos = [];
             while ($row = $result->fetch_assoc()) {
@@ -260,7 +260,7 @@ try {
             ");
             $stmt->bind_param("ii", $proyecto_id, $user_id);
             $stmt->execute();
-            $proyecto = $stmt->get_result()->fetch_assoc();
+            $proyecto = stmt_get_result($stmt)->fetch_assoc();
             $stmt->close();
 
             if (!$proyecto) {
@@ -301,7 +301,7 @@ try {
             $stmt_check = $conn->prepare("SELECT id FROM proyectos WHERE id = ? AND usuario_id = ?");
             $stmt_check->bind_param("ii", $proyecto_id, $user_id);
             $stmt_check->execute();
-            if ($stmt_check->get_result()->num_rows === 0) {
+            if (stmt_get_result($stmt_check)->num_rows === 0) {
                 throw new Exception('Proyecto no válido');
             }
             $stmt_check->close();
@@ -310,7 +310,7 @@ try {
             $stmt_check2 = $conn->prepare("SELECT id FROM equipo WHERE id = ? AND usuario_id = ?");
             $stmt_check2->bind_param("ii", $responsable_id, $user_id);
             $stmt_check2->execute();
-            if ($stmt_check2->get_result()->num_rows === 0) {
+            if (stmt_get_result($stmt_check2)->num_rows === 0) {
                 throw new Exception('Responsable no válido');
             }
             $stmt_check2->close();
@@ -319,7 +319,7 @@ try {
             $stmt_orden = $conn->prepare("SELECT COALESCE(MAX(orden), 0) + 1 as next_orden FROM tareas WHERE proyecto_id = ?");
             $stmt_orden->bind_param("i", $proyecto_id);
             $stmt_orden->execute();
-            $orden = (int)$stmt_orden->get_result()->fetch_assoc()['next_orden'];
+            $orden = (int)stmt_get_result($stmt_orden)->fetch_assoc()['next_orden'];
             $stmt_orden->close();
 
             $fecha_inicio = !empty($fecha_inicio) ? $fecha_inicio : null;
@@ -371,7 +371,7 @@ try {
             ");
             $stmt_check->bind_param("ii", $tarea_id, $user_id);
             $stmt_check->execute();
-            if ($stmt_check->get_result()->num_rows === 0) {
+            if (stmt_get_result($stmt_check)->num_rows === 0) {
                 throw new Exception('Tarea no encontrada');
             }
             $stmt_check->close();
@@ -416,7 +416,7 @@ try {
             ");
             $stmt_check->bind_param("ii", $tarea_id, $user_id);
             $stmt_check->execute();
-            if ($stmt_check->get_result()->num_rows === 0) {
+            if (stmt_get_result($stmt_check)->num_rows === 0) {
                 throw new Exception('Tarea no encontrada');
             }
             $stmt_check->close();
@@ -449,7 +449,7 @@ try {
             ");
             $stmt_check->bind_param("ii", $tarea_id, $user_id);
             $stmt_check->execute();
-            if ($stmt_check->get_result()->num_rows === 0) {
+            if (stmt_get_result($stmt_check)->num_rows === 0) {
                 throw new Exception('Tarea no encontrada');
             }
             $stmt_check->close();
@@ -519,7 +519,7 @@ try {
             $stmt = $conn->prepare($sql);
             $stmt->bind_param($types, ...$params);
             $stmt->execute();
-            $result = $stmt->get_result();
+            $result = stmt_get_result($stmt);
 
             $tareas = [];
             while ($row = $result->fetch_assoc()) {
@@ -544,7 +544,7 @@ try {
             $stmt_check = $conn->prepare("SELECT id FROM proyectos WHERE id = ? AND usuario_id = ?");
             $stmt_check->bind_param("ii", $proyecto_id, $user_id);
             $stmt_check->execute();
-            if ($stmt_check->get_result()->num_rows === 0) {
+            if (stmt_get_result($stmt_check)->num_rows === 0) {
                 throw new Exception('Proyecto no encontrado');
             }
             $stmt_check->close();
@@ -568,7 +568,7 @@ try {
             ");
             $stmt->bind_param("i", $proyecto_id);
             $stmt->execute();
-            $result = $stmt->get_result();
+            $result = stmt_get_result($stmt);
 
             $tareas = [];
             while ($row = $result->fetch_assoc()) {
@@ -608,7 +608,7 @@ try {
             ");
             $stmt->bind_param("i", $user_id);
             $stmt->execute();
-            $row = $stmt->get_result()->fetch_assoc();
+            $row = stmt_get_result($stmt)->fetch_assoc();
             $stats['total_proyectos'] = (int)$row['total'];
             $stats['proyectos_activos'] = (int)$row['activos'];
             $stats['proyectos_completados'] = (int)$row['completados'];
@@ -628,7 +628,7 @@ try {
             ");
             $stmt->bind_param("i", $user_id);
             $stmt->execute();
-            $row = $stmt->get_result()->fetch_assoc();
+            $row = stmt_get_result($stmt)->fetch_assoc();
             $stats['total_tareas'] = (int)$row['total'];
             $stats['tareas_pendientes'] = (int)$row['pendientes'];
             $stats['tareas_en_progreso'] = (int)$row['en_progreso'];
@@ -666,7 +666,7 @@ try {
             ");
             $stmt->bind_param("ii", $user_id, $user_id);
             $stmt->execute();
-            $result = $stmt->get_result();
+            $result = stmt_get_result($stmt);
 
             $responsables = [];
             while ($row = $result->fetch_assoc()) {
@@ -740,7 +740,7 @@ try {
             $stmt = $conn->prepare($sql);
             $stmt->bind_param($types, ...$params);
             $stmt->execute();
-            $result = $stmt->get_result();
+            $result = stmt_get_result($stmt);
 
             $tareas = [];
             while ($row = $result->fetch_assoc()) {
@@ -810,7 +810,7 @@ try {
             $stmt = $conn->prepare($sql);
             $stmt->bind_param($types, ...$params);
             $stmt->execute();
-            $result = $stmt->get_result();
+            $result = stmt_get_result($stmt);
 
             $proyectos = [];
             while ($row = $result->fetch_assoc()) {
@@ -834,7 +834,7 @@ try {
                 ");
                 $stmt_tareas->bind_param("i", $row['id']);
                 $stmt_tareas->execute();
-                $res_tareas = $stmt_tareas->get_result();
+                $res_tareas = stmt_get_result($stmt_tareas);
 
                 $todas_tareas = [];
                 while ($tarea = $res_tareas->fetch_assoc()) {
@@ -886,7 +886,7 @@ try {
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("i", $user_id);
             $stmt->execute();
-            $result = $stmt->get_result();
+            $result = stmt_get_result($stmt);
 
             $proyectos = [];
             while ($row = $result->fetch_assoc()) {
@@ -921,7 +921,7 @@ try {
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("i", $user_id);
             $stmt->execute();
-            $result = $stmt->get_result();
+            $result = stmt_get_result($stmt);
 
             $miembros = [];
             while ($row = $result->fetch_assoc()) {
@@ -963,7 +963,7 @@ try {
             ");
             $stmt_info->bind_param("i", $tarea_id);
             $stmt_info->execute();
-            $info = $stmt_info->get_result()->fetch_assoc();
+            $info = stmt_get_result($stmt_info)->fetch_assoc();
             $stmt_info->close();
 
             if (!$info) {
@@ -991,7 +991,7 @@ try {
                     $stmt_check = $conn->prepare("SELECT id FROM equipo WHERE id = ? AND usuario_id = ?");
                     $stmt_check->bind_param("ii", $valor, $user_id);
                     $stmt_check->execute();
-                    if ($stmt_check->get_result()->num_rows === 0) {
+                    if (stmt_get_result($stmt_check)->num_rows === 0) {
                         throw new Exception('El responsable seleccionado no es válido');
                     }
                     $stmt_check->close();

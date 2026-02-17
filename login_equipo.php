@@ -54,7 +54,7 @@ if ($action === 'create') {
     }
     $stmt->bind_param("s", $correo);
     $stmt->execute();
-    $res = $stmt->get_result();
+    $res = stmt_get_result($stmt);
 
     if (!$res || $res->num_rows !== 1) {
         if ($AJAX) json_response(false, 'No encontramos un registro con ese correo.');

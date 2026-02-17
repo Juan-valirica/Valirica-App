@@ -1,0 +1,5 @@
+RewriteEngine On
+
+# Si el archivo solicitado no es index.html, redirigir todo a index.html
+RewriteCond %{REQUEST_URI} !^/index\.html$
+RewriteRule ^(.*)$ /index.html [L,R=302]

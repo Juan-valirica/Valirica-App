@@ -20,7 +20,7 @@ if (!$token) {
     if ($stmt = $conn->prepare($sql)) {
         $stmt->bind_param('s', $token_hash);
         $stmt->execute();
-        $res = $stmt->get_result();
+        $res = stmt_get_result($stmt);
         if ($res && $res->num_rows === 1) {
             $row = $res->fetch_assoc();
             if ($row['used']) {
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $valid) {
             $u = $conn->prepare("SELECT id, correo, nombre_persona, apellido, cargo FROM equipo WHERE id = ? LIMIT 1");
             $u->bind_param('i', $empleado_id);
             $u->execute();
-            $userRow = $u->get_result()->fetch_assoc();
+            $userRow = stmt_get_result($u)->fetch_assoc();
             $u->close();
 
             session_regenerate_id(true);

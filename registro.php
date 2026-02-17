@@ -12,7 +12,7 @@ if ($invite) {
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('s', $invite);
     $stmt->execute();
-    $inviteData = $stmt->get_result()->fetch_assoc();
+    $inviteData = stmt_get_result($stmt)->fetch_assoc();
     $stmt->close();
 
     if (!$inviteData) {
@@ -36,7 +36,7 @@ if ($inviteData && !empty($inviteData['provider_id'])) {
         $q = $conn->prepare("SELECT empresa, logo FROM usuarios WHERE id = ? LIMIT 1");
         $q->bind_param('i', $provId);
         $q->execute();
-        $prov = $q->get_result()->fetch_assoc();
+        $prov = stmt_get_result($q)->fetch_assoc();
         $q->close();
 
         if ($prov) {
