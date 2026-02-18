@@ -4397,8 +4397,13 @@ try {
     </div><!-- Fin tab-content-tareas -->
 
     <!-- ==================== TAB: PROYECTOS (Kanban) ==================== -->
-    <div id="tab-content-proyectos" class="tab-content" style="display:none;">
-      <?php $modo_embebido = true; include 'kanban_proyectos.php'; ?>
+    <div id="tab-content-proyectos" class="tab-content" style="display:none;padding:0;">
+      <iframe
+        id="kanban-iframe"
+        src="kanban_proyectos.php?id=<?= (int)$empleado_id ?>&embedded=1"
+        style="width:100%;height:74vh;min-height:400px;border:none;display:block;"
+        loading="lazy"
+      ></iframe>
     </div><!-- Fin tab-content-proyectos -->
 
     <!-- ==================== TAB: PERMISOS ==================== -->

@@ -3,16 +3,15 @@
  * KANBAN DE PROYECTOS — Valírica HHRR
  * Vista Kanban profesional para seguimiento de proyectos y tareas.
  * Columnas: Mis Tareas | Mi Área | Planificación | En Progreso | Pausado | Completado | [Cancelado]
- * Soporta modo embebido ($modo_embebido = true) para renderizar dentro del dashboard.
+ * Param ?embedded=1 → oculta topbar para uso en iframe dentro del dashboard.
  */
 
-$modo_embebido = $modo_embebido ?? false;
-
-if (!$modo_embebido) {
-    session_start();
-    require 'config.php';
-}
+session_start();
+require 'config.php';
 date_default_timezone_set('Europe/Madrid');
+
+// Modo iframe embebido (oculta topbar, ajusta altura)
+$is_embedded = !empty($_GET['embedded']);
 
 // ── Auth: determinar empleado_id ──
 $empleado_id = (int)($_GET['id'] ?? 0);
@@ -92,9 +91,8 @@ try {
     }
 } catch (Exception $e) { /* column may not exist yet */ }
 
-if (!$modo_embebido) $conn->close();
+$conn->close();
 ?>
-<?php if (!$modo_embebido): ?>
 <!doctype html>
 <html lang="es">
 <head>
@@ -104,7 +102,6 @@ if (!$modo_embebido) $conn->close();
   <meta name="theme-color" content="#012133">
   <link rel="manifest" href="/manifest.json">
   <link rel="stylesheet" href="/css/valirica-design-system.css">
-<?php endif; ?>
   <style>
     @import url("https://use.typekit.net/qrv8fyz.css");
 
@@ -820,55 +817,19 @@ if (!$modo_embebido) $conn->close();
       letter-spacing: 0.02em;
       white-space: nowrap;
     }
+<?php if ($is_embedded): ?>
+    /* ─── Iframe embebido: sin topbar, ajuste de altura ─── */
+    .kb-shell { overflow: auto; }
+    .kb-board { height: 72vh; min-height: 340px; }
+    body { background: transparent; margin: 0; }
+<?php endif; ?>
   </style>
-
-<?php if (!$modo_embebido): ?>
 </head>
 <body>
-<?php endif; ?>
 
-<?php if ($modo_embebido): ?>
-<style>
-  /* ─── Overrides para modo embebido en dashboard ─── */
-  .kb-shell--embedded {
-    height: auto;
-    overflow: visible;
-    border-radius: 0;
-    background: transparent;
-  }
-  .kb-shell--embedded .kb-stats {
-    border-bottom: 1px solid #F0F0F0;
-    background: transparent;
-    padding: 0 0 14px 0;
-    margin-bottom: 0;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-  .kb-shell--embedded .kb-board {
-    height: 68vh;
-    padding: 14px 0 0 0;
-    min-height: 320px;
-  }
-  /* Chip de área en tarjetas de tarea */
-  .kb-area-chip {
-    display: inline-flex;
-    align-items: center;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 99px;
-    background: rgba(0, 122, 150, 0.09);
-    color: #007a96;
-    border: 1px solid rgba(0, 122, 150, 0.15);
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-  }
-</style>
-<?php endif; ?>
+<div class="kb-shell">
 
-<div class="kb-shell<?= $modo_embebido ? ' kb-shell--embedded' : '' ?>">
-
-<?php if (!$modo_embebido): ?>
+<?php if (!$is_embedded): ?>
   <!-- ── Top Bar ── -->
   <header class="kb-topbar">
     <a class="kb-back-btn" href="dashboard_equipo.php?id=<?php echo $empleado_id; ?>">
@@ -1928,7 +1889,5 @@ if (!$modo_embebido) $conn->close();
 
 })();
 </script>
-<?php if (!$modo_embebido): ?>
 </body>
 </html>
-<?php endif; ?>
