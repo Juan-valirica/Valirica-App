@@ -700,6 +700,7 @@ try {
                     t.*,
                     p.titulo as proyecto_titulo,
                     e.nombre_persona as responsable_nombre,
+                    COALESCE(e.area_trabajo, '—') as responsable_area,
                     CASE
                         WHEN t.estado = 'completada' THEN 'completada'
                         WHEN t.deadline < CURDATE() AND t.estado NOT IN ('completada', 'cancelada') THEN 'vencida'
@@ -752,6 +753,52 @@ try {
                 'ok' => true,
                 'tareas' => $tareas
             ]);
+            break;
+
+        // Obtener todas las tareas de un área (para líderes de área)
+        case 'obtener_tareas_area':
+            $area_id = (int)($_GET['area_id'] ?? 0);
+            if ($area_id <= 0) {
+                echo json_encode(['ok' => false, 'error' => 'area_id requerido']);
+                break;
+            }
+
+            $stmt_at = $conn->prepare("
+                SELECT
+                    t.*,
+                    p.titulo as proyecto_titulo,
+                    e.nombre_persona as responsable_nombre,
+                    COALESCE(e.area_trabajo, '—') as responsable_area,
+                    CASE
+                        WHEN t.estado = 'completada' THEN 'completada'
+                        WHEN t.deadline < CURDATE() AND t.estado NOT IN ('completada','cancelada') THEN 'vencida'
+                        WHEN t.deadline = CURDATE() THEN 'vence_hoy'
+                        WHEN t.deadline BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY) THEN 'proxima_vencer'
+                        ELSE 'en_tiempo'
+                    END as indicador_deadline,
+                    DATEDIFF(t.deadline, CURDATE()) as dias_restantes
+                FROM tareas t
+                INNER JOIN proyectos p ON t.proyecto_id = p.id
+                LEFT JOIN equipo e ON t.responsable_id = e.id
+                WHERE e.area_trabajo_id = ? AND t.estado NOT IN ('cancelada')
+                ORDER BY
+                    CASE WHEN t.deadline < CURDATE() AND t.estado NOT IN ('completada','cancelada') THEN 1
+                         WHEN t.deadline = CURDATE() THEN 2
+                         WHEN t.deadline BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY) THEN 3
+                         ELSE 4 END,
+                    FIELD(t.prioridad,'critica','alta','media','baja'),
+                    t.deadline ASC
+            ");
+            $stmt_at->bind_param("i", $area_id);
+            $stmt_at->execute();
+            $res_at = stmt_get_result($stmt_at);
+            $tareas_area = [];
+            while ($row_at = $res_at->fetch_assoc()) {
+                $tareas_area[] = $row_at;
+            }
+            $stmt_at->close();
+
+            echo json_encode(['ok' => true, 'tareas' => $tareas_area]);
             break;
 
         // Obtener proyectos donde el empleado participa o es líder
@@ -824,6 +871,7 @@ try {
                         t.prioridad,
                         t.responsable_id,
                         COALESCE(e.nombre_persona, 'Sin asignar') as responsable_nombre,
+                        COALESCE(e.area_trabajo, '—') as responsable_area,
                         DATEDIFF(t.deadline, CURDATE()) as dias_restantes
                     FROM tareas t
                     LEFT JOIN equipo e ON t.responsable_id = e.id

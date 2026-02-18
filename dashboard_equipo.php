@@ -4396,32 +4396,9 @@ try {
       </div>
     </div><!-- Fin tab-content-tareas -->
 
-    <!-- ==================== TAB: PROYECTOS ==================== -->
+    <!-- ==================== TAB: PROYECTOS (Kanban) ==================== -->
     <div id="tab-content-proyectos" class="tab-content" style="display:none;">
-      <div style="display:flex;flex-direction:column;gap:16px;">
-
-        <!-- Header -->
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-          <p style="margin:0;color:#666;font-size:13px;">
-            Proyectos donde participas o eres líder
-          </p>
-          <select id="filtro-proyecto-estado" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;">
-            <option value="">Todos los estados</option>
-            <option value="planificacion">Planificación</option>
-            <option value="en_progreso">En progreso</option>
-            <option value="pausado">Pausado</option>
-            <option value="completado">Completado</option>
-          </select>
-        </div>
-
-        <!-- Lista de proyectos -->
-        <div id="lista-mis-proyectos" style="display:flex;flex-direction:column;gap:12px;">
-          <div style="text-align:center;padding:40px;color:#999;">
-            <div style="font-size:48px;margin-bottom:12px;">📁</div>
-            <p>Cargando proyectos...</p>
-          </div>
-        </div>
-      </div>
+      <?php $modo_embebido = true; include 'kanban_proyectos.php'; ?>
     </div><!-- Fin tab-content-proyectos -->
 
     <!-- ==================== TAB: PERMISOS ==================== -->
@@ -4869,9 +4846,8 @@ try {
         // Cargar datos según el tab
         if (tabName === 'tareas') {
           cargarMisTareas();
-        } else if (tabName === 'proyectos') {
-          cargarMisProyectos();
         }
+        // Tab proyectos: el kanban embebido gestiona su propia carga de datos
       }
     });
   }
