@@ -1166,14 +1166,12 @@ try {
      ========================================================= */
 
   .wrap{
-
-    max-width: 980px;
-
+    max-width: 1600px;
     margin: 0 auto;
-
-    padding: 24px;
-
+    padding: 24px 36px;
   }
+  @media (max-width: 900px) { .wrap { padding: 16px 20px; } }
+  @media (max-width: 600px) { .wrap { padding: 12px 14px; } }
 
  
 
@@ -1986,42 +1984,71 @@ try {
    ========================================================= */
 
     .modal-overlay {
+
       position: fixed;
+
       top: 0;
+
       left: 0;
+
       right: 0;
+
       bottom: 0;
+
       background: rgba(1, 33, 51, 0.7);
+
       backdrop-filter: blur(4px);
+
       display: flex;
+
       align-items: center;
+
       justify-content: center;
+
       z-index: 9999;
+
       opacity: 0;
+
       animation: fadeIn 0.2s ease forwards;
-      padding: 20px;
-      overflow-y: auto;
+
     }
+
+ 
 
     @keyframes fadeIn {
+
       to { opacity: 1; }
+
     }
+
+ 
 
     .modal-content {
+
       background: white;
+
       border-radius: 20px;
+
       padding: 28px;
+
       max-width: 500px;
+
       width: 90%;
-      max-height: calc(100vh - 40px);
-      overflow-y: auto;
+
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+
       transform: scale(0.9);
+
       animation: scaleIn 0.3s ease forwards;
+
     }
 
+ 
+
     @keyframes scaleIn {
+
       to { transform: scale(1); }
+
     }
 
  
@@ -2354,6 +2381,95 @@ try {
 
  
  
+/* ─── Crear modal: type cards ─── */
+.crear-tipo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  border: 2px solid #E5E7EB;
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s;
+}
+.crear-tipo-card:hover {
+  border-color: var(--c-primary);
+  box-shadow: 0 4px 16px rgba(1,33,51,0.10);
+  transform: translateY(-2px);
+}
+.crear-tipo-card span { line-height: 1.4; }
+
+/* ─── Crear modal: paso structure ─── */
+.crear-paso-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid #F0F0F0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--c-secondary);
+}
+.crear-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #F3F4F6;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.crear-back-btn:hover { background: #E5E7EB; }
+.crear-paso-body {
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.crear-paso-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 14px 22px 18px;
+  border-top: 1px solid #F0F0F0;
+}
+.crear-field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+.crear-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1F2937;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+.crear-input:focus {
+  outline: none;
+  border-color: var(--c-teal, #007a96);
+  box-shadow: 0 0 0 3px rgba(0,122,150,0.10);
+}
+
  /* =========================================================
    Subnav empleado — Action Bar
    ========================================================= */
@@ -3090,13 +3206,48 @@ try {
    TABS — Estilo Monday/Asana (sin emojis)
    ========================================================================== */
 
+/* ── Exec section header layout ── */
+.exec-header { display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; }
+.exec-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Botón + Crear (siempre visible) ── */
+.btn-crear-unified {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: var(--c-accent, #EF7F1B);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.18s, transform 0.12s;
+  flex-shrink: 0;
+}
+.btn-crear-unified:hover { background: #d96a12; transform: translateY(-1px); }
+.btn-crear-unified i { font-size: 15px; }
+
+/* ── Tab bar ── */
 .tabs-valirica {
   display: flex;
   gap: 4px;
   background: #f1f3f5;
   padding: 4px;
   border-radius: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.tabs-valirica::-webkit-scrollbar { display: none; }
 
 .tab-valirica {
   display: flex;
@@ -3113,11 +3264,10 @@ try {
   transition: all 0.18s ease;
   font-family: inherit;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.tab-valirica i {
-  font-size: 15px;
-}
+.tab-valirica i { font-size: 15px; }
 
 .tab-valirica.active {
   background: #fff;
@@ -3128,6 +3278,14 @@ try {
 .tab-valirica:hover:not(.active) {
   background: rgba(255,255,255,0.6);
   color: var(--c-primary);
+}
+
+/* Mobile: tabs más compactos */
+@media (max-width: 600px) {
+  .tab-valirica { padding: 7px 11px; font-size: 12px; gap: 5px; }
+  .tab-valirica i { font-size: 14px; }
+  .exec-header-top h3 { font-size: 17px !important; }
+  .btn-crear-unified { padding: 7px 14px; font-size: 12px; }
 }
 
 /* Badge de notificaciones en tab Permisos */
@@ -3382,7 +3540,45 @@ try {
  <!-- =========================================================
      Subnav de acciones del empleado
      ========================================================= -->
-<!-- subnav eliminado - acciones disponibles dentro de cada tab -->
+<nav class="employee-subnav" aria-label="Acciones del empleado">
+
+<button class="subnav-item is-primary" data-action="asistencia">
+  <span class="subnav-icon"><i class="ph ph-clock-clockwise" style="font-size:22px;"></i></span>
+  <span class="subnav-label">Asistencia</span>
+</button>
+
+<button class="subnav-item is-primary" data-action="crear-meta">
+  <span class="subnav-icon"><i class="ph ph-target" style="font-size:22px;"></i></span>
+  <span class="subnav-label">Crear meta</span>
+</button>
+
+<button class="subnav-item is-primary" data-action="crear-tarea">
+  <span class="subnav-icon"><i class="ph ph-check-square" style="font-size:22px;"></i></span>
+  <span class="subnav-label">Nueva tarea</span>
+</button>
+
+<button class="subnav-item" data-action="equipo">
+  <span class="subnav-icon"><i class="ph ph-users-three" style="font-size:22px;"></i></span>
+  <span class="subnav-label">Tu equipo</span>
+</button>
+
+<button class="subnav-item" data-action="permisos">
+  <span class="subnav-icon"><i class="ph ph-calendar" style="font-size:22px;"></i></span>
+  <span class="subnav-label">Permisos &amp; Vacaciones</span>
+</button>
+
+<button class="subnav-item" data-action="beneficios">
+  <span class="subnav-icon"><i class="ph ph-gift" style="font-size:22px;"></i></span>
+  <span class="subnav-label">Beneficios</span>
+</button>
+
+<button class="subnav-item" data-action="queja">
+  <span class="subnav-icon"><i class="ph ph-chat-circle-text" style="font-size:22px;"></i></span>
+  <span class="subnav-label">Queja o reclamo</span>
+</button>
+
+
+</nav>
 
  
 
@@ -3885,12 +4081,17 @@ try {
 
  
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-      <h3 style="margin:0;font-size:20px;font-weight:800;color:var(--c-secondary)">
-        Ejecución y seguimiento
-      </h3>
+    <div class="exec-header">
+      <div class="exec-header-top">
+        <h3 style="margin:0;font-size:20px;font-weight:800;color:var(--c-secondary)">
+          Ejecución y seguimiento
+        </h3>
+        <button class="btn-crear-unified" onclick="openCrearModal()">
+          <i class="ph ph-plus"></i> Crear
+        </button>
+      </div>
 
-      <!-- Tabs de navegación -->
+      <!-- Tabs de navegación — full width, scrollable on mobile -->
       <div id="tabs-ejecucion" class="tabs-valirica">
         <button class="tab-btn tab-valirica active" data-tab="metas">
           <i class="ph ph-target"></i> Metas
@@ -4314,8 +4515,8 @@ try {
               <option value="baja">Baja</option>
             </select>
           </div>
-          <button onclick="openCreateModal()" style="padding:8px 16px;background:var(--c-teal);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;">
-            <i class="ph ph-plus" style="font-size:14px;"></i>Nueva tarea / proyecto
+          <button onclick="openCreateTareaModal()" style="padding:8px 16px;background:var(--c-teal);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;">
+            <i class="ph ph-plus" style="font-size:14px;"></i>Nueva tarea
           </button>
         </div>
 
@@ -4329,37 +4530,14 @@ try {
       </div>
     </div><!-- Fin tab-content-tareas -->
 
-    <!-- ==================== TAB: PROYECTOS ==================== -->
-    <div id="tab-content-proyectos" class="tab-content" style="display:none;">
-      <div style="display:flex;flex-direction:column;gap:16px;">
-
-        <!-- Header -->
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-            <p style="margin:0;color:#666;font-size:13px;">
-              Proyectos donde participas o eres líder
-            </p>
-            <select id="filtro-proyecto-estado" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;">
-              <option value="">Todos los estados</option>
-              <option value="planificacion">Planificación</option>
-              <option value="en_progreso">En progreso</option>
-              <option value="pausado">Pausado</option>
-              <option value="completado">Completado</option>
-            </select>
-          </div>
-          <button onclick="openCreateModal()" style="padding:8px 16px;background:var(--c-teal);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;">
-            <i class="ph ph-plus" style="font-size:14px;"></i>Nueva tarea / proyecto
-          </button>
-        </div>
-
-        <!-- Lista de proyectos -->
-        <div id="lista-mis-proyectos" style="display:flex;flex-direction:column;gap:12px;">
-          <div style="text-align:center;padding:40px;color:#999;">
-            <div style="font-size:48px;margin-bottom:12px;">📁</div>
-            <p>Cargando proyectos...</p>
-          </div>
-        </div>
-      </div>
+    <!-- ==================== TAB: PROYECTOS (Kanban) ==================== -->
+    <div id="tab-content-proyectos" class="tab-content" style="display:none;padding:0;">
+      <iframe
+        id="kanban-iframe"
+        src="kanban_proyectos.php?id=<?= (int)$empleado_id ?>&embedded=1"
+        style="width:100%;height:74vh;min-height:400px;border:none;display:block;"
+        loading="lazy"
+      ></iframe>
     </div><!-- Fin tab-content-proyectos -->
 
     <!-- ==================== TAB: PERMISOS ==================== -->
@@ -4807,16 +4985,21 @@ try {
         // Cargar datos según el tab
         if (tabName === 'tareas') {
           cargarMisTareas();
-        } else if (tabName === 'proyectos') {
-          cargarMisProyectos();
         }
+        // Tab proyectos: el kanban embebido gestiona su propia carga de datos
       }
     });
   }
 
   /* =======================================================
-     BOTÓN "CREAR TAREA" EN SUBNAV (eliminado, acciones en tabs)
+     BOTÓN "CREAR TAREA" EN SUBNAV
      ======================================================= */
+  const btnCrearTarea = document.querySelector('[data-action="crear-tarea"]');
+  if (btnCrearTarea) {
+    btnCrearTarea.addEventListener('click', () => {
+      openCreateTareaModal();
+    });
+  }
 
   /* =======================================================
      CARGAR MIS TAREAS
@@ -4862,7 +5045,7 @@ try {
           <div style="text-align:center;padding:40px;color:#999;">
             <i class="ph ph-check-circle" style="font-size:48px;margin-bottom:12px;display:block;color:#ccc;"></i>
             <p>No tienes tareas asignadas</p>
-            <button onclick="openCreateModal()" style="margin-top:12px;padding:10px 20px;background:var(--c-teal);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-family:inherit;">
+            <button onclick="openCreateTareaModal()" style="margin-top:12px;padding:10px 20px;background:var(--c-teal);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-family:inherit;">
               Crear primera tarea
             </button>
           </div>
@@ -6024,7 +6207,7 @@ function renderProyectoItem(proy, index = 0) {
             Tareas del proyecto
           </span>
           ${esLider ? `
-            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); openCreateModal('tarea')">
+            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); openCreateTareaModal()">
               + Nueva tarea
             </button>
           ` : ''}
@@ -6354,305 +6537,512 @@ window.guardarEdicionProyecto = async function(proyectoId, btn) {
 
 
   /* =======================================================
-     MODAL UNIFICADO: CREAR TAREA O PROYECTO
-     Paso 1: elegir tipo (tarea / proyecto)
-     Paso 2a: campos de tarea  (+ área de trabajo)
-     Paso 2b: campos de proyecto → opción de crear 1ra tarea
+     MODAL UNIFICADO: CREAR TAREA / PROYECTO
      ======================================================= */
 
-  window.openCreateModal = function(preselect) {
-    if (document.getElementById('create-modal')) return;
+  let _createdProjectId = null; // persiste entre pasos del modal
 
+  /* ── Abre el modal en el selector de tipo ── */
+  window.openCrearModal = async function() {
+    if (document.getElementById('crear-modal')) return;
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
-    overlay.id = 'create-modal';
+    overlay.id = 'crear-modal';
+    overlay.innerHTML = buildCrearModalHTML();
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeCrearModal(); });
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.style.opacity = '1');
+    await cargarAreasSelector();
+    await cargarProyectosParaSelector();
+  };
 
-    overlay.innerHTML = `
-      <div class="modal-content" style="max-width:520px;">
-        <div class="modal-header">
-          <div class="modal-icon"><i class="ph ph-plus-circle" style="font-size:28px;color:var(--c-accent);"></i></div>
-          <h3 class="modal-title" id="create-modal-title">Crear nuevo</h3>
+  /* Alias para compatibilidad con botones existentes */
+  window.openCreateTareaModal = () => openCrearModal();
+
+  window.closeCrearModal = function() {
+    const m = document.getElementById('crear-modal');
+    if (!m) return;
+    m.style.opacity = '0';
+    setTimeout(() => m.remove(), 200);
+    _createdProjectId = null;
+  };
+
+  /* ── Navegar entre pasos ── */
+  window.crearMostrarPaso = function(paso) {
+    document.querySelectorAll('#crear-modal .crear-paso').forEach(p => p.style.display = 'none');
+    const el = document.getElementById('crear-paso-' + paso);
+    if (el) el.style.display = 'block';
+  };
+
+  window.irACrearTarea = function() { crearMostrarPaso('tarea'); };
+  window.irACrearProyecto = function() { crearMostrarPaso('proyecto'); };
+  window.volverAlSelector = function() { crearMostrarPaso('selector'); };
+
+  /* ── HTML del modal completo ── */
+  function buildCrearModalHTML() {
+    const hoy = new Date().toISOString().split('T')[0];
+    return `
+      <div class="modal-content" style="max-width:560px;padding:0;overflow:hidden;">
+
+        <!-- PASO 0: Selector de tipo -->
+        <div id="crear-paso-selector" class="crear-paso" style="padding:32px 28px;">
+          <div style="text-align:center;margin-bottom:24px;">
+            <div style="font-size:28px;margin-bottom:8px;">✨</div>
+            <h3 style="margin:0;font-size:18px;font-weight:800;color:var(--c-secondary)">¿Qué deseas crear?</h3>
+            <p style="margin:6px 0 0;font-size:13px;color:#6B7280;">Elige el tipo de elemento que quieres agregar</p>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <button class="crear-tipo-card" onclick="irACrearTarea()">
+              <i class="ph ph-check-square" style="font-size:32px;color:var(--c-teal);margin-bottom:10px;"></i>
+              <strong style="font-size:15px;color:var(--c-primary)">Nueva Tarea</strong>
+              <span style="font-size:12px;color:#6B7280;margin-top:4px;">Asigna trabajo dentro de un proyecto</span>
+            </button>
+            <button class="crear-tipo-card" onclick="irACrearProyecto()">
+              <i class="ph ph-folder-plus" style="font-size:32px;color:var(--c-accent,#EF7F1B);margin-bottom:10px;"></i>
+              <strong style="font-size:15px;color:var(--c-primary)">Nuevo Proyecto</strong>
+              <span style="font-size:12px;color:#6B7280;margin-top:4px;">Agrupa tareas y gestiona objetivos</span>
+            </button>
+          </div>
+          <button onclick="closeCrearModal()" style="width:100%;margin-top:16px;padding:10px;background:transparent;border:1.5px solid #E5E7EB;border-radius:8px;color:#6B7280;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px;">Cancelar</button>
         </div>
 
-        <!-- PASO 1: Elegir tipo -->
-        <div id="create-step-choose" class="modal-body" style="display:flex;flex-direction:column;gap:12px;">
-          <p style="margin:0 0 4px;font-size:13px;color:#666;">Elige lo que quieres crear:</p>
+        <!-- PASO 1A: Crear Tarea -->
+        <div id="crear-paso-tarea" class="crear-paso" style="display:none;">
+          <div class="crear-paso-header">
+            <button class="crear-back-btn" onclick="volverAlSelector()">
+              <i class="ph ph-arrow-left"></i>
+            </button>
+            <span>Nueva Tarea</span>
+          </div>
+          <div class="crear-paso-body">
 
-          <button type="button" class="help-option" id="choose-tarea" style="cursor:pointer;text-align:left;">
-            <div style="display:flex;align-items:center;gap:12px;width:100%;">
-              <i class="ph ph-check-square" style="font-size:24px;color:var(--c-teal);flex-shrink:0;"></i>
-              <div style="flex:1;">
-                <div class="help-option-label">Tarea</div>
-                <div class="help-option-sublabel">Una actividad asignada dentro de un proyecto</div>
-              </div>
-              <i class="ph ph-caret-right" style="color:#ccc;font-size:18px;"></i>
-            </div>
-          </button>
-
-          <button type="button" class="help-option" id="choose-proyecto" style="cursor:pointer;text-align:left;">
-            <div style="display:flex;align-items:center;gap:12px;width:100%;">
-              <i class="ph ph-folder-open" style="font-size:24px;color:var(--c-accent);flex-shrink:0;"></i>
-              <div style="flex:1;">
-                <div class="help-option-label">Proyecto</div>
-                <div class="help-option-sublabel">Un contenedor de tareas con fechas y equipo</div>
-              </div>
-              <i class="ph ph-caret-right" style="color:#ccc;font-size:18px;"></i>
-            </div>
-          </button>
-        </div>
-
-        <!-- PASO 2A: Formulario de TAREA -->
-        <div id="create-step-tarea" style="display:none;">
-          <div class="modal-body">
-            <label class="help-option">
-              <div class="help-option-label">Proyecto<div class="help-option-sublabel">Selecciona el proyecto al que pertenece</div></div>
-              <select id="tarea-proyecto-select" style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
-                <option value="">Cargando...</option>
+            <!-- Área (filtra responsable) -->
+            <label class="crear-field-label">
+              Área
+              <select id="tarea-area" class="crear-input" onchange="onAreaChange()">
+                <option value="">Todas las áreas</option>
               </select>
             </label>
 
-            <label class="help-option">
-              <div class="help-option-label">Área de trabajo<div class="help-option-sublabel">El área a la que pertenece esta tarea</div></div>
-              <select id="tarea-area-select" style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
-                <option value="">Cargando áreas...</option>
+            <!-- Proyecto -->
+            <label class="crear-field-label">
+              Proyecto <span style="color:#EF4444">*</span>
+              <select id="tarea-proyecto-select" class="crear-input">
+                <option value="">Cargando proyectos...</option>
               </select>
             </label>
 
-            <label class="help-option">
-              <div class="help-option-label">Título de la tarea</div>
-              <input id="tarea-titulo" type="text" placeholder="Ej: Revisar documentación Q1" style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
+            <!-- Título -->
+            <label class="crear-field-label">
+              Título de la tarea <span style="color:#EF4444">*</span>
+              <input id="tarea-titulo" type="text" class="crear-input" placeholder="Ej: Revisar propuesta Q2">
             </label>
 
-            <label class="help-option">
-              <div class="help-option-label">Descripción <span style="font-weight:400;color:#999;">(opcional)</span></div>
-              <textarea id="tarea-descripcion" placeholder="Detalles adicionales..." style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;resize:vertical;min-height:50px;"></textarea>
+            <!-- Descripción -->
+            <label class="crear-field-label">
+              Descripción <span style="color:#9CA3AF;font-size:11px;">(opcional)</span>
+              <textarea id="tarea-descripcion" class="crear-input" rows="2" placeholder="Detalles adicionales..." style="resize:vertical;"></textarea>
             </label>
 
-            <label class="help-option">
-              <div class="help-option-label">Responsable <span style="font-weight:400;color:#999;">(opcional)</span></div>
-              <select id="tarea-responsable" style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
-                <option value="">Sin asignar</option>
+            <!-- Responsable -->
+            <label class="crear-field-label">
+              Responsable <span style="color:#9CA3AF;font-size:11px;">(opcional)</span>
+              <select id="tarea-responsable" class="crear-input">
+                <option value="">Sin asignar — asignar después</option>
               </select>
             </label>
 
+            <!-- Deadline + Prioridad -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-              <label class="help-option">
-                <div class="help-option-label">Fecha límite</div>
-                <input id="tarea-deadline" type="date" style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
+              <label class="crear-field-label">
+                Fecha límite
+                <input id="tarea-deadline" type="date" class="crear-input">
               </label>
-              <label class="help-option">
-                <div class="help-option-label">Prioridad</div>
-                <select id="tarea-prioridad" style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
+              <label class="crear-field-label">
+                Prioridad
+                <select id="tarea-prioridad" class="crear-input">
                   <option value="media">Media</option>
-                  <option value="baja">Baja</option>
                   <option value="alta">Alta</option>
-                  <option value="critica">Critica</option>
+                  <option value="critica">Crítica</option>
+                  <option value="baja">Baja</option>
                 </select>
               </label>
             </div>
           </div>
-
-          <div class="modal-actions">
-            <button class="modal-btn modal-btn-cancel" onclick="showCreateStep('choose')">Volver</button>
-            <button class="modal-btn modal-btn-confirm" id="btn-guardar-tarea" onclick="guardarTarea(this)">Crear tarea</button>
+          <div class="crear-paso-actions">
+            <button class="modal-btn modal-btn-cancel" onclick="closeCrearModal()">Cancelar</button>
+            <button class="modal-btn modal-btn-confirm" id="btn-guardar-tarea" onclick="guardarTarea(this)">
+              <i class="ph ph-check"></i> Crear tarea
+            </button>
           </div>
         </div>
 
-        <!-- PASO 2B: Formulario de PROYECTO -->
-        <div id="create-step-proyecto" style="display:none;">
-          <div class="modal-body">
-            <label class="help-option">
-              <div class="help-option-label">Título del proyecto</div>
-              <input id="proyecto-titulo" type="text" placeholder="Ej: Lanzamiento campaña Q1" style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
+        <!-- PASO 1B: Crear Proyecto -->
+        <div id="crear-paso-proyecto" class="crear-paso" style="display:none;">
+          <div class="crear-paso-header">
+            <button class="crear-back-btn" onclick="volverAlSelector()">
+              <i class="ph ph-arrow-left"></i>
+            </button>
+            <span>Nuevo Proyecto</span>
+          </div>
+          <div class="crear-paso-body">
+            <label class="crear-field-label">
+              Nombre del proyecto <span style="color:#EF4444">*</span>
+              <input id="proy-titulo" type="text" class="crear-input" placeholder="Ej: Campaña de verano 2026">
             </label>
-
-            <label class="help-option">
-              <div class="help-option-label">Descripción <span style="font-weight:400;color:#999;">(opcional)</span></div>
-              <textarea id="proyecto-descripcion" placeholder="Objetivos del proyecto..." style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;resize:vertical;min-height:50px;"></textarea>
+            <label class="crear-field-label">
+              Descripción <span style="color:#9CA3AF;font-size:11px;">(opcional)</span>
+              <textarea id="proy-descripcion" class="crear-input" rows="2" placeholder="¿De qué trata este proyecto?" style="resize:vertical;"></textarea>
             </label>
-
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-              <label class="help-option">
-                <div class="help-option-label">Fecha inicio</div>
-                <input id="proyecto-fecha-inicio" type="date" style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
+              <label class="crear-field-label">
+                Fecha de inicio
+                <input id="proy-fecha-inicio" type="date" class="crear-input" value="${hoy}">
               </label>
-              <label class="help-option">
-                <div class="help-option-label">Fecha fin estimada</div>
-                <input id="proyecto-fecha-fin" type="date" style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
+              <label class="crear-field-label">
+                Fecha estimada de fin
+                <input id="proy-fecha-fin" type="date" class="crear-input">
               </label>
             </div>
-
-            <label class="help-option">
-              <div class="help-option-label">Prioridad</div>
-              <select id="proyecto-prioridad" style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
+            <label class="crear-field-label">
+              Prioridad
+              <select id="proy-prioridad" class="crear-input">
                 <option value="media">Media</option>
-                <option value="baja">Baja</option>
                 <option value="alta">Alta</option>
-                <option value="critica">Critica</option>
+                <option value="critica">Crítica</option>
+                <option value="baja">Baja</option>
+              </select>
+            </label>
+            <p style="font-size:12px;color:#6B7280;margin:4px 0 0;"><i class="ph ph-info"></i> Serás el líder de este proyecto automáticamente.</p>
+          </div>
+          <div class="crear-paso-actions">
+            <button class="modal-btn modal-btn-cancel" onclick="closeCrearModal()">Cancelar</button>
+            <button class="modal-btn modal-btn-confirm" id="btn-guardar-proyecto" onclick="guardarProyecto(this)">
+              <i class="ph ph-folder-plus"></i> Crear proyecto
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 2: Éxito — primera tarea del proyecto? -->
+        <div id="crear-paso-primera-tarea" class="crear-paso" style="display:none;padding:36px 28px;text-align:center;">
+          <div style="font-size:52px;margin-bottom:16px;">🎉</div>
+          <h3 style="margin:0 0 8px;font-size:18px;font-weight:800;color:var(--c-secondary)">¡Proyecto creado!</h3>
+          <p style="margin:0 0 24px;font-size:13px;color:#6B7280;">¿Deseas crear la primera tarea de este proyecto ahora?</p>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <button class="modal-btn modal-btn-cancel" onclick="closeCrearModal();const t=document.querySelector('[data-tab=proyectos]');if(t)t.click();">
+              No, después
+            </button>
+            <button class="modal-btn modal-btn-confirm" onclick="irAPrimeraTareaProyecto()">
+              <i class="ph ph-plus"></i> Sí, crear primera tarea
+            </button>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  /* ── Acción: ir a crear primera tarea del proyecto recién creado ── */
+  window.irAPrimeraTareaProyecto = async function() {
+    crearMostrarPaso('tarea');
+    // Pre-seleccionar el proyecto recién creado
+    await cargarProyectosParaSelector();
+    if (_createdProjectId) {
+      const sel = document.getElementById('tarea-proyecto-select');
+      if (sel) sel.value = _createdProjectId;
+    }
+  };
+
+  /* ── Cargar áreas en el selector ── */
+  async function cargarAreasSelector() {
+    const sel = document.getElementById('tarea-area');
+    if (!sel) return;
+    try {
+      const r = await fetch(`proyectos_tareas_backend.php?action=obtener_areas&usuario_id=${USER_ID}`);
+      const d = await r.json();
+      if (d.ok && d.areas) {
+        d.areas.forEach(a => {
+          const o = document.createElement('option');
+          o.value = a.id;
+          o.textContent = a.nombre_area;
+          sel.appendChild(o);
+        });
+      }
+    } catch(e) { /* areas opcionales */ }
+  }
+
+  /* ── Cuando cambia el área, filtra responsables ── */
+  window.onAreaChange = async function() {
+    const areaId = document.getElementById('tarea-area')?.value || '';
+    await cargarMiembrosEquipo(document.getElementById('tarea-responsable'), true, areaId);
+  };
+
+  /* ── Guardar Proyecto ── */
+  window.guardarProyecto = async function(btn) {
+    const titulo = document.getElementById('proy-titulo')?.value.trim();
+    if (!titulo) { alert('El nombre del proyecto es obligatorio'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner"></i> Creando...';
+
+    try {
+      const fd = new FormData();
+      fd.append('action', 'crear_proyecto');
+      fd.append('usuario_id', USER_ID);
+      fd.append('titulo', titulo);
+      fd.append('descripcion', document.getElementById('proy-descripcion')?.value.trim() || '');
+      fd.append('lider_id', EMPLEADO_ID);
+      fd.append('fecha_inicio', document.getElementById('proy-fecha-inicio')?.value || '');
+      fd.append('fecha_fin_estimada', document.getElementById('proy-fecha-fin')?.value || '');
+      fd.append('prioridad', document.getElementById('proy-prioridad')?.value || 'media');
+
+      const r = await fetch('proyectos_tareas_backend.php', { method: 'POST', body: fd });
+      const d = await r.json();
+
+      if (!d.ok) { alert('Error: ' + (d.error || 'Error desconocido')); btn.disabled = false; btn.innerHTML = '<i class="ph ph-folder-plus"></i> Crear proyecto'; return; }
+
+      _createdProjectId = d.proyecto_id;
+      crearMostrarPaso('primera-tarea');
+
+    } catch(e) {
+      alert('Error de conexión');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ph ph-folder-plus"></i> Crear proyecto';
+    }
+  };
+
+  /* ── (MANTENER) openCreateTareaModal legacy ── */
+  window.openCreateTareaModal = async function() {
+    if (document.getElementById('crear-modal')) return;
+    await openCrearModal();
+    irACrearTarea(); // ir directo al paso tarea
+  };
+
+  /* =======================================================
+     MODAL CREAR TAREA (legacy compatible)
+     ======================================================= */
+  window.openCreateTareaModal_old = async function() {
+    if (document.getElementById('create-tarea-modal')) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'create-tarea-modal';
+
+    overlay.innerHTML = `
+      <div class="modal-content" style="max-width:550px;">
+        <div class="modal-header">
+          <div class="modal-icon"><i class="ph ph-check-square" style="font-size:28px;color:var(--c-teal);"></i></div>
+          <h3 class="modal-title">Nueva tarea</h3>
+        </div>
+
+        <div class="modal-body">
+          <!-- Selector de proyecto o crear nuevo -->
+          <label class="help-option">
+            <div class="help-option-label">
+              Proyecto
+              <div class="help-option-sublabel">Selecciona un proyecto existente o crea uno nuevo</div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <select id="tarea-proyecto-select" style="flex:1;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
+                <option value="">Cargando proyectos...</option>
+              </select>
+              <button type="button" onclick="toggleNuevoProyectoForm()" style="padding:12px 16px;background:#f1f1f1;border:none;border-radius:8px;cursor:pointer;font-weight:600;white-space:nowrap;">
+                + Nuevo
+              </button>
+            </div>
+          </label>
+
+          <!-- Formulario nuevo proyecto (oculto por defecto) -->
+          <div id="nuevo-proyecto-form" style="display:none;background:#f9f9f9;padding:16px;border-radius:12px;margin-top:12px;">
+            <h4 style="margin:0 0 12px;font-size:14px;color:#184656;display:flex;align-items:center;gap:8px;"><i class="ph ph-folder-plus" style="color:var(--c-teal);"></i>Crear nuevo proyecto</h4>
+            <input id="nuevo-proyecto-titulo" type="text" placeholder="Título del proyecto" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:8px;">
+            <textarea id="nuevo-proyecto-desc" placeholder="Descripción (opcional)" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;resize:vertical;min-height:60px;"></textarea>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <input id="nuevo-proyecto-fecha-inicio" type="date" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:6px;" title="Fecha inicio">
+              <input id="nuevo-proyecto-fecha-fin" type="date" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:6px;" title="Fecha fin estimada">
+            </div>
+            <p style="margin:8px 0 0;font-size:11px;color:#666;">Serás el líder de este proyecto</p>
+          </div>
+
+          <!-- Título de la tarea -->
+          <label class="help-option">
+            <div class="help-option-label">Título de la tarea</div>
+            <input id="tarea-titulo" type="text" placeholder="Ej: Revisar documentación Q1" style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
+          </label>
+
+          <!-- Descripción -->
+          <label class="help-option">
+            <div class="help-option-label">Descripción (opcional)</div>
+            <textarea id="tarea-descripcion" placeholder="Detalles adicionales..." style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;resize:vertical;min-height:60px;"></textarea>
+          </label>
+
+          <!-- Responsable (OPCIONAL) -->
+            <label class="help-option">
+              <div class="help-option-label">
+                Responsable (opcional - puede asignarse después)
+                <div class="help-option-sublabel" id="responsable-hint">Puedes dejar sin asignar y asignarlo luego</div>
+              </div>
+              <select id="tarea-responsable" style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
+                <option value="">Sin asignar (asignar después)</option>
               </select>
             </label>
 
-            <p style="margin:4px 0 0;font-size:11px;color:#888;"><i class="ph ph-info" style="margin-right:4px;"></i>Serás el líder de este proyecto</p>
-          </div>
+          <!-- Deadline y Prioridad -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <label class="help-option">
+              <div class="help-option-label">Fecha límite</div>
+              <input id="tarea-deadline" type="date" style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
+            </label>
 
-          <div class="modal-actions">
-            <button class="modal-btn modal-btn-cancel" onclick="showCreateStep('choose')">Volver</button>
-            <button class="modal-btn modal-btn-confirm" id="btn-guardar-proyecto" onclick="guardarProyecto(this)">Crear proyecto</button>
+            <label class="help-option">
+              <div class="help-option-label">Prioridad</div>
+              <select id="tarea-prioridad" style="width:100%;margin-top:8px;padding:12px;border-radius:8px;border:2px solid #e6e6e6;">
+                <option value="media">Media</option>
+                <option value="baja">Baja</option>
+                <option value="alta">Alta</option>
+                <option value="critica">Crítica</option>
+              </select>
+            </label>
           </div>
         </div>
 
-        <!-- PASO 3: Proyecto creado — crear primera tarea? -->
-        <div id="create-step-post-proyecto" style="display:none;">
-          <div class="modal-body" style="text-align:center;padding:20px 0;">
-            <i class="ph ph-check-circle" style="font-size:48px;color:#2E7D32;margin-bottom:12px;display:block;"></i>
-            <p style="font-size:16px;font-weight:700;color:#012133;margin:0 0 6px;">Proyecto creado</p>
-            <p style="font-size:13px;color:#666;margin:0 0 20px;" id="post-proyecto-msg"></p>
-
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              <button class="modal-btn modal-btn-confirm" style="width:100%;" onclick="postProyectoCrearTarea()">
-                <i class="ph ph-plus" style="margin-right:6px;"></i>Crear la primera tarea del proyecto
-              </button>
-              <button class="modal-btn modal-btn-cancel" style="width:100%;" onclick="closeCreateModal()">Cerrar</button>
-            </div>
-          </div>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn-cancel" onclick="closeCreateTareaModal()">Cancelar</button>
+          <button class="modal-btn modal-btn-confirm" id="btn-guardar-tarea" onclick="guardarTarea(this)">Crear tarea</button>
         </div>
       </div>
     `;
 
     overlay.addEventListener('click', e => {
-      if (e.target === overlay) closeCreateModal();
+      if (e.target === overlay) closeCreateTareaModal();
     });
 
     document.body.appendChild(overlay);
 
-    // Listeners de paso 1
-    document.getElementById('choose-tarea').addEventListener('click', () => showCreateStep('tarea'));
-    document.getElementById('choose-proyecto').addEventListener('click', () => showCreateStep('proyecto'));
+    // Cargar proyectos disponibles
+    await cargarProyectosParaSelector();
 
-    // Si viene preseleccionado
-    if (preselect === 'tarea' || preselect === 'proyecto') {
-      showCreateStep(preselect);
-    }
-  };
+    // Event listener para cambio de proyecto
+document.getElementById('tarea-proyecto-select').addEventListener('change', async function() {
+  await onProyectoChange();
+}); 
+};
 
-  // Alias de compatibilidad
-  window.openCreateTareaModal = function() { openCreateModal('tarea'); };
-
-  let _lastCreatedProyectoId = null;
-
-  window.closeCreateModal = function() {
-    const modal = document.getElementById('create-modal');
+  window.closeCreateTareaModal = function() {
+    const modal = document.getElementById('create-tarea-modal');
     if (!modal) return;
     modal.style.opacity = '0';
     setTimeout(() => modal.remove(), 200);
-    _lastCreatedProyectoId = null;
   };
 
-  // Alias de compatibilidad
-  window.closeCreateTareaModal = closeCreateModal;
+  /* =======================================================
+     TOGGLE FORMULARIO NUEVO PROYECTO
+     ======================================================= */
+  window.toggleNuevoProyectoForm = function() {
+    const form = document.getElementById('nuevo-proyecto-form');
+    const select = document.getElementById('tarea-proyecto-select');
 
-  window.showCreateStep = async function(step) {
-    const steps = ['choose', 'tarea', 'proyecto', 'post-proyecto'];
-    steps.forEach(s => {
-      const el = document.getElementById('create-step-' + s);
-      if (el) el.style.display = 'none';
-    });
-    const target = document.getElementById('create-step-' + step);
-    if (target) target.style.display = 'block';
-
-    const title = document.getElementById('create-modal-title');
-
-    if (step === 'tarea') {
-      title.textContent = 'Nueva tarea';
-      await cargarProyectosParaSelector();
-      await cargarAreasParaSelector();
-      await cargarMiembrosEquipo(document.getElementById('tarea-responsable'), true);
-    } else if (step === 'proyecto') {
-      title.textContent = 'Nuevo proyecto';
-    } else if (step === 'post-proyecto') {
-      title.textContent = 'Proyecto creado';
+    if (form.style.display === 'none') {
+      form.style.display = 'block';
+      select.value = 'nuevo';
+      select.disabled = true;
+      onProyectoChange(); // Actualiza responsable
     } else {
-      title.textContent = 'Crear nuevo';
+      form.style.display = 'none';
+      select.disabled = false;
+      onProyectoChange();
     }
   };
 
   /* =======================================================
      CARGAR PROYECTOS PARA SELECTOR
      ======================================================= */
-  async function cargarProyectosParaSelector() {
-    const select = document.getElementById('tarea-proyecto-select');
-    if (!select) return;
+async function cargarProyectosParaSelector() {
+  const select = document.getElementById('tarea-proyecto-select');
+  if (!select) return;
 
-    try {
-      const params = new URLSearchParams({
-        action: 'obtener_proyectos_activos',
-        usuario_id: USER_ID
-      });
+  try {
+    const params = new URLSearchParams({
+      action: 'obtener_proyectos_activos',
+      usuario_id: USER_ID
+    });
 
-      const response = await fetch('proyectos_tareas_backend.php?' + params.toString());
-      const data = await response.json();
+    const response = await fetch('proyectos_tareas_backend.php?' + params.toString());
+    const data = await response.json();
 
-      select.innerHTML = '<option value="">-- Selecciona un proyecto --</option>';
+    select.innerHTML = '<option value="">-- Selecciona un proyecto --</option>';
+    select.innerHTML += '<option value="nuevo">+ Crear proyecto nuevo...</option>';
 
-      if (data.ok && data.proyectos) {
-        data.proyectos.forEach(p => {
-          const esLider = parseInt(p.lider_id) === EMPLEADO_ID;
-          if (!esLider) return;
 
-          const opt = document.createElement('option');
-          opt.value = p.id;
-          opt.textContent = escapeHtml(p.titulo);
-          select.appendChild(opt);
-        });
-      }
+// ✅ CÓDIGO CORREGIDO (solo proyectos donde SOY LÍDER)
+if (data.ok && data.proyectos) {
+  data.proyectos.forEach(p => {
+    const esLider = parseInt(p.lider_id) === EMPLEADO_ID;
+    
+    // ⭐ SOLO MOSTRAR PROYECTOS DONDE SOY LÍDER
+    if (!esLider) return;
+    
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = escapeHtml(p.titulo);
+    opt.setAttribute('data-lider', p.lider_id);
+    select.appendChild(opt);
+  });
+}
 
-      // Preseleccionar si viene de "crear primera tarea"
-      if (_lastCreatedProyectoId) {
-        select.value = _lastCreatedProyectoId;
-      }
-    } catch (err) {
-      console.error('Error cargando proyectos:', err);
-      select.innerHTML = '<option value="">Error al cargar</option>';
-    }
+
+
+  } catch (err) {
+    console.error('Error cargando proyectos:', err);
+    select.innerHTML = '<option value="">Error al cargar proyectos</option>';
   }
+}
 
   /* =======================================================
-     CARGAR ÁREAS DE TRABAJO PARA SELECTOR
+     ON PROYECTO CHANGE - Actualiza responsable según líder
      ======================================================= */
-  async function cargarAreasParaSelector() {
-    const select = document.getElementById('tarea-area-select');
-    if (!select) return;
+async function onProyectoChange() {
+  const selectProyecto = document.getElementById('tarea-proyecto-select');
+  const selectResponsable = document.getElementById('tarea-responsable');
+  const hint = document.getElementById('responsable-hint');
+  const nuevoProyectoForm = document.getElementById('nuevo-proyecto-form');
 
-    try {
-      const params = new URLSearchParams({
-        action: 'obtener_areas_trabajo',
-        usuario_id: USER_ID
-      });
+  const proyectoId = selectProyecto.value;
 
-      const response = await fetch('proyectos_tareas_backend.php?' + params.toString());
-      const data = await response.json();
-
-      select.innerHTML = '<option value="">-- Selecciona un área --</option>';
-
-      if (data.ok && data.areas) {
-        data.areas.forEach(a => {
-          const opt = document.createElement('option');
-          opt.value = a.id;
-          opt.textContent = escapeHtml(a.nombre_area);
-          select.appendChild(opt);
-        });
-      }
-    } catch (err) {
-      console.error('Error cargando áreas:', err);
-      select.innerHTML = '<option value="">Error al cargar</option>';
-    }
+  // Si está creando nuevo proyecto
+  if (nuevoProyectoForm && nuevoProyectoForm.style.display !== 'none') {
+    hint.textContent = 'Puedes dejar sin asignar y asignarlo luego';
+    selectResponsable.disabled = false;
+    selectResponsable.style.background = '#fff';
+    await cargarMiembrosEquipo(selectResponsable, true);
+    return;
   }
+
+  if (!proyectoId || proyectoId === 'nuevo') {
+    selectResponsable.innerHTML = '<option value="">Sin asignar (asignar después)</option>';
+    selectResponsable.disabled = false;
+    selectResponsable.style.background = '#fff';
+    hint.textContent = 'Puedes dejar sin asignar y asignarlo luego';
+
+    if (proyectoId === 'nuevo') {
+      document.getElementById('nuevo-proyecto-form').style.display = 'block';
+      selectProyecto.disabled = true;
+      await onProyectoChange();
+    }
+    return;
+  }
+
+  // Siempre permitir asignar a cualquier miembro
+  hint.textContent = 'Puedes asignar a cualquier miembro del equipo';
+  selectResponsable.disabled = false;
+  selectResponsable.style.background = '#fff';
+  await cargarMiembrosEquipo(selectResponsable, true);
+}
 
   /* =======================================================
      CARGAR MIEMBROS DEL EQUIPO
      ======================================================= */
-  async function cargarMiembrosEquipo(selectElement, incluirTodos = false) {
-    if (!selectElement) return;
+  async function cargarMiembrosEquipo(selectElement, incluirTodos = false, areaId = '') {
     selectElement.innerHTML = '<option value="">Cargando...</option>';
     selectElement.disabled = true;
 
@@ -6661,38 +7051,47 @@ window.guardarEdicionProyecto = async function(proyectoId, btn) {
         action: 'obtener_miembros_equipo',
         usuario_id: USER_ID
       });
+      if (areaId) params.append('area_id', areaId);
 
       const response = await fetch('proyectos_tareas_backend.php?' + params.toString());
       const data = await response.json();
 
       selectElement.innerHTML = '';
 
-      if (incluirTodos) {
-        const noAsignar = document.createElement('option');
-        noAsignar.value = '';
-        noAsignar.textContent = 'Sin asignar (asignar después)';
-        selectElement.appendChild(noAsignar);
-
-        const selfOpt = document.createElement('option');
-        selfOpt.value = EMPLEADO_ID;
-        selfOpt.textContent = 'Yo mismo';
-        selectElement.appendChild(selfOpt);
-
-        if (data.ok && data.miembros) {
-          data.miembros.forEach(m => {
-            if (parseInt(m.id) !== EMPLEADO_ID) {
-              const opt = document.createElement('option');
-              opt.value = m.id;
-              opt.textContent = m.nombre_persona;
-              selectElement.appendChild(opt);
-            }
-          });
+        if (incluirTodos) {
+          // Primera opción: Sin asignar
+          const noAsignarOption = document.createElement('option');
+          noAsignarOption.value = '';
+          noAsignarOption.textContent = 'Sin asignar (asignar después)';
+          selectElement.appendChild(noAsignarOption);
+        
+          // Segunda opción: Autoasignarse
+          const selfOption = document.createElement('option');
+          selfOption.value = EMPLEADO_ID;
+          selfOption.textContent = 'Yo mismo';
+          selectElement.appendChild(selfOption);
+        
+          // Resto del equipo
+          if (data.ok && data.miembros) {
+            data.miembros.forEach(m => {
+              if (parseInt(m.id) !== EMPLEADO_ID) {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.textContent = m.nombre_persona;
+                selectElement.appendChild(opt);
+              }
+            });
+          }
         }
-      } else {
+
+else {
+        // Solo yo
         selectElement.innerHTML = `<option value="${EMPLEADO_ID}" selected>Yo mismo</option>`;
       }
 
       selectElement.disabled = false;
+      selectElement.style.background = '#fff';
+
     } catch (err) {
       console.error('Error cargando miembros:', err);
       selectElement.innerHTML = `<option value="${EMPLEADO_ID}" selected>Yo mismo</option>`;
@@ -6709,14 +7108,76 @@ window.guardarEdicionProyecto = async function(proyectoId, btn) {
     const deadline = document.getElementById('tarea-deadline').value;
     const prioridad = document.getElementById('tarea-prioridad').value;
     const responsableId = document.getElementById('tarea-responsable').value;
-    const proyectoId = document.getElementById('tarea-proyecto-select').value;
-    const areaId = document.getElementById('tarea-area-select').value;
 
-    if (!titulo) { alert('El título de la tarea es obligatorio'); return; }
-    if (!proyectoId) { alert('Debes seleccionar un proyecto'); return; }
+    const nuevoProyectoForm = document.getElementById('nuevo-proyecto-form');
+    const esNuevoProyecto = nuevoProyectoForm && nuevoProyectoForm.style.display !== 'none';
+
+    // Validaciones
+    if (!titulo) {
+      alert('El título de la tarea es obligatorio');
+      return;
+    }
+
+    let proyectoId = document.getElementById('tarea-proyecto-select').value;
+
+    // Si es nuevo proyecto, primero crearlo
+    if (esNuevoProyecto) {
+      const nuevoTitulo = document.getElementById('nuevo-proyecto-titulo').value.trim();
+      if (!nuevoTitulo) {
+        alert('El título del proyecto es obligatorio');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Creando proyecto...';
+
+      try {
+        const fd = new FormData();
+        fd.append('action', 'crear_proyecto');
+        fd.append('usuario_id', USER_ID);
+        fd.append('titulo', nuevoTitulo);
+        fd.append('descripcion', document.getElementById('nuevo-proyecto-desc').value.trim());
+        fd.append('lider_id', EMPLEADO_ID); // El creador es líder
+        fd.append('fecha_inicio', document.getElementById('nuevo-proyecto-fecha-inicio').value || '');
+        fd.append('fecha_fin_estimada', document.getElementById('nuevo-proyecto-fecha-fin').value || '');
+        fd.append('prioridad', 'media');
+
+        const response = await fetch('proyectos_tareas_backend.php', {
+          method: 'POST',
+          body: fd
+        });
+        const data = await response.json();
+
+        if (!data.ok) {
+          alert('Error al crear proyecto: ' + (data.error || 'Error desconocido'));
+          btn.disabled = false;
+          btn.textContent = 'Crear tarea';
+          return;
+        }
+
+        proyectoId = data.proyecto_id;
+
+      } catch (err) {
+        console.error('Error creando proyecto:', err);
+        alert('Error de conexión al crear proyecto');
+        btn.disabled = false;
+        btn.textContent = 'Crear tarea';
+        return;
+      }
+    }
+
+    if (!proyectoId || proyectoId === 'nuevo') {
+      alert('Debes seleccionar o crear un proyecto');
+      btn.disabled = false;
+      btn.textContent = 'Crear tarea';
+      return;
+    }
+
+// Responsable ahora es opcional - se puede asignar después
+const responsableFinal = responsableId || null;
 
     btn.disabled = true;
-    btn.textContent = 'Guardando...';
+    btn.textContent = 'Guardando tarea...';
 
     try {
       const fd = new FormData();
@@ -6725,27 +7186,28 @@ window.guardarEdicionProyecto = async function(proyectoId, btn) {
       fd.append('proyecto_id', proyectoId);
       fd.append('titulo', titulo);
       fd.append('descripcion', descripcion);
-      fd.append('responsable_id', responsableId || EMPLEADO_ID);
-      fd.append('deadline', deadline || '');
+      
+      const responsableFinal = responsableId || EMPLEADO_ID;
+      fd.append('responsable_id', responsableFinal);      fd.append('deadline', deadline || '');
       fd.append('prioridad', prioridad);
-      if (areaId) fd.append('area_id', areaId);
 
-      const response = await fetch('proyectos_tareas_backend.php', { method: 'POST', body: fd });
+      const response = await fetch('proyectos_tareas_backend.php', {
+        method: 'POST',
+        body: fd
+      });
       const data = await response.json();
 
       if (!data.ok) {
-        alert('Error: ' + (data.error || 'Error desconocido'));
+        alert('Error al crear tarea: ' + (data.error || 'Error desconocido'));
         btn.disabled = false;
         btn.textContent = 'Crear tarea';
         return;
       }
 
-      closeCreateModal();
+      closeCreateTareaModal();
+      alert('Tarea creada correctamente');
 
-      // Recargar tab activo
-      if (typeof cargarMisTareas === 'function') cargarMisTareas();
-      if (typeof cargarMisProyectos === 'function') cargarMisProyectos();
-
+      // Cambiar al tab de tareas y recargar
       const tabTareas = document.querySelector('[data-tab="tareas"]');
       if (tabTareas) tabTareas.click();
 
@@ -6755,65 +7217,6 @@ window.guardarEdicionProyecto = async function(proyectoId, btn) {
       btn.disabled = false;
       btn.textContent = 'Crear tarea';
     }
-  };
-
-  /* =======================================================
-     GUARDAR PROYECTO
-     ======================================================= */
-  window.guardarProyecto = async function(btn) {
-    const titulo = document.getElementById('proyecto-titulo').value.trim();
-    const descripcion = document.getElementById('proyecto-descripcion').value.trim();
-    const fechaInicio = document.getElementById('proyecto-fecha-inicio').value;
-    const fechaFin = document.getElementById('proyecto-fecha-fin').value;
-    const prioridad = document.getElementById('proyecto-prioridad').value;
-
-    if (!titulo) { alert('El título del proyecto es obligatorio'); return; }
-
-    btn.disabled = true;
-    btn.textContent = 'Creando...';
-
-    try {
-      const fd = new FormData();
-      fd.append('action', 'crear_proyecto');
-      fd.append('usuario_id', USER_ID);
-      fd.append('titulo', titulo);
-      fd.append('descripcion', descripcion);
-      fd.append('lider_id', EMPLEADO_ID);
-      fd.append('fecha_inicio', fechaInicio || '');
-      fd.append('fecha_fin_estimada', fechaFin || '');
-      fd.append('prioridad', prioridad);
-
-      const response = await fetch('proyectos_tareas_backend.php', { method: 'POST', body: fd });
-      const data = await response.json();
-
-      if (!data.ok) {
-        alert('Error: ' + (data.error || 'Error desconocido'));
-        btn.disabled = false;
-        btn.textContent = 'Crear proyecto';
-        return;
-      }
-
-      _lastCreatedProyectoId = data.proyecto_id;
-
-      // Mostrar paso 3: crear primera tarea?
-      document.getElementById('post-proyecto-msg').textContent = '"' + escapeHtml(titulo) + '" ha sido creado.';
-      showCreateStep('post-proyecto');
-
-      if (typeof cargarMisProyectos === 'function') cargarMisProyectos();
-
-    } catch (err) {
-      console.error('Error:', err);
-      alert('Error de conexión');
-      btn.disabled = false;
-      btn.textContent = 'Crear proyecto';
-    }
-  };
-
-  /* =======================================================
-     POST-PROYECTO: Crear primera tarea
-     ======================================================= */
-  window.postProyectoCrearTarea = function() {
-    showCreateStep('tarea');
   };
 
   /* =======================================================

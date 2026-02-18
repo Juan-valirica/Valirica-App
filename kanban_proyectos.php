@@ -3,11 +3,15 @@
  * KANBAN DE PROYECTOS — Valírica HHRR
  * Vista Kanban profesional para seguimiento de proyectos y tareas.
  * Columnas: Mis Tareas | Mi Área | Planificación | En Progreso | Pausado | Completado | [Cancelado]
+ * Param ?embedded=1 → oculta topbar para uso en iframe dentro del dashboard.
  */
 
 session_start();
 require 'config.php';
 date_default_timezone_set('Europe/Madrid');
+
+// Modo iframe embebido (oculta topbar, ajusta altura)
+$is_embedded = !empty($_GET['embedded']);
 
 // ── Auth: determinar empleado_id ──
 $empleado_id = (int)($_GET['id'] ?? 0);
@@ -798,11 +802,34 @@ $conn->close();
       :root { --kb-column-width: 260px; }
       .kb-topbar-actions .kb-btn-ghost { display: none; }
     }
+
+    /* ─── Chip de área ─── */
+    .kb-area-chip {
+      display: inline-flex;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 99px;
+      background: rgba(0, 122, 150, 0.09);
+      color: #007a96;
+      border: 1px solid rgba(0, 122, 150, 0.15);
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+<?php if ($is_embedded): ?>
+    /* ─── Iframe embebido: sin topbar, ajuste de altura ─── */
+    .kb-shell { overflow: auto; }
+    .kb-board { height: 72vh; min-height: 340px; }
+    body { background: transparent; margin: 0; }
+<?php endif; ?>
   </style>
 </head>
 <body>
+
 <div class="kb-shell">
 
+<?php if (!$is_embedded): ?>
   <!-- ── Top Bar ── -->
   <header class="kb-topbar">
     <a class="kb-back-btn" href="dashboard_equipo.php?id=<?php echo $empleado_id; ?>">
@@ -821,6 +848,7 @@ $conn->close();
       </button>
     </div>
   </header>
+<?php endif; ?>
 
   <!-- ── Stats Strip ── -->
   <div class="kb-stats" id="kb-stats">
@@ -1141,22 +1169,30 @@ $conn->close();
     const isDone = tarea.estado === 'completada';
     const deadlineInfo = getDeadlineInfo(tarea);
 
+    const areaLabel = tarea.responsable_area && tarea.responsable_area !== '—' ? tarea.responsable_area : null;
+
     return `
       <div class="kb-task-card ${esMiTarea ? 'my-task' : ''}" data-task-id="${tarea.id}" onclick="toggleTaskExpand(this)">
         <div class="kb-task-row">
           <span class="kb-status-dot kb-dot-${tarea.estado}"></span>
           <span class="kb-task-title ${isDone ? 'done' : ''}">${esc(tarea.titulo)}</span>
+          ${areaLabel ? `<span class="kb-area-chip">${esc(areaLabel)}</span>` : ''}
           <span class="kb-task-status-text" style="color:${estado.color}">${estado.text}</span>
         </div>
         <div class="kb-task-details">
           <div class="kb-task-detail-row">
             <span class="kb-task-detail-label">Responsable</span>
             <span class="kb-task-detail-value">
-              ${esMiTarea ? 'Tu' : esc(tarea.responsable_nombre || 'Sin asignar')}
+              ${esMiTarea ? 'Tú' : esc(tarea.responsable_nombre || 'Sin asignar')}
             </span>
           </div>
+          ${areaLabel ? `
           <div class="kb-task-detail-row">
-            <span class="kb-task-detail-label">Fecha limite</span>
+            <span class="kb-task-detail-label">Área</span>
+            <span class="kb-task-detail-value"><span class="kb-area-chip">${esc(areaLabel)}</span></span>
+          </div>` : ''}
+          <div class="kb-task-detail-row">
+            <span class="kb-task-detail-label">Fecha límite</span>
             <span class="kb-task-detail-value">
               ${deadlineInfo.html}
             </span>
@@ -1186,9 +1222,14 @@ $conn->close();
     if (deadlineInfo.type === 'overdue') urgencyClass = 'overdue';
     else if (deadlineInfo.type === 'today' || deadlineInfo.type === 'soon') urgencyClass = 'due-soon';
 
+    const areaMyTask = tarea.responsable_area && tarea.responsable_area !== '—' ? tarea.responsable_area : null;
+
     return `
       <div class="kb-mytask-card ${urgencyClass}" style="animation-delay:${delay}s" onclick="toggleTaskExpand(this)" data-task-id="${tarea.id}">
-        <div class="kb-mytask-project">${esc(tarea.proyecto_titulo || 'Sin proyecto')}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px;">
+          <div class="kb-mytask-project">${esc(tarea.proyecto_titulo || 'Sin proyecto')}</div>
+          ${areaMyTask ? `<span class="kb-area-chip">${esc(areaMyTask)}</span>` : ''}
+        </div>
         <div class="kb-mytask-title ${isDone ? 'done' : ''}">${esc(tarea.titulo)}</div>
         <div class="kb-mytask-footer">
           <span class="kb-status-dot kb-dot-${tarea.estado}"></span>
@@ -1201,6 +1242,11 @@ $conn->close();
             <span class="kb-task-detail-label">Responsable</span>
             <span class="kb-task-detail-value">${esc(tarea.responsable_nombre || 'Sin asignar')}</span>
           </div>
+          ${areaMyTask ? `
+          <div class="kb-task-detail-row">
+            <span class="kb-task-detail-label">Área</span>
+            <span class="kb-task-detail-value"><span class="kb-area-chip">${esc(areaMyTask)}</span></span>
+          </div>` : ''}
           <div class="kb-task-detail-row">
             <span class="kb-task-detail-label">Prioridad</span>
             <span class="kb-task-detail-value">${capitalize(tarea.prioridad || 'media')}</span>
