@@ -954,33 +954,65 @@ try {
             $result_columns = $conn->query("SHOW COLUMNS FROM equipo LIKE 'activo'");
             $has_activo = $result_columns->num_rows > 0;
 
-            $sql = "
-                SELECT id, nombre_persona, cargo
-                FROM equipo
-                WHERE usuario_id = ?
-            ";
+            $area_id_filter = (int)($_GET['area_id'] ?? $_POST['area_id'] ?? 0);
 
-            if ($has_activo) {
-                $sql .= " AND activo = 1";
+            $sql_params = [$user_id];
+            $sql_types  = "i";
+
+            if ($area_id_filter > 0) {
+                // Filtrar por área via equipo_areas_trabajo
+                $sql = "
+                    SELECT DISTINCT e.id, e.nombre_persona, e.cargo
+                    FROM equipo e
+                    INNER JOIN equipo_areas_trabajo eat ON eat.equipo_id = e.id AND eat.area_id = ?
+                    WHERE e.usuario_id = ?
+                ";
+                array_unshift($sql_params, $area_id_filter);
+                $sql_types = "ii";
+            } else {
+                $sql = "SELECT id, nombre_persona, cargo FROM equipo WHERE usuario_id = ?";
             }
 
+            if ($has_activo) $sql .= " AND e.activo = 1";
             $sql .= " ORDER BY nombre_persona ASC";
 
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("i", $user_id);
+            $stmt->bind_param($sql_types, ...$sql_params);
             $stmt->execute();
             $result = stmt_get_result($stmt);
 
             $miembros = [];
-            while ($row = $result->fetch_assoc()) {
-                $miembros[] = $row;
-            }
+            while ($row = $result->fetch_assoc()) { $miembros[] = $row; }
             $stmt->close();
 
-            echo json_encode([
-                'ok' => true,
-                'miembros' => $miembros
-            ]);
+            echo json_encode(['ok' => true, 'miembros' => $miembros]);
+            break;
+
+        // ── Obtener áreas de la empresa ──
+        case 'obtener_areas':
+            $stmt_ar = $conn->prepare("
+                SELECT at.id, at.nombre_area
+                FROM areas_trabajo at
+                WHERE at.usuario_id = ?
+                ORDER BY at.nombre_area ASC
+            ");
+            // Si la tabla no tiene usuario_id, fallback a todas las áreas usadas por equipo de esta empresa
+            if (!$stmt_ar) {
+                $stmt_ar = $conn->prepare("
+                    SELECT DISTINCT at.id, at.nombre_area
+                    FROM areas_trabajo at
+                    INNER JOIN equipo_areas_trabajo eat ON eat.area_id = at.id
+                    INNER JOIN equipo e ON e.id = eat.equipo_id AND e.usuario_id = ?
+                    ORDER BY at.nombre_area ASC
+                ");
+            }
+            $stmt_ar->bind_param("i", $user_id);
+            $stmt_ar->execute();
+            $res_ar = stmt_get_result($stmt_ar);
+            $areas_list = [];
+            while ($row_ar = $res_ar->fetch_assoc()) { $areas_list[] = $row_ar; }
+            $stmt_ar->close();
+            echo json_encode(['ok' => true, 'areas' => $areas_list]);
             break;
 
         // =====================================================

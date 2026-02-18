@@ -1166,14 +1166,12 @@ try {
      ========================================================= */
 
   .wrap{
-
-    max-width: 980px;
-
+    max-width: 1600px;
     margin: 0 auto;
-
-    padding: 24px;
-
+    padding: 24px 36px;
   }
+  @media (max-width: 900px) { .wrap { padding: 16px 20px; } }
+  @media (max-width: 600px) { .wrap { padding: 12px 14px; } }
 
  
 
@@ -2383,6 +2381,95 @@ try {
 
  
  
+/* ─── Crear modal: type cards ─── */
+.crear-tipo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  border: 2px solid #E5E7EB;
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s;
+}
+.crear-tipo-card:hover {
+  border-color: var(--c-primary);
+  box-shadow: 0 4px 16px rgba(1,33,51,0.10);
+  transform: translateY(-2px);
+}
+.crear-tipo-card span { line-height: 1.4; }
+
+/* ─── Crear modal: paso structure ─── */
+.crear-paso-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid #F0F0F0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--c-secondary);
+}
+.crear-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #F3F4F6;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.crear-back-btn:hover { background: #E5E7EB; }
+.crear-paso-body {
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.crear-paso-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 14px 22px 18px;
+  border-top: 1px solid #F0F0F0;
+}
+.crear-field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+.crear-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1F2937;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+.crear-input:focus {
+  outline: none;
+  border-color: var(--c-teal, #007a96);
+  box-shadow: 0 0 0 3px rgba(0,122,150,0.10);
+}
+
  /* =========================================================
    Subnav empleado — Action Bar
    ========================================================= */
@@ -3119,13 +3206,48 @@ try {
    TABS — Estilo Monday/Asana (sin emojis)
    ========================================================================== */
 
+/* ── Exec section header layout ── */
+.exec-header { display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; }
+.exec-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Botón + Crear (siempre visible) ── */
+.btn-crear-unified {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: var(--c-accent, #EF7F1B);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.18s, transform 0.12s;
+  flex-shrink: 0;
+}
+.btn-crear-unified:hover { background: #d96a12; transform: translateY(-1px); }
+.btn-crear-unified i { font-size: 15px; }
+
+/* ── Tab bar ── */
 .tabs-valirica {
   display: flex;
   gap: 4px;
   background: #f1f3f5;
   padding: 4px;
   border-radius: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.tabs-valirica::-webkit-scrollbar { display: none; }
 
 .tab-valirica {
   display: flex;
@@ -3142,11 +3264,10 @@ try {
   transition: all 0.18s ease;
   font-family: inherit;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.tab-valirica i {
-  font-size: 15px;
-}
+.tab-valirica i { font-size: 15px; }
 
 .tab-valirica.active {
   background: #fff;
@@ -3157,6 +3278,14 @@ try {
 .tab-valirica:hover:not(.active) {
   background: rgba(255,255,255,0.6);
   color: var(--c-primary);
+}
+
+/* Mobile: tabs más compactos */
+@media (max-width: 600px) {
+  .tab-valirica { padding: 7px 11px; font-size: 12px; gap: 5px; }
+  .tab-valirica i { font-size: 14px; }
+  .exec-header-top h3 { font-size: 17px !important; }
+  .btn-crear-unified { padding: 7px 14px; font-size: 12px; }
 }
 
 /* Badge de notificaciones en tab Permisos */
@@ -3952,12 +4081,17 @@ try {
 
  
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-      <h3 style="margin:0;font-size:20px;font-weight:800;color:var(--c-secondary)">
-        Ejecución y seguimiento
-      </h3>
+    <div class="exec-header">
+      <div class="exec-header-top">
+        <h3 style="margin:0;font-size:20px;font-weight:800;color:var(--c-secondary)">
+          Ejecución y seguimiento
+        </h3>
+        <button class="btn-crear-unified" onclick="openCrearModal()">
+          <i class="ph ph-plus"></i> Crear
+        </button>
+      </div>
 
-      <!-- Tabs de navegación -->
+      <!-- Tabs de navegación — full width, scrollable on mobile -->
       <div id="tabs-ejecucion" class="tabs-valirica">
         <button class="tab-btn tab-valirica active" data-tab="metas">
           <i class="ph ph-target"></i> Metas
@@ -6403,9 +6537,291 @@ window.guardarEdicionProyecto = async function(proyectoId, btn) {
 
 
   /* =======================================================
-     MODAL CREAR TAREA
+     MODAL UNIFICADO: CREAR TAREA / PROYECTO
      ======================================================= */
+
+  let _createdProjectId = null; // persiste entre pasos del modal
+
+  /* ── Abre el modal en el selector de tipo ── */
+  window.openCrearModal = async function() {
+    if (document.getElementById('crear-modal')) return;
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'crear-modal';
+    overlay.innerHTML = buildCrearModalHTML();
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeCrearModal(); });
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.style.opacity = '1');
+    await cargarAreasSelector();
+    await cargarProyectosParaSelector();
+  };
+
+  /* Alias para compatibilidad con botones existentes */
+  window.openCreateTareaModal = () => openCrearModal();
+
+  window.closeCrearModal = function() {
+    const m = document.getElementById('crear-modal');
+    if (!m) return;
+    m.style.opacity = '0';
+    setTimeout(() => m.remove(), 200);
+    _createdProjectId = null;
+  };
+
+  /* ── Navegar entre pasos ── */
+  window.crearMostrarPaso = function(paso) {
+    document.querySelectorAll('#crear-modal .crear-paso').forEach(p => p.style.display = 'none');
+    const el = document.getElementById('crear-paso-' + paso);
+    if (el) el.style.display = 'block';
+  };
+
+  window.irACrearTarea = function() { crearMostrarPaso('tarea'); };
+  window.irACrearProyecto = function() { crearMostrarPaso('proyecto'); };
+  window.volverAlSelector = function() { crearMostrarPaso('selector'); };
+
+  /* ── HTML del modal completo ── */
+  function buildCrearModalHTML() {
+    const hoy = new Date().toISOString().split('T')[0];
+    return `
+      <div class="modal-content" style="max-width:560px;padding:0;overflow:hidden;">
+
+        <!-- PASO 0: Selector de tipo -->
+        <div id="crear-paso-selector" class="crear-paso" style="padding:32px 28px;">
+          <div style="text-align:center;margin-bottom:24px;">
+            <div style="font-size:28px;margin-bottom:8px;">✨</div>
+            <h3 style="margin:0;font-size:18px;font-weight:800;color:var(--c-secondary)">¿Qué deseas crear?</h3>
+            <p style="margin:6px 0 0;font-size:13px;color:#6B7280;">Elige el tipo de elemento que quieres agregar</p>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <button class="crear-tipo-card" onclick="irACrearTarea()">
+              <i class="ph ph-check-square" style="font-size:32px;color:var(--c-teal);margin-bottom:10px;"></i>
+              <strong style="font-size:15px;color:var(--c-primary)">Nueva Tarea</strong>
+              <span style="font-size:12px;color:#6B7280;margin-top:4px;">Asigna trabajo dentro de un proyecto</span>
+            </button>
+            <button class="crear-tipo-card" onclick="irACrearProyecto()">
+              <i class="ph ph-folder-plus" style="font-size:32px;color:var(--c-accent,#EF7F1B);margin-bottom:10px;"></i>
+              <strong style="font-size:15px;color:var(--c-primary)">Nuevo Proyecto</strong>
+              <span style="font-size:12px;color:#6B7280;margin-top:4px;">Agrupa tareas y gestiona objetivos</span>
+            </button>
+          </div>
+          <button onclick="closeCrearModal()" style="width:100%;margin-top:16px;padding:10px;background:transparent;border:1.5px solid #E5E7EB;border-radius:8px;color:#6B7280;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px;">Cancelar</button>
+        </div>
+
+        <!-- PASO 1A: Crear Tarea -->
+        <div id="crear-paso-tarea" class="crear-paso" style="display:none;">
+          <div class="crear-paso-header">
+            <button class="crear-back-btn" onclick="volverAlSelector()">
+              <i class="ph ph-arrow-left"></i>
+            </button>
+            <span>Nueva Tarea</span>
+          </div>
+          <div class="crear-paso-body">
+
+            <!-- Área (filtra responsable) -->
+            <label class="crear-field-label">
+              Área
+              <select id="tarea-area" class="crear-input" onchange="onAreaChange()">
+                <option value="">Todas las áreas</option>
+              </select>
+            </label>
+
+            <!-- Proyecto -->
+            <label class="crear-field-label">
+              Proyecto <span style="color:#EF4444">*</span>
+              <select id="tarea-proyecto-select" class="crear-input">
+                <option value="">Cargando proyectos...</option>
+              </select>
+            </label>
+
+            <!-- Título -->
+            <label class="crear-field-label">
+              Título de la tarea <span style="color:#EF4444">*</span>
+              <input id="tarea-titulo" type="text" class="crear-input" placeholder="Ej: Revisar propuesta Q2">
+            </label>
+
+            <!-- Descripción -->
+            <label class="crear-field-label">
+              Descripción <span style="color:#9CA3AF;font-size:11px;">(opcional)</span>
+              <textarea id="tarea-descripcion" class="crear-input" rows="2" placeholder="Detalles adicionales..." style="resize:vertical;"></textarea>
+            </label>
+
+            <!-- Responsable -->
+            <label class="crear-field-label">
+              Responsable <span style="color:#9CA3AF;font-size:11px;">(opcional)</span>
+              <select id="tarea-responsable" class="crear-input">
+                <option value="">Sin asignar — asignar después</option>
+              </select>
+            </label>
+
+            <!-- Deadline + Prioridad -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <label class="crear-field-label">
+                Fecha límite
+                <input id="tarea-deadline" type="date" class="crear-input">
+              </label>
+              <label class="crear-field-label">
+                Prioridad
+                <select id="tarea-prioridad" class="crear-input">
+                  <option value="media">Media</option>
+                  <option value="alta">Alta</option>
+                  <option value="critica">Crítica</option>
+                  <option value="baja">Baja</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="crear-paso-actions">
+            <button class="modal-btn modal-btn-cancel" onclick="closeCrearModal()">Cancelar</button>
+            <button class="modal-btn modal-btn-confirm" id="btn-guardar-tarea" onclick="guardarTarea(this)">
+              <i class="ph ph-check"></i> Crear tarea
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 1B: Crear Proyecto -->
+        <div id="crear-paso-proyecto" class="crear-paso" style="display:none;">
+          <div class="crear-paso-header">
+            <button class="crear-back-btn" onclick="volverAlSelector()">
+              <i class="ph ph-arrow-left"></i>
+            </button>
+            <span>Nuevo Proyecto</span>
+          </div>
+          <div class="crear-paso-body">
+            <label class="crear-field-label">
+              Nombre del proyecto <span style="color:#EF4444">*</span>
+              <input id="proy-titulo" type="text" class="crear-input" placeholder="Ej: Campaña de verano 2026">
+            </label>
+            <label class="crear-field-label">
+              Descripción <span style="color:#9CA3AF;font-size:11px;">(opcional)</span>
+              <textarea id="proy-descripcion" class="crear-input" rows="2" placeholder="¿De qué trata este proyecto?" style="resize:vertical;"></textarea>
+            </label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <label class="crear-field-label">
+                Fecha de inicio
+                <input id="proy-fecha-inicio" type="date" class="crear-input" value="${hoy}">
+              </label>
+              <label class="crear-field-label">
+                Fecha estimada de fin
+                <input id="proy-fecha-fin" type="date" class="crear-input">
+              </label>
+            </div>
+            <label class="crear-field-label">
+              Prioridad
+              <select id="proy-prioridad" class="crear-input">
+                <option value="media">Media</option>
+                <option value="alta">Alta</option>
+                <option value="critica">Crítica</option>
+                <option value="baja">Baja</option>
+              </select>
+            </label>
+            <p style="font-size:12px;color:#6B7280;margin:4px 0 0;"><i class="ph ph-info"></i> Serás el líder de este proyecto automáticamente.</p>
+          </div>
+          <div class="crear-paso-actions">
+            <button class="modal-btn modal-btn-cancel" onclick="closeCrearModal()">Cancelar</button>
+            <button class="modal-btn modal-btn-confirm" id="btn-guardar-proyecto" onclick="guardarProyecto(this)">
+              <i class="ph ph-folder-plus"></i> Crear proyecto
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 2: Éxito — primera tarea del proyecto? -->
+        <div id="crear-paso-primera-tarea" class="crear-paso" style="display:none;padding:36px 28px;text-align:center;">
+          <div style="font-size:52px;margin-bottom:16px;">🎉</div>
+          <h3 style="margin:0 0 8px;font-size:18px;font-weight:800;color:var(--c-secondary)">¡Proyecto creado!</h3>
+          <p style="margin:0 0 24px;font-size:13px;color:#6B7280;">¿Deseas crear la primera tarea de este proyecto ahora?</p>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <button class="modal-btn modal-btn-cancel" onclick="closeCrearModal();const t=document.querySelector('[data-tab=proyectos]');if(t)t.click();">
+              No, después
+            </button>
+            <button class="modal-btn modal-btn-confirm" onclick="irAPrimeraTareaProyecto()">
+              <i class="ph ph-plus"></i> Sí, crear primera tarea
+            </button>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  /* ── Acción: ir a crear primera tarea del proyecto recién creado ── */
+  window.irAPrimeraTareaProyecto = async function() {
+    crearMostrarPaso('tarea');
+    // Pre-seleccionar el proyecto recién creado
+    await cargarProyectosParaSelector();
+    if (_createdProjectId) {
+      const sel = document.getElementById('tarea-proyecto-select');
+      if (sel) sel.value = _createdProjectId;
+    }
+  };
+
+  /* ── Cargar áreas en el selector ── */
+  async function cargarAreasSelector() {
+    const sel = document.getElementById('tarea-area');
+    if (!sel) return;
+    try {
+      const r = await fetch(`proyectos_tareas_backend.php?action=obtener_areas&usuario_id=${USER_ID}`);
+      const d = await r.json();
+      if (d.ok && d.areas) {
+        d.areas.forEach(a => {
+          const o = document.createElement('option');
+          o.value = a.id;
+          o.textContent = a.nombre_area;
+          sel.appendChild(o);
+        });
+      }
+    } catch(e) { /* areas opcionales */ }
+  }
+
+  /* ── Cuando cambia el área, filtra responsables ── */
+  window.onAreaChange = async function() {
+    const areaId = document.getElementById('tarea-area')?.value || '';
+    await cargarMiembrosEquipo(document.getElementById('tarea-responsable'), true, areaId);
+  };
+
+  /* ── Guardar Proyecto ── */
+  window.guardarProyecto = async function(btn) {
+    const titulo = document.getElementById('proy-titulo')?.value.trim();
+    if (!titulo) { alert('El nombre del proyecto es obligatorio'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner"></i> Creando...';
+
+    try {
+      const fd = new FormData();
+      fd.append('action', 'crear_proyecto');
+      fd.append('usuario_id', USER_ID);
+      fd.append('titulo', titulo);
+      fd.append('descripcion', document.getElementById('proy-descripcion')?.value.trim() || '');
+      fd.append('lider_id', EMPLEADO_ID);
+      fd.append('fecha_inicio', document.getElementById('proy-fecha-inicio')?.value || '');
+      fd.append('fecha_fin_estimada', document.getElementById('proy-fecha-fin')?.value || '');
+      fd.append('prioridad', document.getElementById('proy-prioridad')?.value || 'media');
+
+      const r = await fetch('proyectos_tareas_backend.php', { method: 'POST', body: fd });
+      const d = await r.json();
+
+      if (!d.ok) { alert('Error: ' + (d.error || 'Error desconocido')); btn.disabled = false; btn.innerHTML = '<i class="ph ph-folder-plus"></i> Crear proyecto'; return; }
+
+      _createdProjectId = d.proyecto_id;
+      crearMostrarPaso('primera-tarea');
+
+    } catch(e) {
+      alert('Error de conexión');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ph ph-folder-plus"></i> Crear proyecto';
+    }
+  };
+
+  /* ── (MANTENER) openCreateTareaModal legacy ── */
   window.openCreateTareaModal = async function() {
+    if (document.getElementById('crear-modal')) return;
+    await openCrearModal();
+    irACrearTarea(); // ir directo al paso tarea
+  };
+
+  /* =======================================================
+     MODAL CREAR TAREA (legacy compatible)
+     ======================================================= */
+  window.openCreateTareaModal_old = async function() {
     if (document.getElementById('create-tarea-modal')) return;
 
     const overlay = document.createElement('div');
@@ -6626,7 +7042,7 @@ async function onProyectoChange() {
   /* =======================================================
      CARGAR MIEMBROS DEL EQUIPO
      ======================================================= */
-  async function cargarMiembrosEquipo(selectElement, incluirTodos = false) {
+  async function cargarMiembrosEquipo(selectElement, incluirTodos = false, areaId = '') {
     selectElement.innerHTML = '<option value="">Cargando...</option>';
     selectElement.disabled = true;
 
@@ -6635,6 +7051,7 @@ async function onProyectoChange() {
         action: 'obtener_miembros_equipo',
         usuario_id: USER_ID
       });
+      if (areaId) params.append('area_id', areaId);
 
       const response = await fetch('proyectos_tareas_backend.php?' + params.toString());
       const data = await response.json();
