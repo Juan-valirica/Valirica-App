@@ -1,0 +1,193 @@
+<h1>CONTRATO DE PRESTACIÓN DE SERVICIOS SaaS – VALÍRICA (ESPAÑA)</h1>
+
+<p><strong>Versión:</strong> 1.1</p>
+<p><strong>Fecha de registro en plataforma:</strong> {{FECHA_REGISTRO}}</p>
+<p><strong>Fecha de aceptación contractual:</strong> {{FECHA_ACEPTACION}}</p>
+
+<hr>
+
+<h2>🔎 RESUMEN EJECUTIVO</h2>
+
+<p>
+Valírica es una plataforma tecnológica que permite a tu empresa analizar,
+medir y alinear su cultura organizacional, clima laboral y desempeño.
+</p>
+
+<ul>
+<li>El contrato inicia desde el momento del registro en la plataforma: <strong>{{FECHA_REGISTRO}}</strong>.</li>
+<li>Periodo de prueba acordado: <strong>{{PERIODO_PRUEBA}}</strong>.</li>
+<li>Al finalizar el periodo de prueba se activa automáticamente el plan contratado.</li>
+<li>Precio por empleado activo: <strong>{{PRECIO_PLAN}}</strong>.</li>
+<li>Los datos pertenecen a tu empresa.</li>
+</ul>
+
+<hr>
+
+<h2>1. IDENTIFICACIÓN DEL PROVEEDOR</h2>
+
+<p>
+Marca comercial: <strong>Valírica</strong><br>
+Operador y facturador: <strong>WAKU SAS</strong><br>
+NIT: 900781581-2<br>
+Domicilio: Carrera 56A #148-35, Colombia<br>
+Correo: vale@valirica.com
+</p>
+
+<p>
+Propietario del software: Juan Camilo Calderón<br>
+NIE: Z1665039M
+</p>
+
+<hr>
+
+<h2>2. IDENTIFICACIÓN DEL CLIENTE</h2>
+
+<p>
+Empresa: {{EMPRESA_CLIENTE}}<br>
+CIF: {{CIF_CLIENTE}}<br>
+Representante: {{REPRESENTANTE}}<br>
+Correo principal: {{EMAIL_CLIENTE}}
+</p>
+
+<p>
+Correo de facturación adicional:
+<strong>{{EMAIL_FACTURACION_ADICIONAL}}</strong>
+</p>
+
+<hr>
+
+<h2>3. INICIO Y DURACIÓN</h2>
+
+<p>
+El contrato entra en vigor desde la fecha de registro en la plataforma,
+independientemente de la fecha de aceptación formal.
+</p>
+
+<p>
+Fecha de inicio: <strong>{{FECHA_REGISTRO}}</strong>
+</p>
+
+<p>
+Periodo de prueba: <strong>{{PERIODO_PRUEBA}}</strong>
+</p>
+
+<p>
+Si no existe uso activo durante el periodo de prueba,
+podrá aplicarse una penalización equivalente al valor mensual de tres empleados activos.
+</p>
+
+<hr>
+
+<h2>4. PLAN Y PRECIO</h2>
+
+<p>
+Plan contratado: <strong>{{TIPO_PLAN}}</strong>
+</p>
+
+<p>
+Precio por empleado activo: <strong>{{PRECIO_PLAN}}</strong> (IVA no incluido).
+</p>
+
+<p>
+Facturación anticipada.
+</p>
+
+<p>
+Renovación automática salvo cancelación con 30 días de antelación.
+</p>
+
+<p>
+El precio podrá actualizarse anualmente conforme al IPC u otras variables económicas.
+</p>
+
+<hr>
+
+<h2>5. ALMACENAMIENTO</h2>
+
+<p>
+Incluye 200 MB por empleado activo.
+</p>
+
+<p>
+Bloques adicionales disponibles bajo tarifa vigente.
+</p>
+
+<p>
+Tras cancelación, los datos se conservarán durante 3 meses y posteriormente serán eliminados.
+</p>
+
+<hr>
+
+<h2>6. TRATAMIENTO DE DATOS</h2>
+
+<p>
+El Cliente actúa como Responsable del Tratamiento.
+</p>
+
+<p>
+WAKU SAS actúa como Encargado del Tratamiento.
+</p>
+
+<p>
+Cumplimiento del Reglamento (UE) 2016/679 (RGPD).
+</p>
+
+<p>
+Valírica no comparte datos empresariales ni personales con terceros.
+</p>
+
+<p>
+Se podrán utilizar datos agregados y anonimizados para análisis globales.
+</p>
+
+<hr>
+
+<h2>7. FINALIDAD DEL PERFILAMIENTO</h2>
+
+<p>
+El objetivo es mejorar alineación organizacional.
+</p>
+
+<p>
+No constituye evaluación psicológica clínica ni fundamento único para despidos.
+</p>
+
+<hr>
+
+<h2>8. PROPIEDAD INTELECTUAL</h2>
+
+<p>
+Prohibida ingeniería inversa.
+</p>
+
+<p>
+Se permiten sublicencias autorizadas siempre que se acepte este contrato.
+</p>
+
+<hr>
+
+<h2>9. RESPONSABILIDAD</h2>
+
+<p>
+Limitada al importe pagado en los últimos 12 meses.
+</p>
+
+<p>
+No aplica en caso de dolo o negligencia grave.
+</p>
+
+<hr>
+
+<h2>10. LEY APLICABLE</h2>
+
+<p>
+Legislación española. Tribunales de Madrid.
+</p>
+
+<hr>
+
+<h2>11. ACEPTACIÓN</h2>
+
+<p>
+La aceptación electrónica tiene plena validez jurídica.
+</p>

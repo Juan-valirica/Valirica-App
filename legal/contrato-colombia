@@ -1,0 +1,140 @@
+<h1>CONTRATO DE PRESTACIÓN DE SERVICIOS SaaS – VALÍRICA (COLOMBIA)</h1>
+
+<p><strong>Versión:</strong> 1.1</p>
+<p><strong>Fecha de registro en plataforma:</strong> {{FECHA_REGISTRO}}</p>
+<p><strong>Fecha de aceptación contractual:</strong> {{FECHA_ACEPTACION}}</p>
+
+<hr>
+
+<h2>🔎 RESUMEN EJECUTIVO</h2>
+
+<ul>
+<li>El contrato inicia desde el registro en la plataforma: <strong>{{FECHA_REGISTRO}}</strong>.</li>
+<li>Periodo de prueba: <strong>{{PERIODO_PRUEBA}}</strong>.</li>
+<li>Precio por empleado activo: <strong>{{PRECIO_PLAN}}</strong> + IVA.</li>
+<li>Los datos pertenecen a la empresa.</li>
+</ul>
+
+<hr>
+
+<h2>1. IDENTIFICACIÓN</h2>
+
+<p>
+WAKU SAS<br>
+NIT: 900781581-2<br>
+Domicilio: Carrera 56A #148-35<br>
+Correo: vale@valirica.com
+</p>
+
+<p>
+Software propiedad de Juan Camilo Calderón
+C.C. 1020759038
+</p>
+
+<hr>
+
+<h2>2. CLIENTE</h2>
+
+<p>
+Empresa: {{EMPRESA_CLIENTE}}<br>
+NIT: {{NIT_CLIENTE}}<br>
+Representante: {{REPRESENTANTE}}<br>
+Correo principal: {{EMAIL_CLIENTE}}
+</p>
+
+<p>
+Correo de facturación adicional:
+<strong>{{EMAIL_FACTURACION_ADICIONAL}}</strong>
+</p>
+
+<hr>
+
+<h2>3. INICIO Y PRUEBA</h2>
+
+<p>
+Inicio contractual: <strong>{{FECHA_REGISTRO}}</strong>
+</p>
+
+<p>
+Periodo de prueba: <strong>{{PERIODO_PRUEBA}}</strong>
+</p>
+
+<p>
+La falta de uso activo podrá generar cobro equivalente a tres empleados activos por un mes.
+</p>
+
+<hr>
+
+<h2>4. PLAN Y PRECIO</h2>
+
+<p>
+Plan: <strong>{{TIPO_PLAN}}</strong>
+</p>
+
+<p>
+Precio por empleado activo: <strong>{{PRECIO_PLAN}}</strong> + IVA.
+</p>
+
+<p>
+Facturación anticipada.
+</p>
+
+<p>
+Actualización anual conforme IPC.
+</p>
+
+<hr>
+
+<h2>5. PROTECCIÓN DE DATOS</h2>
+
+<p>
+Cliente: Responsable del Tratamiento.
+</p>
+
+<p>
+WAKU SAS: Encargado del Tratamiento.
+</p>
+
+<p>
+Cumplimiento Ley 1581 de 2012.
+</p>
+
+<p>
+No se comparten datos con terceros.
+</p>
+
+<hr>
+
+<h2>6. FINALIDAD</h2>
+
+<p>
+Herramienta para alineación organizacional.
+</p>
+
+<p>
+No constituye evaluación clínica ni fundamento único para despidos.
+</p>
+
+<hr>
+
+<h2>7. RESPONSABILIDAD</h2>
+
+<p>
+Limitada al valor pagado en los últimos 12 meses.
+</p>
+
+<hr>
+
+<h2>8. LEY APLICABLE</h2>
+
+<p>
+Legislación colombiana. Tribunales de Bogotá.
+</p>
+
+<hr>
+
+<h2>9. ACEPTACIÓN</h2>
+
+<p>
+La aceptación electrónica tiene validez jurídica.
+</p>
