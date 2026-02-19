@@ -165,6 +165,7 @@ exit;
   <link rel="apple-touch-icon" href="https://app.valirica.com/uploads/logos/1749413056_logo-valirica.png">
   <link rel="icon" type="image/png" sizes="192x192" href="https://app.valirica.com/uploads/logos/1749413056_logo-valirica.png">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://use.typekit.net/qrv8fyz.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -175,11 +176,12 @@ exit;
       --c-accent:    #EF7F1B;
       --c-soft:      #FFF5F0;
       --radius:      20px;
+      --font: "gelica", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     html, body {
       height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      font-family: var(--font);
       color: var(--c-primary);
       -webkit-font-smoothing: antialiased;
     }
@@ -195,7 +197,10 @@ exit;
     ══════════════════════════════ */
     .login-brand {
       width: 44%;
-      background: linear-gradient(155deg, var(--c-primary) 0%, var(--c-secondary) 55%, #00657e 100%);
+      background:
+        radial-gradient(ellipse at 80% 10%, rgba(0,122,150,0.35) 0%, transparent 55%),
+        radial-gradient(ellipse at 10% 90%, rgba(239,127,27,0.18) 0%, transparent 50%),
+        linear-gradient(160deg, #011929 0%, var(--c-primary) 40%, #0d3a4f 100%);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -206,93 +211,137 @@ exit;
       flex-shrink: 0;
     }
 
-    /* Decorative blobs */
+    /* Decorative rings */
     .login-brand::before {
       content: '';
       position: absolute;
-      width: 420px; height: 420px;
+      width: 480px; height: 480px;
       border-radius: 50%;
-      background: rgba(0, 122, 150, 0.18);
-      top: -120px; right: -120px;
+      border: 1px solid rgba(0,122,150,0.2);
+      top: -160px; right: -160px;
     }
     .login-brand::after {
       content: '';
       position: absolute;
-      width: 320px; height: 320px;
+      width: 340px; height: 340px;
       border-radius: 50%;
-      background: rgba(239, 127, 27, 0.10);
-      bottom: -100px; left: -80px;
+      border: 1px solid rgba(239,127,27,0.12);
+      bottom: -120px; left: -100px;
     }
-    .blob-mid {
+    .blob-accent {
       position: absolute;
-      width: 200px; height: 200px;
+      width: 180px; height: 180px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.04);
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
+      background: rgba(239,127,27,0.06);
+      top: 38%; left: -60px;
+      pointer-events: none;
+    }
+    .blob-teal {
+      position: absolute;
+      width: 140px; height: 140px;
+      border-radius: 50%;
+      background: rgba(0,122,150,0.10);
+      bottom: 20%; right: -40px;
       pointer-events: none;
     }
 
-    .brand-logo-card {
-      background: rgba(255,255,255,0.12);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.22);
-      border-radius: 20px;
-      padding: 20px 28px;
+    /* Logo: dark bg blends with panel — no white card */
+    .brand-logo-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin-bottom: 28px;
       z-index: 1;
+      position: relative;
     }
-    .brand-logo-card img {
-      max-width: 160px;
-      max-height: 56px;
+    .brand-logo-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -12px;
+      border-radius: 50%;
+      background: rgba(0,122,150,0.12);
+      border: 1px solid rgba(0,122,150,0.25);
+    }
+    .brand-logo-wrap img {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
       display: block;
-      object-fit: contain;
+      object-fit: cover;
+      position: relative;
+      z-index: 1;
     }
 
+    .brand-wordmark {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 10px;
+      z-index: 1;
+    }
     .brand-headline {
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 800;
       color: #fff;
       text-align: center;
-      line-height: 1.25;
+      line-height: 1.2;
       z-index: 1;
-      margin-bottom: 10px;
-      letter-spacing: -0.3px;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .brand-headline span {
+      color: var(--c-accent);
     }
     .brand-tagline {
       font-size: 14px;
-      color: rgba(255,255,255,0.72);
+      color: rgba(255,255,255,0.60);
       text-align: center;
       line-height: 1.65;
-      max-width: 280px;
+      max-width: 270px;
       z-index: 1;
       margin-bottom: 36px;
+    }
+
+    /* Accent divider */
+    .brand-divider {
+      width: 36px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--c-accent), var(--c-teal));
+      border-radius: 2px;
+      margin: 0 auto 24px;
+      z-index: 1;
     }
 
     .brand-features {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       z-index: 1;
       width: 100%;
-      max-width: 290px;
+      max-width: 286px;
     }
     .feature-pill {
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 12px;
-      padding: 10px 14px;
-      color: rgba(255,255,255,0.88);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 10px;
+      padding: 9px 14px;
+      color: rgba(255,255,255,0.82);
       font-size: 13px;
       font-weight: 500;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+    .feature-pill:hover {
+      background: rgba(255,255,255,0.09);
+      border-color: rgba(0,122,150,0.3);
     }
     .feature-pill i {
       color: var(--c-accent);
-      font-size: 18px;
+      font-size: 17px;
       flex-shrink: 0;
     }
 
@@ -305,7 +354,7 @@ exit;
       align-items: center;
       justify-content: center;
       padding: 48px 40px;
-      background: #fff;
+      background: #fafbfc;
       overflow-y: auto;
     }
 
@@ -317,18 +366,18 @@ exit;
     .form-eyebrow {
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 1.8px;
+      letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--c-teal);
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     .form-title {
-      font-size: 28px;
+      font-size: 30px;
       font-weight: 800;
       color: var(--c-primary);
-      line-height: 1.2;
+      line-height: 1.15;
       margin-bottom: 6px;
-      letter-spacing: -0.4px;
+      letter-spacing: -0.6px;
     }
     .form-subtitle {
       font-size: 14px;
@@ -340,7 +389,7 @@ exit;
     /* Mode switcher tabs */
     .mode-tabs {
       display: flex;
-      background: #f1f3f5;
+      background: #eef0f3;
       border-radius: 12px;
       padding: 4px;
       margin-bottom: 24px;
@@ -348,7 +397,7 @@ exit;
     }
     .mode-tab {
       flex: 1;
-      padding: 8px 10px;
+      padding: 9px 10px;
       border: none;
       border-radius: 9px;
       cursor: pointer;
@@ -357,14 +406,14 @@ exit;
       color: #6B7280;
       background: transparent;
       transition: all 0.2s ease;
-      font-family: inherit;
+      font-family: var(--font);
       text-align: center;
       line-height: 1.3;
     }
     .mode-tab.active {
       background: #fff;
       color: var(--c-primary);
-      box-shadow: 0 2px 8px rgba(1,33,51,0.12);
+      box-shadow: 0 2px 10px rgba(1,33,51,0.10);
     }
 
     /* Notice */
@@ -420,11 +469,11 @@ exit;
     }
     .lf-input {
       width: 100%;
-      padding: 11px 14px 11px 40px;
-      border: 1.5px solid #E5E7EB;
+      padding: 12px 14px 12px 42px;
+      border: 1.5px solid #E2E6EA;
       border-radius: 12px;
       font-size: 14px;
-      font-family: inherit;
+      font-family: var(--font);
       color: var(--c-primary);
       background: #fff;
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -473,28 +522,30 @@ exit;
     /* Submit */
     .lf-submit {
       width: 100%;
-      padding: 13px;
-      background: var(--c-primary);
+      padding: 14px;
+      background: linear-gradient(135deg, var(--c-accent) 0%, #d96b0a 100%);
       color: #fff;
       border: none;
       border-radius: 12px;
       font-size: 15px;
       font-weight: 700;
-      font-family: inherit;
+      font-family: var(--font);
       cursor: pointer;
-      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
       margin-top: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      letter-spacing: 0.1px;
+      box-shadow: 0 4px 14px rgba(239,127,27,0.35);
     }
     .lf-submit:hover:not(:disabled) {
-      background: var(--c-secondary);
-      box-shadow: 0 6px 20px rgba(1,33,51,0.22);
+      opacity: 0.92;
+      box-shadow: 0 8px 24px rgba(239,127,27,0.45);
       transform: translateY(-1px);
     }
-    .lf-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+    .lf-submit:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
 
     .lf-spinner {
       width: 16px; height: 16px;
@@ -512,11 +563,11 @@ exit;
       padding: 11px;
       background: transparent;
       color: #6B7280;
-      border: 1.5px solid #E5E7EB;
+      border: 1.5px solid #E2E6EA;
       border-radius: 12px;
       font-size: 14px;
       font-weight: 600;
-      font-family: inherit;
+      font-family: var(--font);
       cursor: pointer;
       transition: all 0.15s ease;
       display: none;
@@ -557,12 +608,14 @@ exit;
       .login-shell { flex-direction: column; }
       .login-brand {
         width: 100%;
-        padding: 32px 24px 28px;
+        padding: 28px 24px 24px;
         min-height: auto;
       }
-      .brand-features { display: none; }
+      .brand-features, .brand-divider { display: none; }
       .brand-tagline { margin-bottom: 0; }
-      .login-form-panel { padding: 32px 20px 40px; }
+      .brand-logo-wrap img { width: 68px; height: 68px; }
+      .brand-headline { font-size: 22px; }
+      .login-form-panel { padding: 28px 20px 40px; background: #fff; }
     }
   </style>
 </head>
@@ -571,14 +624,18 @@ exit;
 
   <!-- ═══ LEFT: BRAND PANEL ═══ -->
   <aside class="login-brand" aria-hidden="true">
-    <span class="blob-mid"></span>
+    <span class="blob-accent"></span>
+    <span class="blob-teal"></span>
 
-    <div class="brand-logo-card">
-      <img src="https://app.valirica.com/uploads/logos/1749413056_logo-valirica.png" alt="Valírica">
+    <div class="brand-logo-wrap">
+      <img src="https://app.valirica.com/uploads/logo-192.png" alt="Valírica">
     </div>
 
-    <h2 class="brand-headline">Portal de Equipo</h2>
-    <p class="brand-tagline">Accede a tu espacio personal, revisa tus metas y gestiona tu día a día en la organización.</p>
+    <p class="brand-wordmark">Valírica</p>
+    <h2 class="brand-headline">Tu espacio de<br><span>equipo</span></h2>
+    <p class="brand-tagline">Revisa tus metas, gestiona tareas y mantén el control de tu jornada laboral.</p>
+
+    <div class="brand-divider"></div>
 
     <div class="brand-features">
       <div class="feature-pill">
@@ -604,9 +661,9 @@ exit;
   <main class="login-form-panel" role="main">
     <div class="login-form-inner">
 
-      <p class="form-eyebrow">Portal de Equipo</p>
+      <p class="form-eyebrow">Portal de Equipo — Valírica</p>
       <h1 class="form-title">Bienvenido de nuevo</h1>
-      <p class="form-subtitle">Ingresa con tu correo corporativo y contraseña.</p>
+      <p class="form-subtitle">Ingresa con tu correo corporativo y contraseña para acceder a tu dashboard.</p>
 
       <!-- Mode tabs -->
       <div class="mode-tabs">
