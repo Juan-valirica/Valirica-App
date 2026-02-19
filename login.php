@@ -51,273 +51,373 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->close();
 }
 ?>
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Iniciar sesión | Valírica</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Valírica Design System -->
-  <link rel="stylesheet" href="valirica-design-system.css">
-
+  <meta charset="utf-8">
+  <title>Acceso Empresa — Valírica</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#011929">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="https://app.valirica.com/uploads/logo-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="https://app.valirica.com/uploads/logo-192.png">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://use.typekit.net/qrv8fyz.css">
   <style>
-    /* === Login Page Specific Styles === */
-    /* Solo estilos únicos de esta página que no están en el design system */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      min-height: 100svh;
-      display: block;
-      overflow: auto;
-      padding: 0;
-      scrollbar-gutter: stable both-edges;
+    :root {
+      --c-primary:   #012133;
+      --c-secondary: #184656;
+      --c-teal:      #007a96;
+      --c-accent:    #EF7F1B;
+      --c-soft:      #FFF5F0;
+      --font: "gelica", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    /* Contenedor auth específico para login/registro */
-    .auth-shell {
-      width: min(1100px, 100%);
-      background: #fff;
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-lg);
-      border: 1px solid var(--color-gray-100);
+    html, body {
+      height: 100%;
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      color: var(--c-primary);
+    }
+
+    /* ── Split layout ── */
+    .login-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════
+       LEFT BRAND PANEL
+    ══════════════════════════════ */
+    .login-brand {
+      width: 44%;
+      background:
+        radial-gradient(ellipse at 80% 8%,  rgba(0,122,150,0.40) 0%, transparent 52%),
+        radial-gradient(ellipse at 8%  92%, rgba(239,127,27,0.16) 0%, transparent 50%),
+        radial-gradient(ellipse at 92% 80%, rgba(0,122,150,0.14) 0%, transparent 42%),
+        linear-gradient(160deg, #010f1a 0%, #011929 35%, var(--c-primary) 70%, #0d3a4f 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 48px 40px;
+      position: relative;
       overflow: hidden;
-      display: grid;
-      grid-template-columns: 1.2fr 1fr;
-      margin: clamp(16px, 4vh, 56px) auto;
+      flex-shrink: 0;
     }
 
-    @media (max-width: 940px) {
-      .auth-shell {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Panel de marca (izquierda) */
-    .brand-pane {
-      background: linear-gradient(180deg, var(--c-primary) 0%, var(--c-secondary) 100%);
-      color: #fff;
-      padding: clamp(20px, 4vh, 56px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-4);
-      text-align: center;
-    }
-
-    .brand-logo {
-      display: none !important;
-      width: min(360px, 64%);
-      max-width: 360px;
-      border-radius: var(--radius-md);
-      background: #fff;
-      object-fit: contain;
-      padding: var(--space-4);
-      box-shadow: var(--shadow-xl);
-      margin-bottom: var(--space-2);
-    }
-
-    .brand-byline {
-      font-size: var(--text-xs);
-      font-style: italic;
-      color: rgba(255, 255, 255, 0.85);
-      letter-spacing: var(--tracking-wide);
-      margin-top: calc(-1 * var(--space-1));
-    }
-
-    .brand-title {
-      font-size: clamp(22px, 3.2vw, 28px);
-      font-weight: var(--font-extrabold);
-      letter-spacing: var(--tracking-tight);
-      margin: var(--space-1) 0 0 0;
-      color: #fff;
-    }
-
-    .brand-sub {
-      font-size: var(--text-sm);
-      color: rgba(255, 255, 255, 0.92);
-      line-height: var(--leading-relaxed);
-      max-width: 56ch;
-    }
-
-    .brand-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-2);
-      padding: var(--space-2) var(--space-3);
-      border-radius: var(--radius-full);
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      font-size: var(--text-xs);
-      color: #fff;
-      width: max-content;
-    }
-
-    .brand-badge::before {
-      content: "•";
-      opacity: 0.85;
-    }
-
-    /* Panel de formulario (derecha) */
-    .form-pane {
-      padding: clamp(20px, 4vh, 56px);
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-6);
-      justify-content: center;
-    }
-
-    .form-head h1 {
-      margin: 0 0 var(--space-1) 0;
-    }
-
-    .form-head p {
-      margin: 0;
-      color: var(--color-gray-500);
-    }
-
-    form {
-      display: grid;
-      gap: var(--space-4);
-    }
-
-    /* Toggle password button específico */
-    .toggle-pass {
+    .login-brand::before {
+      content: '';
       position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-      padding: var(--space-2);
-      color: var(--color-gray-500);
-      border-radius: var(--radius-sm);
-      transition: background var(--transition-fast);
+      width: 480px; height: 480px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,122,150,0.18);
+      top: -160px; right: -160px;
     }
-
-    .toggle-pass:hover {
-      background: var(--color-gray-100);
+    .login-brand::after {
+      content: '';
+      position: absolute;
+      width: 340px; height: 340px;
+      border-radius: 50%;
+      border: 1px solid rgba(239,127,27,0.10);
+      bottom: -120px; left: -100px;
     }
+    .blob-accent { position: absolute; width: 180px; height: 180px; border-radius: 50%; background: rgba(239,127,27,0.05); top: 38%; left: -60px; pointer-events: none; }
+    .blob-teal   { position: absolute; width: 140px; height: 140px; border-radius: 50%; background: rgba(0,122,150,0.10); bottom: 22%; right: -40px; pointer-events: none; }
 
-    /* Input group para password con toggle */
-    .input-group {
+    .brand-logo-wrap {
       position: relative;
       display: flex;
       align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+      z-index: 1;
+    }
+    .brand-logo-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -10px;
+      border-radius: 50%;
+      background: rgba(0,122,150,0.12);
+      border: 1px solid rgba(0,122,150,0.25);
+    }
+    .brand-logo-wrap img {
+      width: 88px; height: 88px;
+      border-radius: 50%;
+      object-fit: cover;
+      position: relative;
+      z-index: 1;
+      display: block;
     }
 
-    /* Divider específico */
-    .divider {
-      height: 1px;
+    .brand-wordmark {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 3.5px; text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+      margin-bottom: 12px; text-align: center; z-index: 1;
+    }
+    .brand-headline {
+      font-size: 28px; font-weight: 800;
+      color: #fff; text-align: center;
+      line-height: 1.2; letter-spacing: -0.5px;
+      margin-bottom: 8px; z-index: 1;
+    }
+    .brand-headline span { color: var(--c-teal); filter: brightness(1.4); }
+
+    .brand-tagline {
+      font-size: 14px; color: rgba(255,255,255,0.58);
+      text-align: center; line-height: 1.65;
+      max-width: 270px; z-index: 1; margin-bottom: 36px;
+    }
+
+    .brand-divider {
+      width: 36px; height: 3px;
+      background: linear-gradient(90deg, var(--c-teal), var(--c-accent));
+      border-radius: 2px; margin: 0 auto 24px; z-index: 1;
+    }
+
+    .brand-features {
+      display: flex; flex-direction: column;
+      gap: 8px; z-index: 1;
+      width: 100%; max-width: 286px;
+    }
+    .feature-pill {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 10px; padding: 9px 14px;
+      color: rgba(255,255,255,0.82);
+      font-size: 13px; font-weight: 500;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+    .feature-pill:hover {
+      background: rgba(255,255,255,0.09);
+      border-color: rgba(0,122,150,0.3);
+    }
+    .feature-pill i { color: var(--c-teal); filter: brightness(1.5); font-size: 17px; flex-shrink: 0; }
+
+    /* ══════════════════════════════
+       RIGHT FORM PANEL
+    ══════════════════════════════ */
+    .login-form-panel {
+      flex: 1; display: flex;
+      align-items: center; justify-content: center;
+      padding: 48px 40px;
+      background: #fafbfc; overflow-y: auto;
+    }
+
+    .login-form-inner { width: 100%; max-width: 400px; }
+
+    .form-eyebrow {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--c-teal); margin-bottom: 10px;
+    }
+    .form-title {
+      font-size: 30px; font-weight: 800;
+      color: var(--c-primary); line-height: 1.15;
+      margin-bottom: 6px; letter-spacing: -0.6px;
+    }
+    .form-subtitle {
+      font-size: 14px; color: #6B7280;
+      line-height: 1.55; margin-bottom: 32px;
+    }
+
+    /* Fields */
+    .lf-field { margin-bottom: 16px; }
+    .lf-label {
+      display: block; font-size: 13px;
+      font-weight: 600; color: var(--c-primary); margin-bottom: 6px;
+    }
+    .lf-input-wrap { position: relative; display: flex; align-items: center; }
+    .lf-input-icon {
+      position: absolute; left: 13px;
+      color: #9CA3AF; font-size: 17px;
+      pointer-events: none; z-index: 1;
+    }
+    .lf-input {
       width: 100%;
-      background: linear-gradient(
-        90deg,
-        rgba(1, 33, 51, 0.04) 0%,
-        rgba(1, 33, 51, 0.1) 12%,
-        rgba(1, 33, 51, 0.04) 100%
-      );
-      margin: var(--space-2) 0;
+      padding: 12px 14px 12px 42px;
+      border: 1.5px solid #E2E6EA;
+      border-radius: 12px;
+      font-size: 14px; font-family: var(--font);
+      color: var(--c-primary); background: #fff;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      outline: none;
     }
-
-    /* Inline badges container */
-    .inline-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-2);
+    .lf-input:focus {
+      border-color: var(--c-teal);
+      box-shadow: 0 0 0 3px rgba(0,122,150,0.12);
     }
+    .lf-input.has-toggle { padding-right: 44px; }
 
-    /* Text muted con link */
-    .muted {
-      font-size: var(--text-sm);
-      color: var(--color-gray-500);
+    .lf-toggle {
+      position: absolute; right: 12px;
+      background: none; border: none; cursor: pointer;
+      color: #9CA3AF; font-size: 17px; padding: 4px;
+      display: flex; align-items: center;
+      transition: color 0.15s ease; z-index: 1;
     }
+    .lf-toggle:hover { color: var(--c-primary); }
 
-    .muted a {
-      color: var(--c-secondary);
-      font-weight: var(--font-extrabold);
-      text-decoration: none;
+    /* Submit — teal for empresa */
+    .lf-submit {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--c-teal), #005f74);
+      color: #fff; border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 700;
+      font-family: var(--font); cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+      margin-top: 8px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      letter-spacing: 0.1px;
+      box-shadow: 0 4px 14px rgba(0,122,150,0.35);
     }
-
-    .muted a:hover {
-      text-decoration: underline;
+    .lf-submit:hover {
+      opacity: 0.92;
+      box-shadow: 0 8px 24px rgba(0,122,150,0.45);
+      transform: translateY(-1px);
     }
+    .lf-submit i { font-size: 17px; }
 
-    /* Responsive adjustments */
-    @media (max-height: 740px) {
-      .brand-pane,
-      .form-pane {
-        padding: var(--space-4);
+    /* Register link */
+    .form-footer {
+      margin-top: 22px; text-align: center;
+      font-size: 13px; color: #6B7280; line-height: 1.6;
+    }
+    .form-footer a { color: var(--c-teal); font-weight: 700; text-decoration: none; }
+    .form-footer a:hover { text-decoration: underline; }
+
+    /* Back to index link */
+    .form-back {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; color: #9CA3AF; text-decoration: none;
+      margin-bottom: 28px;
+      transition: color 0.15s ease;
+    }
+    .form-back:hover { color: var(--c-primary); }
+    .form-back i { font-size: 14px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 820px) {
+      .login-shell { flex-direction: column; }
+      .login-brand {
+        width: 100%; padding: 28px 24px 24px; min-height: auto;
       }
-      .brand-logo {
-        max-width: 300px;
-        padding: var(--space-3);
-      }
+      .brand-features, .brand-divider { display: none; }
+      .brand-tagline { margin-bottom: 0; }
+      .brand-logo-wrap img { width: 68px; height: 68px; }
+      .brand-headline { font-size: 22px; }
+      .login-form-panel { padding: 28px 20px 40px; background: #fff; }
     }
   </style>
 </head>
 <body>
+<div class="login-shell">
 
-  <main class="auth-shell" role="main">
-    <!-- Panel de marca -->
-    <section class="brand-pane" aria-label="Identidad">
-      <img
-        src="/uploads/logo-valirica.png"
-        alt="Valírica"
-        class="brand-logo"
-      />
-      <h2 class="brand-title h2">Bienvenido de nuevo</h2>
-      <p class="brand-sub">
-        Accede a tu <strong>dashboard</strong> para gestionar cultura, motivación
-        y decisiones de talento con <strong>datos reales</strong>.
-      </p>
-      <span class="brand-badge" title="Acceso seguro">Acceso seguro</span>
-      <div class="brand-byline">Developed by valirica.com</div>
-    </section>
+  <!-- ═══ LEFT: BRAND PANEL ═══ -->
+  <aside class="login-brand" aria-hidden="true">
+    <span class="blob-accent"></span>
+    <span class="blob-teal"></span>
 
-    <!-- Formulario -->
-    <section class="form-pane" aria-label="Formulario de acceso">
-      <div class="form-head">
-        <h1 class="h2">Iniciar sesión</h1>
-        <p>Ingresa tus credenciales para continuar.</p>
+    <div class="brand-logo-wrap">
+      <img src="https://app.valirica.com/uploads/logo-192.png" alt="Valírica">
+    </div>
+
+    <p class="brand-wordmark">Valírica</p>
+    <h2 class="brand-headline">Tu dashboard de<br><span>empresa</span></h2>
+    <p class="brand-tagline">Gestiona tu equipo, mide la cultura organizacional y toma decisiones basadas en datos reales.</p>
+
+    <div class="brand-divider"></div>
+
+    <div class="brand-features">
+      <div class="feature-pill">
+        <i class="ph ph-chart-bar"></i>
+        <span>Dashboard de cultura y alineación</span>
       </div>
+      <div class="feature-pill">
+        <i class="ph ph-users-three"></i>
+        <span>Gestión completa del equipo</span>
+      </div>
+      <div class="feature-pill">
+        <i class="ph ph-lightning"></i>
+        <span>Análisis de motivación colectiva</span>
+      </div>
+      <div class="feature-pill">
+        <i class="ph ph-trend-up"></i>
+        <span>Reportes de desempeño en tiempo real</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ RIGHT: FORM PANEL ═══ -->
+  <main class="login-form-panel" role="main">
+    <div class="login-form-inner">
+
+      <a href="index.php" class="form-back">
+        <i class="ph ph-arrow-left"></i>
+        Volver al inicio
+      </a>
+
+      <p class="form-eyebrow">Acceso Empresa — Valírica</p>
+      <h1 class="form-title">Bienvenido de nuevo</h1>
+      <p class="form-subtitle">Ingresa con tu correo y contraseña para acceder a tu dashboard.</p>
 
       <form action="login.php" method="POST" novalidate>
-        <div class="form-group">
-          <label class="form-label" for="email">Correo electrónico</label>
-          <input class="form-input" id="email" name="email" type="email" inputmode="email" autocomplete="email" required>
+
+        <!-- Email -->
+        <div class="lf-field">
+          <label class="lf-label" for="email">Correo electrónico</label>
+          <div class="lf-input-wrap">
+            <i class="ph ph-envelope lf-input-icon"></i>
+            <input class="lf-input" id="email" name="email"
+                   type="email" autocomplete="email"
+                   placeholder="tu@empresa.com" required>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="password">Contraseña</label>
-          <div class="input-group">
-            <input class="form-input" id="password" name="password" type="password" autocomplete="current-password" required>
-            <button class="toggle-pass" type="button" aria-label="Mostrar u ocultar contraseña" onclick="togglePass()">
-              👁️
+        <!-- Password -->
+        <div class="lf-field">
+          <label class="lf-label" for="password">Contraseña</label>
+          <div class="lf-input-wrap">
+            <i class="ph ph-lock lf-input-icon"></i>
+            <input class="lf-input has-toggle" id="password" name="password"
+                   type="password" autocomplete="current-password"
+                   placeholder="Tu contraseña" required>
+            <button type="button" class="lf-toggle" id="toggle-pass"
+                    aria-label="Mostrar contraseña" onclick="togglePass()">
+              <i class="ph ph-eye" id="toggle-icon"></i>
             </button>
           </div>
         </div>
 
-        <div class="inline-badges" aria-hidden="true">
-          <span class="badge badge-accent">Datos protegidos</span>
-          <span class="badge badge-accent">Sesión segura</span>
-        </div>
-
-        <div class="divider" role="presentation"></div>
-
-        <button class="btn btn-primary btn-lg btn-full" type="submit">Entrar ➝</button>
-
-        <p class="muted">¿Aún no tienes cuenta? <a href="registro.php">Crear cuenta</a></p>
+        <button type="submit" class="lf-submit">
+          Ingresar al dashboard
+          <i class="ph ph-arrow-right"></i>
+        </button>
       </form>
-    </section>
-  </main>
 
-  <script>
-    function togglePass(){
-      const el = document.getElementById('password');
-      el.type = (el.type === 'password') ? 'text' : 'password';
-    }
-  </script>
+      <p class="form-footer">
+        ¿Aún no tienes cuenta? <a href="registro.php">Crear cuenta</a>
+      </p>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  function togglePass() {
+    const inp  = document.getElementById('password');
+    const icon = document.getElementById('toggle-icon');
+    const hidden = inp.type === 'password';
+    inp.type = hidden ? 'text' : 'password';
+    icon.className = hidden ? 'ph ph-eye-slash' : 'ph ph-eye';
+    document.getElementById('toggle-pass')
+      .setAttribute('aria-label', hidden ? 'Ocultar contraseña' : 'Mostrar contraseña');
+  }
+</script>
 </body>
 </html>
