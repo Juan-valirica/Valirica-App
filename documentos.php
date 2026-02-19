@@ -394,6 +394,21 @@ $energia_equipo = 0;   $mot_class = '';   $mot_label = '';   $mot_icon  = '';
     .cat-beneficios { background: #fce7f3; color: #9d174d; }
     .cat-comunicado { background: #e0e7ff; color: #3730a3; }
     .cat-general    { background: #f1f5f9; color: #475569; }
+    .cat-permiso    { background: #ede9fe; color: #7c3aed; }
+    .cat-vacacion   { background: #e0f2fe; color: #0369a1; }
+
+    /* Solicitudes status badges */
+    .badge-pendiente  { background: #FFF3E0; color: #E65100; }
+    .badge-aprobado   { background: #dcfce7; color: #166534; }
+    .badge-rechazado  { background: #fee2e2; color: #b91c1c; }
+
+    /* Solicitud card highlight */
+    .doc-card.solicitud-card {
+      border-top: 3px solid var(--c-teal, #007a96);
+    }
+    .doc-card.solicitud-card.estado-pendiente  { border-top-color: #E65100; }
+    .doc-card.solicitud-card.estado-aprobado   { border-top-color: #166534; }
+    .doc-card.solicitud-card.estado-rechazado  { border-top-color: #dc2626; }
 
     .doc-title {
       font-size: 14px;
@@ -869,6 +884,26 @@ $energia_equipo = 0;   $mot_class = '';   $mot_label = '';   $mot_icon  = '';
       <span class="dm-nav-badge gray" id="badge-archivados">0</span>
     </div>
 
+    <div class="dm-sidebar-section-label" style="margin-top:8px;">Solicitudes empleados</div>
+
+    <div class="dm-nav-item" id="nav-solicitudes" onclick="setSidebarFilter('solicitudes', null)">
+      <i class="ph ph-note-pencil"></i>
+      <span class="nav-label">Todas las solicitudes</span>
+      <span class="dm-nav-badge" id="badge-solicitudes">0</span>
+    </div>
+
+    <div class="dm-nav-item" id="nav-permisos" onclick="setSidebarFilter('permisos', null)">
+      <i class="ph ph-identification-card"></i>
+      <span class="nav-label">Permisos</span>
+      <span class="dm-nav-badge gray" id="badge-permisos">0</span>
+    </div>
+
+    <div class="dm-nav-item" id="nav-vacaciones-sol" onclick="setSidebarFilter('vacaciones', null)">
+      <i class="ph ph-sun-horizon"></i>
+      <span class="nav-label">Vacaciones</span>
+      <span class="dm-nav-badge gray" id="badge-vacaciones">0</span>
+    </div>
+
     <!-- Stats -->
     <div class="dm-sidebar-stats">
       <div class="dm-stat-mini">
@@ -886,6 +921,10 @@ $energia_equipo = 0;   $mot_class = '';   $mot_label = '';   $mot_icon  = '';
       <div class="dm-stat-mini teal">
         <span class="val" id="stat-links">0</span>
         <span class="lbl">Links</span>
+      </div>
+      <div class="dm-stat-mini accent dm-stat-mini-wide">
+        <span class="val" id="stat-sol-pendientes">0</span>
+        <span class="lbl">Solicitudes pendientes</span>
       </div>
     </div>
   </aside>
@@ -925,6 +964,8 @@ $energia_equipo = 0;   $mot_class = '';   $mot_label = '';   $mot_icon  = '';
         <option value="beneficios">Beneficios</option>
         <option value="comunicado">Comunicado</option>
         <option value="general">General</option>
+        <option value="permiso">Permiso</option>
+        <option value="vacacion">Vacación</option>
       </select>
 
       <div class="dm-view-toggle">
@@ -1024,6 +1065,8 @@ $energia_equipo = 0;   $mot_class = '';   $mot_label = '';   $mot_icon  = '';
             <option value="beneficios">Beneficios</option>
             <option value="comunicado">Comunicado</option>
             <option value="general">General</option>
+            <option value="permiso">Permiso</option>
+            <option value="vacacion">Vacación</option>
           </select>
         </div>
 
@@ -1101,14 +1144,17 @@ const CAT_LABELS = {
   contrato:'Contrato', politica:'Política', onboarding:'Onboarding',
   formacion:'Formación', evaluacion:'Evaluación', certificado:'Certificado',
   reglamento:'Reglamento', beneficios:'Beneficios', comunicado:'Comunicado',
-  general:'General'
+  general:'General', permiso:'Permiso', vacacion:'Vacación'
 };
 const CAT_CLASS = {
   contrato:'cat-contrato', politica:'cat-politica', onboarding:'cat-onboarding',
   formacion:'cat-formacion', evaluacion:'cat-evaluacion', certificado:'cat-certificado',
   reglamento:'cat-reglamento', beneficios:'cat-beneficios', comunicado:'cat-comunicado',
-  general:'cat-general'
+  general:'cat-general', permiso:'cat-permiso', vacacion:'cat-vacacion'
 };
+
+/* ── Scopes that go to listar_solicitudes ── */
+const SOLICITUDES_SCOPES = ['solicitudes', 'permisos', 'vacaciones'];
 
 /* ─────────────────────────────────────────
    STATS
@@ -1119,14 +1165,23 @@ function loadStats() {
     .then(d => {
       if (!d.ok) return;
       const s = d.stats;
-      setText('stat-total',     s.total     || 0);
-      setText('stat-nuevos',    s.nuevos    || 0);
-      setText('stat-pdfs',      s.pdfs      || 0);
-      setText('stat-links',     s.links     || 0);
-      setText('badge-todos',    s.total     || 0);
-      setText('badge-empresa',  s.empresa   || 0);
-      setText('badge-nuevos',   s.nuevos    || 0);
-      setText('badge-archivados', s.archivados || 0);
+      setText('stat-total',          s.total     || 0);
+      setText('stat-nuevos',         s.nuevos    || 0);
+      setText('stat-pdfs',           s.pdfs      || 0);
+      setText('stat-links',          s.links     || 0);
+      setText('badge-todos',         s.total     || 0);
+      setText('badge-empresa',       s.empresa   || 0);
+      setText('badge-nuevos',        s.nuevos    || 0);
+      setText('badge-archivados',    s.archivados || 0);
+      setText('badge-solicitudes',   s.solicitudes || 0);
+      setText('badge-permisos',      s.permisos   || 0);
+      setText('badge-vacaciones',    s.vacaciones  || 0);
+      setText('stat-sol-pendientes', s.solicitudes_pendientes || 0);
+      // Highlight solicitudes badge if there are pending ones
+      const solBadge = document.getElementById('badge-solicitudes');
+      if (solBadge) {
+        solBadge.classList.toggle('gray', !(s.solicitudes_pendientes > 0));
+      }
     })
     .catch(() => {});
 }
@@ -1193,7 +1248,23 @@ function buildFilters() {
   return params;
 }
 
+function buildSolicitudesFilters() {
+  const q = document.getElementById('dmSearch').value.trim();
+  const params = new URLSearchParams({ action: 'listar_solicitudes' });
+  // currentScope 'solicitudes'→subtipo='todos', 'permisos'→subtipo='permisos', etc.
+  if (currentScope !== 'solicitudes') params.append('subtipo', currentScope);
+  if (currentEmpId) params.append('empleado_id', currentEmpId);
+  if (q) params.append('q', q);
+  return params;
+}
+
 function loadDocs() {
+  // Delegate to solicitudes loader for those scopes
+  if (SOLICITUDES_SCOPES.includes(currentScope)) {
+    loadSolicitudes();
+    return;
+  }
+
   const grid  = document.getElementById('dmGrid');
   const empty = document.getElementById('dmEmpty');
   grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:#94a3b8;font-size:14px;"><i class="ph ph-circle-notch" style="font-size:24px;"></i><br>Cargando…</div>';
@@ -1213,6 +1284,26 @@ function loadDocs() {
     .catch(() => { grid.innerHTML = ''; showEmpty(); });
 }
 
+function loadSolicitudes() {
+  const grid  = document.getElementById('dmGrid');
+  const empty = document.getElementById('dmEmpty');
+  grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:#94a3b8;font-size:14px;"><i class="ph ph-circle-notch" style="font-size:24px;"></i><br>Cargando solicitudes…</div>';
+  empty.style.display = 'none';
+
+  fetch(BACKEND + '?' + buildSolicitudesFilters())
+    .then(r => r.json())
+    .then(d => {
+      if (!d.ok) { grid.innerHTML = ''; showEmpty(); return; }
+      const docs = d.solicitudes || [];
+      if (!docs.length) { grid.innerHTML = ''; showEmpty(); return; }
+      grid.className = currentView === 'list' ? 'dm-grid list-mode' : 'dm-grid';
+      grid.innerHTML = docs.map(doc =>
+        currentView === 'list' ? renderDocRow(doc) : renderDocCard(doc)
+      ).join('');
+    })
+    .catch(() => { grid.innerHTML = ''; showEmpty(); });
+}
+
 function showEmpty() {
   document.getElementById('dmEmpty').style.display = 'flex';
 }
@@ -1221,9 +1312,10 @@ function showEmpty() {
    RENDER — CARD
 ───────────────────────────────────────── */
 function renderDocCard(doc) {
-  const typeIcon = typeIconHtml(doc.tipo);
-  const catBadge = catBadgeHtml(doc.categoria);
-  const statBadge = statBadgeHtml(doc.estado);
+  const isSolicitud = !!doc.source_tipo;
+  const typeIcon  = typeIconHtml(doc.tipo, isSolicitud ? doc.source_tipo : null);
+  const catBadge  = catBadgeHtml(doc.categoria);
+  const statBadge = isSolicitud ? solicitudStatBadgeHtml(doc.estado) : statBadgeHtml(doc.estado);
   const empChip = doc.empleado_nombre
     ? `<div class="doc-emp-chip">
          <div class="doc-emp-chip-avatar">${esc(empInitials(doc.empleado_nombre))}</div>
@@ -1232,7 +1324,35 @@ function renderDocCard(doc) {
   const desc = doc.descripcion
     ? `<div class="doc-desc">${esc(doc.descripcion)}</div>` : '';
 
-  return `<div class="doc-card" data-id="${doc.id}">
+  const cardClass = isSolicitud
+    ? `doc-card solicitud-card estado-${esc(doc.estado)}`
+    : 'doc-card';
+
+  // Actions differ for solicitudes vs regular docs
+  let actions = '';
+  if (isSolicitud) {
+    const hasFile = doc.archivo && doc.tipo === 'pdf';
+    actions = `
+      ${hasFile ? `<button class="doc-action-btn view" onclick='viewDoc(${jsonDoc(doc)})' title="Ver documento adjunto">
+        <i class="ph ph-file-pdf"></i>
+      </button>` : ''}
+      <a href="permisos_vacaciones_empleador_panel.php" class="doc-action-btn view" title="Ir al panel de solicitudes" style="text-decoration:none;display:flex;align-items:center;justify-content:center;">
+        <i class="ph ph-arrow-square-out"></i>
+      </a>`;
+  } else {
+    actions = `
+      <button class="doc-action-btn view" onclick='viewDoc(${jsonDoc(doc)})' title="Ver documento">
+        <i class="ph ph-arrow-square-out"></i>
+      </button>
+      <button class="doc-action-btn" onclick='archiveDoc(${doc.id}, ${doc.estado === "archivado" ? 1 : 0})' title="${doc.estado === 'archivado' ? 'Desarchivar' : 'Archivar'}">
+        <i class="ph ph-${doc.estado === 'archivado' ? 'arrow-counter-clockwise' : 'archive'}"></i>
+      </button>
+      <button class="doc-action-btn danger" onclick='deleteDoc(${doc.id}, ${JSON.stringify(doc.titulo)})' title="Eliminar">
+        <i class="ph ph-trash"></i>
+      </button>`;
+  }
+
+  return `<div class="${cardClass}" data-id="${doc.id}">
     <div class="doc-card-top">
       ${typeIcon}
       <div class="doc-badges">${catBadge}${statBadge}</div>
@@ -1242,17 +1362,7 @@ function renderDocCard(doc) {
     ${empChip}
     <div class="doc-card-bottom">
       <span class="doc-date">${relativeDate(doc.created_at)}</span>
-      <div class="doc-actions">
-        <button class="doc-action-btn view" onclick='viewDoc(${jsonDoc(doc)})' title="Ver documento">
-          <i class="ph ph-arrow-square-out"></i>
-        </button>
-        <button class="doc-action-btn" onclick='archiveDoc(${doc.id}, ${doc.estado === "archivado" ? 1 : 0})' title="${doc.estado === 'archivado' ? 'Desarchivar' : 'Archivar'}">
-          <i class="ph ph-${doc.estado === 'archivado' ? 'arrow-counter-clockwise' : 'archive'}"></i>
-        </button>
-        <button class="doc-action-btn danger" onclick='deleteDoc(${doc.id}, ${JSON.stringify(doc.titulo)})' title="Eliminar">
-          <i class="ph ph-trash"></i>
-        </button>
-      </div>
+      <div class="doc-actions">${actions}</div>
     </div>
   </div>`;
 }
@@ -1261,10 +1371,24 @@ function renderDocCard(doc) {
    RENDER — ROW
 ───────────────────────────────────────── */
 function renderDocRow(doc) {
-  const typeIcon = typeIconHtml(doc.tipo);
-  const catBadge = catBadgeHtml(doc.categoria);
-  const statBadge = statBadgeHtml(doc.estado);
-  const empName = doc.empleado_nombre || '<span style="color:#cbd5e1">—</span>';
+  const isSolicitud = !!doc.source_tipo;
+  const typeIcon  = typeIconHtml(doc.tipo, isSolicitud ? doc.source_tipo : null);
+  const catBadge  = catBadgeHtml(doc.categoria);
+  const statBadge = isSolicitud ? solicitudStatBadgeHtml(doc.estado) : statBadgeHtml(doc.estado);
+  const empName   = doc.empleado_nombre ? esc(doc.empleado_nombre) : '<span style="color:#cbd5e1">—</span>';
+
+  let rowActions = '';
+  if (isSolicitud) {
+    const hasFile = doc.archivo && doc.tipo === 'pdf';
+    rowActions = `
+      ${hasFile ? `<button class="doc-action-btn view" onclick='viewDoc(${jsonDoc(doc)})' title="Ver adjunto"><i class="ph ph-file-pdf"></i></button>` : ''}
+      <a href="permisos_vacaciones_empleador_panel.php" class="doc-action-btn view" title="Panel solicitudes" style="text-decoration:none;display:flex;align-items:center;justify-content:center;"><i class="ph ph-arrow-square-out"></i></a>`;
+  } else {
+    rowActions = `
+      <button class="doc-action-btn view" onclick='viewDoc(${jsonDoc(doc)})' title="Ver"><i class="ph ph-arrow-square-out"></i></button>
+      <button class="doc-action-btn" onclick='archiveDoc(${doc.id}, ${doc.estado === "archivado" ? 1 : 0})' title="${doc.estado === 'archivado' ? 'Desarchivar' : 'Archivar'}"><i class="ph ph-${doc.estado === 'archivado' ? 'arrow-counter-clockwise' : 'archive'}"></i></button>
+      <button class="doc-action-btn danger" onclick='deleteDoc(${doc.id}, ${JSON.stringify(doc.titulo)})' title="Eliminar"><i class="ph ph-trash"></i></button>`;
+  }
 
   return `<div class="doc-row" data-id="${doc.id}">
     ${typeIcon}
@@ -1273,27 +1397,24 @@ function renderDocRow(doc) {
       <div class="doc-row-desc">${doc.descripcion ? esc(doc.descripcion) : '<span style="color:#cbd5e1">Sin descripción</span>'}</div>
     </div>
     <div class="doc-row-cat">${catBadge}</div>
-    <div class="doc-row-emp">${typeof empName === 'string' && doc.empleado_nombre ? esc(doc.empleado_nombre) : empName}</div>
+    <div class="doc-row-emp">${empName}</div>
     <div class="doc-row-date">${relativeDate(doc.created_at)}</div>
     <div class="doc-row-status">${statBadge}</div>
-    <div class="doc-row-actions">
-      <button class="doc-action-btn view" onclick='viewDoc(${jsonDoc(doc)})' title="Ver">
-        <i class="ph ph-arrow-square-out"></i>
-      </button>
-      <button class="doc-action-btn" onclick='archiveDoc(${doc.id}, ${doc.estado === "archivado" ? 1 : 0})' title="${doc.estado === 'archivado' ? 'Desarchivar' : 'Archivar'}">
-        <i class="ph ph-${doc.estado === 'archivado' ? 'arrow-counter-clockwise' : 'archive'}"></i>
-      </button>
-      <button class="doc-action-btn danger" onclick='deleteDoc(${doc.id}, ${JSON.stringify(doc.titulo)})' title="Eliminar">
-        <i class="ph ph-trash"></i>
-      </button>
-    </div>
+    <div class="doc-row-actions">${rowActions}</div>
   </div>`;
 }
 
 /* ─────────────────────────────────────────
    HELPERS
 ───────────────────────────────────────── */
-function typeIconHtml(tipo) {
+function typeIconHtml(tipo, sourceTipo) {
+  // Solicitudes get special icons
+  if (sourceTipo === 'permiso') {
+    return `<div class="doc-type-icon" style="background:#ede9fe;color:#7c3aed;"><i class="ph ph-identification-card"></i></div>`;
+  }
+  if (sourceTipo === 'vacacion') {
+    return `<div class="doc-type-icon" style="background:#e0f2fe;color:#0369a1;"><i class="ph ph-sun-horizon"></i></div>`;
+  }
   const map = {
     pdf:       ['ph-file-pdf',       'pdf'],
     drive:     ['ph-cloud',          'drive'],
@@ -1316,6 +1437,16 @@ function statBadgeHtml(estado) {
     archivado: ['badge-archivado','Archivado'],
   };
   const [cls, label] = map[estado] || ['badge-leido','Leído'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function solicitudStatBadgeHtml(estado) {
+  const map = {
+    pendiente: ['badge-pendiente', 'Pendiente'],
+    aprobado:  ['badge-aprobado',  'Aprobado'],
+    rechazado: ['badge-rechazado', 'Rechazado'],
+  };
+  const [cls, label] = map[estado] || ['badge-leido', estado || '—'];
   return `<span class="badge ${cls}">${label}</span>`;
 }
 
@@ -1356,7 +1487,14 @@ function setText(id, val) {
 
 function jsonDoc(doc) {
   return JSON.stringify({
-    id: doc.id, tipo: doc.tipo, url: doc.url, archivo: doc.archivo, titulo: doc.titulo
+    id:         doc.id,
+    tipo:       doc.tipo       || 'otro',
+    // Backend returns url_documento; normalize to 'url' for viewDoc
+    url:        doc.url_documento || doc.url || null,
+    // Backend returns nombre_archivo; solicitudes return 'archivo' (full path)
+    archivo:    doc.nombre_archivo || doc.archivo || null,
+    titulo:     doc.titulo,
+    source_tipo: doc.source_tipo || null,
   });
 }
 
@@ -1391,9 +1529,17 @@ function setSidebarFilter(scope, empId) {
     document.getElementById('emp-caret').className = 'ph ph-caret-up';
     document.getElementById('emp-caret').style.cssText = 'font-size:13px;color:rgba(255,255,255,0.4);';
   } else {
-    const navId = { todos:'nav-todos', empresa:'nav-empresa', nuevos:'nav-nuevos', archivados:'nav-archivados' }[scope];
+    const navId = {
+      todos:'nav-todos', empresa:'nav-empresa', nuevos:'nav-nuevos',
+      archivados:'nav-archivados',
+      solicitudes:'nav-solicitudes', permisos:'nav-permisos', vacaciones:'nav-vacaciones-sol',
+    }[scope];
     if (navId) document.getElementById(navId)?.classList.add('active');
-    const titles = { todos:'Todos los documentos', empresa:'Documentos de empresa', nuevos:'Documentos nuevos', archivados:'Archivados' };
+    const titles = {
+      todos:'Todos los documentos', empresa:'Documentos de empresa',
+      nuevos:'Documentos nuevos', archivados:'Archivados',
+      solicitudes:'Solicitudes de empleados', permisos:'Permisos', vacaciones:'Vacaciones',
+    };
     setToolbarTitle(titles[scope] || 'Documentos');
   }
 
@@ -1433,15 +1579,20 @@ function closeMobileSidebar() {
 ───────────────────────────────────────── */
 function viewDoc(doc) {
   if (doc.tipo === 'pdf' && doc.archivo) {
-    window.open('uploads/documentos/' + encodeURIComponent(doc.archivo), '_blank');
+    // Permisos: archivo is already a relative path (uploads/permisos/...)
+    // Documentos: archivo is just the filename → prefix with uploads/documentos/
+    const path = doc.source_tipo === 'permiso'
+      ? doc.archivo  // already 'uploads/permisos/permiso_xxx.pdf'
+      : 'uploads/documentos/' + encodeURIComponent(doc.archivo);
+    window.open(path, '_blank');
   } else if (doc.url) {
     window.open(doc.url, '_blank');
   } else {
     alert('Este documento no tiene un archivo o enlace disponible.');
     return;
   }
-  /* Mark as read */
-  markRead(doc.id);
+  // Only mark docs as read (not solicitudes — they have their own state)
+  if (!doc.source_tipo) markRead(doc.id);
 }
 
 function markRead(id) {
