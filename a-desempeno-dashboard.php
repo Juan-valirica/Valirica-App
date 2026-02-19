@@ -1822,6 +1822,34 @@ try {
     // Silenciar error
 }
 
+/* ============ Query: Equipo con metas activas asignadas ============ */
+$team_with_goals = [];
+try {
+    $stmt_twg = $conn->prepare("
+        SELECT e.id, e.nombre_persona, e.cargo,
+               COUNT(mp.id) as metas_count
+        FROM equipo e
+        INNER JOIN metas_personales mp ON mp.persona_id = e.id AND mp.user_id = ?
+        WHERE e.usuario_id = ?
+          AND mp.is_completed = 0
+        GROUP BY e.id, e.nombre_persona, e.cargo
+        HAVING metas_count > 0
+        ORDER BY metas_count DESC
+        LIMIT 20
+    ");
+    if ($stmt_twg) {
+        $stmt_twg->bind_param("ii", $user_id, $user_id);
+        $stmt_twg->execute();
+        $res_twg = stmt_get_result($stmt_twg);
+        while ($row = $res_twg->fetch_assoc()) {
+            $team_with_goals[] = $row;
+        }
+        $stmt_twg->close();
+    }
+} catch (Exception $e) {
+    // Silenciar error
+}
+
 /* ============ Queries para Tab 3: Time & Attendance ============ */
 
 // Variables inicializadas
@@ -4865,8 +4893,11 @@ document.addEventListener('keydown', function(e) {
       padding-bottom: var(--space-4);
       border-bottom: 2px solid #F3F4F6;
     ">
-      <h2 style="font-size: 20px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-1);">
-        📊 Análisis de Metas
+      <h2 style="font-size: 20px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-1); display:flex; align-items:center; gap:8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Análisis de Metas
       </h2>
       <p style="font-size: 14px; color: var(--c-body); opacity: 0.7; margin: 0;">
         Distribución y estado de todas las metas del equipo
@@ -4901,8 +4932,9 @@ document.addEventListener('keydown', function(e) {
           <!-- Empresa Goals -->
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span style="font-size: 13px; font-weight: 600; color: var(--c-secondary);">
-                🏢 Empresa
+              <span style="font-size: 13px; font-weight: 600; color: var(--c-secondary); display:inline-flex; align-items:center; gap:5px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 22V12h6v10"/><path d="M3 9h18"/></svg>
+                Empresa
               </span>
               <span style="font-size: 15px; font-weight: 700; color: var(--c-accent);">
                 <?= $goals_by_type['empresa'] ?>
@@ -4927,8 +4959,9 @@ document.addEventListener('keydown', function(e) {
           <!-- Area Goals -->
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span style="font-size: 13px; font-weight: 600; color: var(--c-secondary);">
-                👥 Área
+              <span style="font-size: 13px; font-weight: 600; color: var(--c-secondary); display:inline-flex; align-items:center; gap:5px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Área
               </span>
               <span style="font-size: 15px; font-weight: 700; color: #8B5CF6;">
                 <?= $goals_by_type['area'] ?>
@@ -4953,8 +4986,9 @@ document.addEventListener('keydown', function(e) {
           <!-- Personal Goals -->
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span style="font-size: 13px; font-weight: 600; color: var(--c-secondary);">
-                👤 Personal
+              <span style="font-size: 13px; font-weight: 600; color: var(--c-secondary); display:inline-flex; align-items:center; gap:5px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Personal
               </span>
               <span style="font-size: 15px; font-weight: 700; color: #00A3FF;">
                 <?= $goals_by_type['personal'] ?>
@@ -5011,11 +5045,11 @@ document.addEventListener('keydown', function(e) {
 
           <?php
           $status_config = [
-            'completed' => ['icon' => '✅', 'label' => 'Completadas', 'color' => '#00D98F'],
-            'on_track' => ['icon' => '✅', 'label' => 'Encaminadas', 'color' => '#00D98F'],
-            'at_risk' => ['icon' => '⚠️', 'label' => 'En Riesgo', 'color' => '#FFB020'],
-            'critical' => ['icon' => '🔥', 'label' => 'Críticas', 'color' => '#FF3B6D'],
-            'overdue' => ['icon' => '🚨', 'label' => 'Vencidas', 'color' => '#FF3B6D']
+            'completed' => ['color' => '#00D98F', 'label' => 'Completadas'],
+            'on_track'  => ['color' => '#00A3FF', 'label' => 'Encaminadas'],
+            'at_risk'   => ['color' => '#FFB020', 'label' => 'En Riesgo'],
+            'critical'  => ['color' => '#FF3B6D', 'label' => 'Críticas'],
+            'overdue'   => ['color' => '#991b1b', 'label' => 'Vencidas'],
           ];
 
           foreach ($status_config as $key => $config):
@@ -5030,7 +5064,7 @@ document.addEventListener('keydown', function(e) {
               border-radius: 10px;
               border-left: 4px solid <?= $config['color'] ?>;
             ">
-              <span style="font-size: 20px;"><?= $config['icon'] ?></span>
+              <span style="width:10px;height:10px;border-radius:50%;background:<?= $config['color'] ?>;display:inline-block;flex-shrink:0;"></span>
               <div style="flex: 1;">
                 <div style="font-size: 13px; font-weight: 600; color: var(--c-secondary);">
                   <?= $config['label'] ?>
@@ -5057,8 +5091,11 @@ document.addEventListener('keydown', function(e) {
   <!-- Team Pulse -->
   <section style="margin-bottom: var(--space-8);">
     <div style="margin-bottom: var(--space-5); padding-bottom: var(--space-4); border-bottom: 2px solid #F3F4F6;">
-      <h2 style="font-size: 20px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-2);">
-        💪 Pulso del Equipo
+      <h2 style="font-size: 20px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-2); display:flex; align-items:center; gap:8px;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Pulso del Equipo
       </h2>
       <p style="font-size: 14px; color: var(--c-body); opacity: 0.7; margin: 0;">
         Top performers y personas que necesitan apoyo
@@ -5233,187 +5270,149 @@ document.addEventListener('keydown', function(e) {
   <div style="margin-bottom: var(--space-6);">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5); flex-wrap: wrap; gap: var(--space-3);">
       <div>
-        <h1 style="font-size: 28px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-1);">
-          🎯 Metas & OKRs
-        </h1>
-        <p style="color: var(--c-body); opacity: 0.7; margin: 0; font-size: 14px;">
-          Q1 2026 • <?= $metas_total_count ?> metas activas • Última actualización: ahora
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;">
+          <div style="width:38px;height:38px;background:linear-gradient(135deg,#EF7F1B,#f5962c);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(239,127,27,.28);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+            </svg>
+          </div>
+          <h1 style="font-size: 26px; font-weight: 800; color: var(--c-secondary); margin: 0; letter-spacing: -0.3px;">
+            Metas & OKRs
+          </h1>
+        </div>
+        <p style="color: var(--c-body); opacity: 0.55; margin: 0; font-size: 13px; padding-left: 48px;">
+          Q1 2026 · <?= $metas_total_count ?> metas activas
         </p>
       </div>
       <button
         onclick="openCrearMetaModal()"
         style="
-          padding: 12px 24px;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #FF6B35 100%);
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 11px 22px;
+          background: linear-gradient(135deg, #EF7F1B 0%, #f5962c 100%);
           border: none;
-          border-radius: 8px;
+          border-radius: 12px;
           color: white;
-          font-weight: 600;
+          font-weight: 700;
           font-size: 14px;
+          font-family: inherit;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(255, 136, 0, 0.2);
-          transition: all 0.3s ease;
+          box-shadow: 0 4px 16px rgba(239,127,27,.30);
+          transition: filter .12s ease, box-shadow .12s ease, transform .07s ease;
+          letter-spacing: .1px;
         "
-        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 136, 0, 0.3)'"
-        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255, 136, 0, 0.2)'"
+        onmouseover="this.style.filter='brightness(1.05)';this.style.boxShadow='0 6px 22px rgba(239,127,27,.38)'"
+        onmouseout="this.style.filter='none';this.style.boxShadow='0 4px 16px rgba(239,127,27,.30)'"
+        onmousedown="this.style.transform='translateY(1px)'"
+        onmouseup="this.style.transform='translateY(0)'"
       >
-        ✨ Crear Meta
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Nueva Meta
       </button>
 
     </div>
 
-    <!-- KPIs Hero Grid -->
+    <!-- KPIs: solo Avance Global + Críticas -->
     <div style="
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
       gap: var(--space-4);
       margin-bottom: var(--space-6);
     ">
-      <!-- 1. KPI: Avance Global -->
+      <!-- Avance Global -->
       <div style="
-        background: linear-gradient(135deg, #00A3FF 0%, #00A3FF 100%);
-        border-radius: 16px;
+        background: linear-gradient(150deg, #012133 0%, #184656 100%);
+        border-radius: 18px;
         padding: var(--space-5);
         color: white;
         position: relative;
         overflow: hidden;
       ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          📊 Avance Global
+        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-3);">
+          <div style="width:30px;height:30px;background:rgba(239,127,27,.2);border:1px solid rgba(239,127,27,.35);border-radius:9px;display:flex;align-items:center;justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF7F1B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+            </svg>
+          </div>
+          <span style="font-size:11px;font-weight:700;opacity:.6;letter-spacing:.8px;text-transform:uppercase;">Avance Global</span>
         </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $global_completion ?>%
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Progreso general de tus metas
-        </div>
+        <div style="font-size:44px;font-weight:800;line-height:1;margin-bottom:6px;letter-spacing:-2px;"><?= $global_completion ?>%</div>
+        <div style="font-size:12px;opacity:.5;">Progreso general de todas las metas</div>
       </div>
 
-      <!-- 2. KPI: Encaminadas -->
+      <!-- Críticas -->
       <div style="
-        background: linear-gradient(135deg, #00D98F 0%, #00D98F 100%);
-        border-radius: 16px;
+        background: linear-gradient(150deg, #450a0a 0%, #7f1d1d 100%);
+        border-radius: 18px;
         padding: var(--space-5);
         color: white;
         position: relative;
         overflow: hidden;
       ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          ✅ Encaminadas
+        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-3);">
+          <div style="width:30px;height:30px;background:rgba(255,59,109,.2);border:1px solid rgba(255,59,109,.35);border-radius:9px;display:flex;align-items:center;justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF3B6D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <span style="font-size:11px;font-weight:700;opacity:.6;letter-spacing:.8px;text-transform:uppercase;">Críticas</span>
         </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $metas_on_track_count ?>
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Más del 70% o sin urgencia
-        </div>
-      </div>
-
-      <!-- 3. KPI: En Riesgo -->
-      <div style="
-        background: linear-gradient(135deg, #FFB020 0%, #EF7F1B 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          ⚠️ En Riesgo
-        </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $metas_at_risk_count ?>
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Menos del 70% • Vencen en 7 días
-        </div>
-      </div>
-
-      <!-- 4. KPI: Críticas -->
-      <div style="
-        background: linear-gradient(135deg, #FF3B6D 0%, #991B1B 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          🔥 Críticas
-        </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $metas_critical_count ?>
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Menos del 50% • Vencen en 3 días
-        </div>
-      </div>
-
-      <!-- 5. KPI: Vencidas -->
-      <div style="
-        background: linear-gradient(135deg, #FF3B6D 0%, #FF3B6D 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          🚨 Vencidas
-        </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $metas_overdue_count ?>
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Pasaron su fecha límite
-        </div>
+        <div style="font-size:44px;font-weight:800;line-height:1;margin-bottom:6px;letter-spacing:-2px;"><?= $metas_critical_count ?></div>
+        <div style="font-size:12px;opacity:.5;">Menos del 50% · vencen en 3 días</div>
       </div>
     </div>
+
+    <!-- Equipo con metas activas -->
+    <?php if (!empty($team_with_goals)): ?>
+    <div style="margin-bottom: var(--space-7);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-4);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-secondary,#184656)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span style="font-size:13px;font-weight:700;color:var(--c-secondary);">Miembros con metas activas</span>
+        <span style="font-size:11px;font-weight:700;color:#7a7977;background:#f0eeeb;border-radius:9999px;padding:2px 9px;"><?= count($team_with_goals) ?></span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:9px;">
+        <?php
+        $avatar_palette = ['#012133','#184656','#0e3547','#1a4a5c','#0d2e3d'];
+        foreach ($team_with_goals as $member):
+          $parts = explode(' ', trim($member['nombre_persona']));
+          $initials = strtoupper(substr($parts[0] ?? '', 0, 1) . substr($parts[1] ?? '', 0, 1));
+          if (strlen($initials) < 2) $initials = strtoupper(substr($member['nombre_persona'], 0, 2));
+          $bg = $avatar_palette[$member['id'] % count($avatar_palette)];
+          $first_name = $parts[0] ?? $member['nombre_persona'];
+        ?>
+          <div style="
+            display:flex;align-items:center;gap:9px;
+            padding: 7px 13px 7px 7px;
+            background: #fff;
+            border: 1.5px solid #e8e6e3;
+            border-radius: 12px;
+            transition: border-color .15s, box-shadow .15s;
+            cursor: default;
+          "
+          onmouseover="this.style.borderColor='#EF7F1B';this.style.boxShadow='0 2px 12px rgba(239,127,27,.12)'"
+          onmouseout="this.style.borderColor='#e8e6e3';this.style.boxShadow='none'">
+            <div style="width:32px;height:32px;border-radius:9px;background:<?= $bg ?>;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <span style="font-size:11.5px;font-weight:800;color:rgba(255,255,255,.9);letter-spacing:.5px;"><?= htmlspecialchars($initials) ?></span>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--c-secondary);line-height:1.2;"><?= htmlspecialchars($first_name) ?></div>
+              <div style="font-size:11px;color:#7a7977;"><?= (int)$member['metas_count'] ?> <?= $member['metas_count'] == 1 ? 'meta' : 'metas' ?></div>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <?php endif; ?>
 
   <!-- ===============================================
        🚀 VISUALIZACIÓN JERÁRQUICA V2.0 - TOP INDUSTRY LEVEL
@@ -5542,23 +5541,19 @@ document.addEventListener('keydown', function(e) {
           $statusColor = '#00A3FF';
           $statusBg = '#EFF6FF';
           $statusText = 'En curso';
-          $statusIcon = '⟳';
 
           if ($pctCorp >= 100) {
             $statusColor = '#00D98F';
             $statusBg = '#D1FAE5';
             $statusText = 'Completada';
-            $statusIcon = '✓';
           } elseif ($daysToDue !== null && $daysToDue < 0) {
             $statusColor = '#FF3B6D';
             $statusBg = '#FEE2E2';
             $statusText = 'Vencida';
-            $statusIcon = '!';
           } elseif ($daysToDue !== null && $daysToDue <= 7) {
             $statusColor = '#FFB020';
             $statusBg = '#FEF3C7';
             $statusText = 'Próxima';
-            $statusIcon = '⚠';
           }
 
           // Compact circle
@@ -5595,15 +5590,20 @@ document.addEventListener('keydown', function(e) {
                 <div style="
                   width: 48px;
                   height: 48px;
-                  background: linear-gradient(135deg, #EF7F1B, #FFB020);
+                  background: linear-gradient(135deg, #EF7F1B, #f5962c);
                   border-radius: 12px;
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                  font-size: 24px;
                   flex-shrink: 0;
                   box-shadow: 0 4px 12px rgba(239, 127, 27, 0.3);
-                ">🏢</div>
+                ">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="3"/>
+                    <path d="M9 22V12h6v10"/>
+                    <path d="M3 9h18"/>
+                  </svg>
+                </div>
 
                 <!-- Title & Meta -->
                 <div style="flex: 1; min-width: 0;">
@@ -5625,27 +5625,35 @@ document.addEventListener('keydown', function(e) {
                     <span style="
                       display: inline-flex;
                       align-items: center;
-                      gap: 4px;
+                      gap: 5px;
                       padding: 4px 10px;
                       background: <?= $statusBg ?>;
                       border-radius: 6px;
                       font-size: 11px;
                       font-weight: 600;
                       color: <?= $statusColor ?>;
-                    "><?= $statusIcon ?> <?= $statusText ?></span>
+                    ">
+                      <span style="width:6px;height:6px;border-radius:50%;background:<?= $statusColor ?>;display:inline-block;flex-shrink:0;"></span>
+                      <?= htmlspecialchars($statusText) ?>
+                    </span>
 
                     <!-- Date -->
                     <span style="
                       display: inline-flex;
                       align-items: center;
-                      gap: 4px;
+                      gap: 5px;
                       padding: 4px 10px;
                       background: #F9FAFB;
                       border-radius: 6px;
                       font-size: 11px;
                       font-weight: 500;
                       color: #6B7280;
-                    ">📅 <?= fmt_date($meta['due_date']) ?></span>
+                    ">
+                      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="12" height="12" rx="2"/><path d="M2 7h12M6 1v4M10 1v4"/>
+                      </svg>
+                      <?= htmlspecialchars(fmt_date($meta['due_date'])) ?>
+                    </span>
                   </div>
                 </div>
 
