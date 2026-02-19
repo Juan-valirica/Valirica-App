@@ -735,10 +735,96 @@ $energia_equipo = 0;   $mot_class = '';   $mot_label = '';   $mot_icon  = '';
     /* Scrollbar style for main */
     .dm-main::-webkit-scrollbar { width: 6px; }
     .dm-main::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  /* ── Page header (matches dashboard_empleado style) ── */
+  .dm-page-header {
+    width: 100%;
+    background: var(--c-primary, #012133);
+    color: var(--c-soft, #FFF5F0);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+    box-sizing: border-box;
+  }
+  .dm-page-header .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .dm-page-header .brand-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: #f4f4f4;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+  .dm-page-header .title {
+    display: flex;
+    flex-direction: column;
+  }
+  .dm-page-header .title h1 {
+    margin: 0;
+    font-size: clamp(18px, 2.4vw, 24px);
+    color: var(--c-soft, #FFF5F0);
+    letter-spacing: -0.3px;
+    line-height: 1.1;
+  }
+  .dm-page-header .title span {
+    font-size: 13px;
+    color: var(--c-soft, #FFF5F0);
+    opacity: .8;
+  }
+  .go-dashboard-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: var(--c-soft, #FFF5F0);
+    color: var(--c-primary, #012133);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.4);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  }
+  .go-dashboard-btn:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.16);
+    transform: translateY(-1px);
+  }
+
+  /* Adjust layout height to account for header */
+  .dm-layout {
+    height: calc(100vh - 68px) !important;
+  }
   </style>
 </head>
 <body>
-<?php require 'a-header-desktop-brand.php'; ?>
+
+<!-- Header (matches dashboard_empleado style) -->
+<header class="dm-page-header">
+  <div class="nav-left">
+    <img class="brand-logo"
+         src="<?php echo h(resolve_logo_url($logo ?: '')); ?>"
+         alt="Logo de <?php echo h($empresa); ?>">
+    <div class="title">
+      <h1><?php echo h($empresa ?: 'Mi empresa'); ?></h1>
+      <span>Gestión Documental</span>
+    </div>
+  </div>
+  <div class="nav-right">
+    <a href="a-desktop-dashboard-brand.php" class="go-dashboard-btn">
+      Regresar a tu Dashboard
+    </a>
+  </div>
+</header>
 
 <!-- Mobile sidebar overlay -->
 <div class="dm-sidebar-overlay" id="dmOverlay" onclick="closeMobileSidebar()"></div>
