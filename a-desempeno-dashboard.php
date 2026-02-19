@@ -1470,10 +1470,10 @@ function db_get_personas(mysqli $conn, int $user_id): array {
 }
 
 /* ============ Tab Navigation ============ */
-$active_tab = $_GET['tab'] ?? 'overview';
-$valid_tabs = ['overview', 'goals', 'time', 'projects', 'people', 'analytics'];
+$active_tab = $_GET['tab'] ?? 'goals';
+$valid_tabs = ['goals', 'time', 'projects', 'people', 'analytics'];
 if (!in_array($active_tab, $valid_tabs)) {
-    $active_tab = 'overview';
+    $active_tab = 'goals';
 }
 
 /* ============ Queries para Tab 1: Overview ============ */
@@ -2872,12 +2872,17 @@ if (empty($cultura_tipo_final)) {
     }
 
     .tab-icon {
-      font-size: 16px;
-      filter: grayscale(0.3);
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      color: currentColor;
+      opacity: 0.65;
+      transition: opacity var(--transition);
     }
 
+    .tab-link:hover .tab-icon,
     .tab-link.is-active .tab-icon {
-      filter: grayscale(0);
+      opacity: 1;
     }
 
     /* ===== Tab Content ===== */
@@ -4075,12 +4080,10 @@ details[open] > summary .caret{ transform:rotate(45deg); }
 <!-- Tab Navigation -->
 <nav class="tab-nav" role="navigation" aria-label="Performance sections">
   <div class="tab-nav-container">
-    <a href="?tab=overview" class="tab-link <?= $active_tab === 'overview' ? 'is-active' : '' ?>">
-      <span class="tab-icon">🏠</span>
-      <span>Overview</span>
-    </a>
     <a href="?tab=goals" class="tab-link <?= $active_tab === 'goals' ? 'is-active' : '' ?>" style="position: relative;">
-      <span class="tab-icon">🎯</span>
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+      </svg>
       <span>Metas</span>
       <?php if ($unread_notifications_count > 0): ?>
         <span style="
@@ -4106,7 +4109,9 @@ details[open] > summary .caret{ transform:rotate(45deg); }
       <?php endif; ?>
     </a>
     <a href="?tab=time" class="tab-link <?= $active_tab === 'time' ? 'is-active' : '' ?>" style="position: relative;">
-      <span class="tab-icon">⏱️</span>
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
       <span>Tiempo & Asistencia</span>
       <?php if ($solicitudes_pendientes_count > 0): ?>
         <span id="solicitudesPendientesBadge" style="
@@ -4132,11 +4137,15 @@ details[open] > summary .caret{ transform:rotate(45deg); }
       <?php endif; ?>
     </a>
     <a href="?tab=projects" class="tab-link <?= $active_tab === 'projects' ? 'is-active' : '' ?>">
-      <span class="tab-icon">📋</span>
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
       <span>Proyectos</span>
     </a>
     <a href="?tab=people" class="tab-link <?= $active_tab === 'people' ? 'is-active' : '' ?>">
-      <span class="tab-icon">👥</span>
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
       <span>Equipo</span>
     </a>
   </div>
