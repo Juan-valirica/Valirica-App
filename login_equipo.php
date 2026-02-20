@@ -152,480 +152,783 @@ exit;
 }
 // --- fin del bloque AJAX/PHP ---
 ?>
-
-
-
 <!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Iniciar sesión | Equipo — Valírica</title>
+  <title>Acceso Equipo — Valírica</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-
-  <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#012133">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Valírica">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="application-name" content="Valírica">
-
-  <!-- PWA Icons -->
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="https://app.valirica.com/uploads/logos/1749413056_logo-valirica.png">
   <link rel="icon" type="image/png" sizes="192x192" href="https://app.valirica.com/uploads/logos/1749413056_logo-valirica.png">
-
-  <!-- Valírica Design System -->
-  <link rel="stylesheet" href="valirica-design-system.css">
-
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://use.typekit.net/qrv8fyz.css">
   <style>
-    /* === Login Equipo Page Specific Styles === */
-    /* Nota: Variables CSS, reset, botones y formularios base están en valirica-design-system.css */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      background: #f4f6f8;
+    :root {
+      --c-primary:   #012133;
+      --c-secondary: #184656;
+      --c-teal:      #007a96;
+      --c-accent:    #EF7F1B;
+      --c-soft:      #FFF5F0;
+      --radius:      20px;
+      --font: "gelica", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    /* Layout específico de login equipo (grid 460px 1fr) */
-    .wrap {
-      max-width: 980px;
-      margin: var(--space-9) auto;
-      display: grid;
-      grid-template-columns: 460px 1fr;
-      gap: var(--space-7);
-      align-items: stretch;
-      padding: var(--space-5);
-    }
-
-    /* Panel de marca (izquierda) */
-    .brand-pane {
-      background: linear-gradient(180deg, var(--c-primary), var(--c-secondary));
-      border-radius: var(--radius);
-      padding: var(--space-9);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: var(--space-5);
-      box-shadow: var(--shadow);
-    }
-
-    .brand-logo {
-      max-width: 240px;
-      background: #fff;
-      padding: var(--space-3);
-      border-radius: var(--radius);
-    }
-
-    /* Panel de formulario (derecha) */
-    .form-pane {
-      background: var(--c-bg);
-      border-radius: var(--radius);
-      padding: var(--space-9);
-      box-shadow: var(--shadow);
-    }
-
-    h1 {
-      margin: 0 0 var(--space-2) 0;
+    html, body {
+      height: 100%;
+      font-family: var(--font);
       color: var(--c-primary);
-      font-size: var(--text-2xl);
+      -webkit-font-smoothing: antialiased;
     }
 
-    p.lead {
-      margin: 0 0 var(--space-3) 0;
-      color: var(--c-body);
+    /* ── Full-height split layout ── */
+    .login-shell {
+      display: flex;
+      min-height: 100vh;
     }
 
-    /* Form base */
-    form {
+    /* ══════════════════════════════
+       LEFT BRAND PANEL
+    ══════════════════════════════ */
+    .login-brand {
+      width: 44%;
+      background:
+        radial-gradient(ellipse at 80% 10%, rgba(0,122,150,0.35) 0%, transparent 55%),
+        radial-gradient(ellipse at 10% 90%, rgba(239,127,27,0.18) 0%, transparent 50%),
+        linear-gradient(160deg, #011929 0%, var(--c-primary) 40%, #0d3a4f 100%);
       display: flex;
       flex-direction: column;
-      gap: var(--space-3);
-    }
-
-    /* Input específico para esta página (mapea a .form-input del design system) */
-    .input {
-      padding: var(--space-3) var(--space-4);
-      border-radius: var(--radius);
-      border: 1px solid #e6e6e6;
-      font-size: var(--text-base);
-      background: #fff;
-      width: 100%;
-    }
-
-    .input:focus {
-      outline: none;
-      box-shadow: 0 0 0 4px rgba(239, 127, 27, 0.12);
-      border-color: color-mix(in srgb, var(--c-accent) 35%, #e6e6e6);
-    }
-
-    .row {
-      display: flex;
-      gap: var(--space-2);
+      justify-content: center;
       align-items: center;
+      padding: 48px 40px;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
     }
 
-    /* Botón ghost específico */
-    .btn-ghost {
-      background: #f1f1f1;
-      color: var(--c-body);
-      border: 1px solid #e9e9e9;
-      padding: var(--space-3) var(--space-3);
-      border-radius: var(--radius);
-      cursor: pointer;
+    /* Decorative rings */
+    .login-brand::before {
+      content: '';
+      position: absolute;
+      width: 480px; height: 480px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,122,150,0.2);
+      top: -160px; right: -160px;
+    }
+    .login-brand::after {
+      content: '';
+      position: absolute;
+      width: 340px; height: 340px;
+      border-radius: 50%;
+      border: 1px solid rgba(239,127,27,0.12);
+      bottom: -120px; left: -100px;
+    }
+    .blob-accent {
+      position: absolute;
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      background: rgba(239,127,27,0.06);
+      top: 38%; left: -60px;
+      pointer-events: none;
+    }
+    .blob-teal {
+      position: absolute;
+      width: 140px; height: 140px;
+      border-radius: 50%;
+      background: rgba(0,122,150,0.10);
+      bottom: 20%; right: -40px;
+      pointer-events: none;
     }
 
-    /* Tabs específicos para toggle login/crear */
-    .tabs {
+    /* Logo: dark bg blends with panel — no white card */
+    .brand-logo-wrap {
       display: flex;
-      gap: var(--space-2);
-      margin-bottom: var(--space-3);
-    }
-
-    .tab {
-      background: transparent;
-      border: 0;
-      padding: var(--space-2) var(--space-3);
-      border-radius: var(--radius);
-      cursor: pointer;
-      font-weight: var(--font-bold);
-      color: var(--c-body);
-      transition: all var(--transition-fast);
-    }
-
-    .tab.active {
-      background: color-mix(in srgb, var(--c-accent) 10%, #fff);
-      color: var(--c-accent);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    }
-
-    /* Notice/alert específico */
-    .notice {
-      padding: var(--space-3);
-      border-radius: var(--radius);
-      background: color-mix(in srgb, var(--c-accent) 6%, #fff);
-      border: 1px solid rgba(239, 127, 27, 0.12);
-      color: #8a3b00;
-      font-size: var(--text-sm);
-    }
-
-    /* Field container */
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-2);
-      margin-bottom: var(--space-3);
-    }
-
-    /* Helper text */
-    .helper {
-      font-size: var(--text-xs);
-      color: #7a7a7a;
-      margin-top: var(--space-1);
-    }
-
-    /* Toggle button (mostrar contraseña) */
-    .toggle-btn {
-      background: transparent;
-      border: 0;
-      cursor: pointer;
-      padding: var(--space-2) var(--space-2);
-      border-radius: var(--radius);
-      font-size: var(--text-sm);
-      line-height: 1;
-      display: inline-flex;
       align-items: center;
       justify-content: center;
+      margin-bottom: 28px;
+      z-index: 1;
+      position: relative;
+    }
+    .brand-logo-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -12px;
+      border-radius: 50%;
+      background: rgba(0,122,150,0.12);
+      border: 1px solid rgba(0,122,150,0.25);
+    }
+    .brand-logo-wrap img {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      display: block;
+      object-fit: cover;
+      position: relative;
+      z-index: 1;
     }
 
-    /* Input row con toggle */
-    .field .input-row {
+    .brand-wordmark {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 10px;
+      z-index: 1;
+    }
+    .brand-headline {
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      text-align: center;
+      line-height: 1.2;
+      z-index: 1;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .brand-headline span {
+      color: var(--c-accent);
+    }
+    .brand-tagline {
+      font-size: 14px;
+      color: rgba(255,255,255,0.60);
+      text-align: center;
+      line-height: 1.65;
+      max-width: 270px;
+      z-index: 1;
+      margin-bottom: 36px;
+    }
+
+    /* Accent divider */
+    .brand-divider {
+      width: 36px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--c-accent), var(--c-teal));
+      border-radius: 2px;
+      margin: 0 auto 24px;
+      z-index: 1;
+    }
+
+    .brand-features {
       display: flex;
-      gap: var(--space-2);
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1;
+      width: 100%;
+      max-width: 286px;
+    }
+    .feature-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 10px;
+      padding: 9px 14px;
+      color: rgba(255,255,255,0.82);
+      font-size: 13px;
+      font-weight: 500;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+    .feature-pill:hover {
+      background: rgba(255,255,255,0.09);
+      border-color: rgba(0,122,150,0.3);
+    }
+    .feature-pill i {
+      color: var(--c-accent);
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════
+       RIGHT FORM PANEL
+    ══════════════════════════════ */
+    .login-form-panel {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 40px;
+      background: #fafbfc;
+      overflow-y: auto;
+    }
+
+    .login-form-inner {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .form-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--c-teal);
+      margin-bottom: 10px;
+    }
+    .form-title {
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--c-primary);
+      line-height: 1.15;
+      margin-bottom: 6px;
+      letter-spacing: -0.6px;
+    }
+    .form-subtitle {
+      font-size: 14px;
+      color: #6B7280;
+      line-height: 1.55;
+      margin-bottom: 28px;
+    }
+
+    /* Mode switcher tabs */
+    .mode-tabs {
+      display: flex;
+      background: #eef0f3;
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 24px;
+      gap: 4px;
+    }
+    .mode-tab {
+      flex: 1;
+      padding: 9px 10px;
+      border: none;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6B7280;
+      background: transparent;
+      transition: all 0.2s ease;
+      font-family: var(--font);
+      text-align: center;
+      line-height: 1.3;
+    }
+    .mode-tab.active {
+      background: #fff;
+      color: var(--c-primary);
+      box-shadow: 0 2px 10px rgba(1,33,51,0.10);
+    }
+
+    /* Notice */
+    .form-notice {
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      animation: noticeIn 0.2s ease;
+    }
+    @keyframes noticeIn {
+      from { transform: translateY(-6px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    .form-notice.error {
+      background: rgba(239,68,68,0.07);
+      border: 1px solid rgba(239,68,68,0.18);
+      color: #991B1B;
+    }
+    .form-notice.success {
+      background: rgba(0,122,150,0.07);
+      border: 1px solid rgba(0,122,150,0.2);
+      color: var(--c-secondary);
+    }
+    .form-notice i { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    /* Fields */
+    .lf-field { margin-bottom: 14px; }
+
+    .lf-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--c-primary);
+      margin-bottom: 6px;
+    }
+
+    .lf-input-wrap {
+      position: relative;
+      display: flex;
       align-items: center;
     }
+    .lf-input-icon {
+      position: absolute;
+      left: 13px;
+      color: #9CA3AF;
+      font-size: 17px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .lf-input {
+      width: 100%;
+      padding: 12px 14px 12px 42px;
+      border: 1.5px solid #E2E6EA;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: var(--font);
+      color: var(--c-primary);
+      background: #fff;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      outline: none;
+    }
+    .lf-input:focus {
+      border-color: var(--c-teal);
+      box-shadow: 0 0 0 3px rgba(0,122,150,0.12);
+    }
+    .lf-input.has-toggle { padding-right: 44px; }
 
-    .field .input-row .input {
-      flex: 1;
+    .lf-toggle {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #9CA3AF;
+      font-size: 17px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s ease;
+      z-index: 1;
+    }
+    .lf-toggle:hover { color: var(--c-primary); }
+
+    .lf-helper {
+      font-size: 12px;
+      color: #6B7280;
+      margin-top: 5px;
+      line-height: 1.4;
     }
 
-    /* Utilidades de texto */
-    .muted {
-      font-size: var(--text-sm);
-      color: #6b6b6b;
+    /* Password strength */
+    .pass-strength { display: flex; gap: 4px; margin-top: 6px; }
+    .ps-bar {
+      flex: 1; height: 3px; border-radius: 2px;
+      background: #E5E7EB;
+      transition: background 0.3s ease;
+    }
+    .ps-bar.weak   { background: #EF4444; }
+    .ps-bar.medium { background: #F59E0B; }
+    .ps-bar.strong { background: #10B981; }
+
+    /* Submit */
+    .lf-submit {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--c-accent) 0%, #d96b0a 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: 0.1px;
+      box-shadow: 0 4px 14px rgba(239,127,27,0.35);
+    }
+    .lf-submit:hover:not(:disabled) {
+      opacity: 0.92;
+      box-shadow: 0 8px 24px rgba(239,127,27,0.45);
+      transform: translateY(-1px);
+    }
+    .lf-submit:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+
+    .lf-spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .lf-btn-secondary {
+      width: 100%;
+      margin-top: 10px;
+      padding: 11px;
+      background: transparent;
+      color: #6B7280;
+      border: 1.5px solid #E2E6EA;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: none;
+    }
+    .lf-btn-secondary:hover {
+      background: #F9FAFB;
+      color: var(--c-primary);
+      border-color: #D1D5DB;
     }
 
-    .small {
-      font-size: var(--text-xs);
-      color: #777;
+    /* Footer */
+    .form-footer {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 12px;
+      color: #9CA3AF;
+      line-height: 1.6;
+    }
+    .form-footer a { color: var(--c-teal); text-decoration: none; }
+    .form-footer a:hover { text-decoration: underline; }
+
+    /* Divider */
+    .lf-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 18px 0;
+      color: #D1D5DB;
+      font-size: 12px;
+    }
+    .lf-divider::before, .lf-divider::after {
+      content: ''; flex: 1;
+      border-top: 1px solid #E5E7EB;
     }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      .wrap {
-        grid-template-columns: 1fr;
-        padding: var(--space-3);
-      }
-      .brand-pane {
-        order: 2;
-      }
-      .btn {
+    /* ── Responsive ── */
+    @media (max-width: 820px) {
+      .login-shell { flex-direction: column; }
+      .login-brand {
         width: 100%;
-        min-width: 0;
+        padding: 28px 24px 24px;
+        min-height: auto;
       }
+      .brand-features, .brand-divider { display: none; }
+      .brand-tagline { margin-bottom: 0; }
+      .brand-logo-wrap img { width: 68px; height: 68px; }
+      .brand-headline { font-size: 22px; }
+      .login-form-panel { padding: 28px 20px 40px; background: #fff; }
     }
-
-    @media (min-width: 769px) {
-      .tab {
-        padding: var(--space-3) var(--space-4);
-        font-size: var(--text-sm);
-      }
-      .tab.active {
-        transform: translateY(-1px);
-      }
-    }
-  
   </style>
 </head>
 <body>
-  <main class="wrap" role="main">
-    <aside class="brand-pane" aria-hidden="true">
-      <img class="brand-logo" src="/uploads/logo-valirica.png" alt="Valírica">
-      <div style="text-align:center; max-width:320px;">
-        <h2 style="color:#fff; margin:var(--space-2) 0 0 0;">Valírica — Equipo</h2>
-        <p class="small" style="color:rgba(255,255,255,0.9);">Mide y activa la cultura de tu equipo. Si tienes problemas, escribe a soporte.</p>
-      </div>
-    </aside>
+<div class="login-shell">
 
-    <section class="form-pane" aria-label="Formulario equipo">
-      <div style="margin-bottom:var(--space-2);">
-        <h1>Acceso — Equipo</h1>
-        <p class="lead">Usa tu correo de trabajo y contraseña.</p>
+  <!-- ═══ LEFT: BRAND PANEL ═══ -->
+  <aside class="login-brand" aria-hidden="true">
+    <span class="blob-accent"></span>
+    <span class="blob-teal"></span>
+
+    <div class="brand-logo-wrap">
+      <img src="https://app.valirica.com/uploads/logo-192.png" alt="Valírica">
+    </div>
+
+    <p class="brand-wordmark">Valírica</p>
+    <h2 class="brand-headline">Tu espacio de<br><span>equipo</span></h2>
+    <p class="brand-tagline">Revisa tus metas, gestiona tareas y mantén el control de tu jornada laboral.</p>
+
+    <div class="brand-divider"></div>
+
+    <div class="brand-features">
+      <div class="feature-pill">
+        <i class="ph ph-target"></i>
+        <span>Metas y objetivos en tiempo real</span>
+      </div>
+      <div class="feature-pill">
+        <i class="ph ph-kanban"></i>
+        <span>Tareas y proyectos del equipo</span>
+      </div>
+      <div class="feature-pill">
+        <i class="ph ph-calendar-check"></i>
+        <span>Permisos y vacaciones simplificados</span>
+      </div>
+      <div class="feature-pill">
+        <i class="ph ph-files"></i>
+        <span>Documentos siempre disponibles</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ RIGHT: FORM PANEL ═══ -->
+  <main class="login-form-panel" role="main">
+    <div class="login-form-inner">
+
+      <p class="form-eyebrow">Portal de Equipo — Valírica</p>
+      <h1 class="form-title">Bienvenido de nuevo</h1>
+      <p class="form-subtitle">Ingresa con tu correo corporativo y contraseña para acceder a tu dashboard.</p>
+
+      <!-- Mode tabs -->
+      <div class="mode-tabs">
+        <button id="tab-login"  class="mode-tab active" type="button">Iniciar sesión</button>
+        <button id="tab-create" class="mode-tab"        type="button">Primera vez</button>
       </div>
 
+      <!-- Notice (PHP flash + AJAX) -->
       <?php if (!empty($notice)): ?>
-  <div class="notice" role="alert"><?php echo htmlspecialchars($notice); ?></div>
-<?php endif; ?>
+      <div class="form-notice error" role="alert">
+        <i class="ph ph-warning-circle"></i>
+        <span><?php echo htmlspecialchars($notice); ?></span>
+      </div>
+      <?php endif; ?>
+      <div id="notice-container" role="status" aria-live="polite"></div>
 
+      <!-- ═══ FORM ═══ -->
+      <form id="team-form" autocomplete="on" novalidate>
+        <input type="hidden" name="ajax"   value="1" />
+        <input type="hidden" name="action" id="action-field" value="login" />
 
-      <!-- Reemplaza el <form> y script por este bloque -->
-<div class="tabs">
-  <button id="tab-login" class="tab active" aria-pressed="true">Iniciar sesión</button>
-  <button id="tab-create" class="tab" aria-pressed="false">Crear contraseña (primera vez)</button>
-</div>
+        <!-- Correo -->
+        <div class="lf-field">
+          <label class="lf-label" for="correo">Correo corporativo</label>
+          <div class="lf-input-wrap">
+            <i class="ph ph-envelope lf-input-icon"></i>
+            <input class="lf-input" id="correo" name="correo"
+                   type="email" autocomplete="email"
+                   placeholder="tu@empresa.com" required />
+          </div>
+        </div>
 
-<div id="notice-container" role="status" aria-live="polite" style="margin-top:var(--space-3);"></div>
+        <!-- Login: password -->
+        <div id="login-fields">
+          <div class="lf-field">
+            <label class="lf-label" for="password">Contraseña</label>
+            <div class="lf-input-wrap">
+              <i class="ph ph-lock lf-input-icon"></i>
+              <input class="lf-input has-toggle" id="password" name="password"
+                     type="password" autocomplete="current-password"
+                     placeholder="Tu contraseña" />
+              <button type="button" class="lf-toggle" id="toggle-pass"
+                      aria-label="Mostrar contraseña">
+                <i class="ph ph-eye" id="toggle-pass-icon"></i>
+              </button>
+            </div>
+          </div>
+        </div>
 
-<form id="team-form" autocomplete="on" novalidate>
-  <input type="hidden" name="ajax" value="1" />
-  <input type="hidden" name="action" id="action-field" value="login" />
+        <!-- Create: new password + repeat -->
+        <div id="create-fields" style="display:none;">
+          <div class="lf-field">
+            <label class="lf-label" for="password_new">Crear contraseña</label>
+            <div class="lf-input-wrap">
+              <i class="ph ph-lock lf-input-icon"></i>
+              <input class="lf-input has-toggle" id="password_new" name="password_new"
+                     type="password" autocomplete="new-password"
+                     placeholder="Mínimo 8 caracteres"
+                     aria-describedby="helper-pass" />
+              <button type="button" class="lf-toggle" id="toggle-pass"
+                      aria-label="Mostrar contraseña">
+                <i class="ph ph-eye" id="toggle-pass-icon"></i>
+              </button>
+            </div>
+            <div class="pass-strength" id="pass-strength" aria-hidden="true">
+              <div class="ps-bar" id="ps1"></div>
+              <div class="ps-bar" id="ps2"></div>
+              <div class="ps-bar" id="ps3"></div>
+            </div>
+            <p class="lf-helper" id="helper-pass">Mínimo 8 caracteres. Combina letras, números y símbolos.</p>
+          </div>
 
-  <div>
-    <label for="correo">Correo</label>
-    <input class="input" id="correo" name="correo" type="email" required />
-  </div>
+          <div class="lf-field">
+            <label class="lf-label" for="password_new2">Repetir contraseña</label>
+            <div class="lf-input-wrap">
+              <i class="ph ph-lock-key lf-input-icon"></i>
+              <input class="lf-input has-toggle" id="password_new2" name="password_new2"
+                     type="password" autocomplete="new-password"
+                     placeholder="Repite la contraseña"
+                     aria-describedby="helper-pass2" />
+              <button type="button" class="lf-toggle" id="toggle-pass2"
+                      aria-label="Mostrar contraseña repetida">
+                <i class="ph ph-eye" id="toggle-pass2-icon"></i>
+              </button>
+            </div>
+            <p class="lf-helper" id="helper-pass2">Repite exactamente la contraseña anterior.</p>
+          </div>
+        </div>
 
-  <div id="login-fields">
-    <label for="password">Contraseña</label>
-    <input class="input" id="password" name="password" type="password" autocomplete="current-password" />
-  </div>
+        <!-- Submit -->
+        <button type="submit" id="btn-submit" class="lf-submit">
+          <span id="btn-text">Ingresar</span>
+          <span class="lf-spinner" id="spinner"></span>
+        </button>
+        <button type="button" id="btn-cancel" class="lf-btn-secondary">
+          Volver al inicio de sesión
+        </button>
+      </form>
 
-<div id="create-fields" style="display:none;">
-  <div class="field">
-    <label for="password_new">Crear contraseña</label>
-    <div style="position:relative; display:flex; gap:var(--space-2); align-items:center;">
-      <input class="input" id="password_new" name="password_new" type="password" autocomplete="new-password" aria-describedby="helper-pass" />
-      <button type="button" id="toggle-pass" aria-label="Mostrar contraseña" style="border:0; background:transparent; cursor:pointer; padding:var(--space-2) var(--space-2); font-size:var(--text-sm);">👁️</button>
+      <div class="form-footer">
+        ¿Problemas para acceder?
+        <a href="mailto:soporte@valirica.com">Contacta a soporte</a>
+      </div>
+
     </div>
-    <div id="helper-pass" class="helper">Mínimo 8 caracteres. Usa una combinación segura.</div>
-  </div>
-
-  <div class="field">
-    <label for="password_new2">Repetir contraseña</label>
-    <div style="position:relative; display:flex; gap:var(--space-2); align-items:center;">
-      <input class="input" id="password_new2" name="password_new2" type="password" autocomplete="new-password" aria-describedby="helper-pass2" />
-      <button type="button" id="toggle-pass2" aria-label="Mostrar contraseña repetida" style="border:0; background:transparent; cursor:pointer; padding:var(--space-2) var(--space-2); font-size:var(--text-sm);">👁️</button>
-    </div>
-    <div id="helper-pass2" class="helper">Repite exactamente la contraseña anterior.</div>
-  </div>
+  </main>
 </div>
-
-
-
-  <div style="display:flex; gap:var(--space-2); margin-top:var(--space-3); align-items:center;">
-    <button type="submit" id="btn-submit" class="btn">Continuar</button>
-    <button type="button" id="btn-cancel" class="btn-ghost" style="display:none;">Volver</button>
-    <div id="spinner" style="display:none; margin-left:var(--space-2);">⏳</div>
-  </div>
-</form>
 
 <script>
-(function(){
-  const tabLogin = document.getElementById('tab-login');
-  const tabCreate = document.getElementById('tab-create');
-  const loginFields = document.getElementById('login-fields');
-  const createFields = document.getElementById('create-fields');
-  const actionField = document.getElementById('action-field');
-  const form = document.getElementById('team-form');
-  const btnSubmit = document.getElementById('btn-submit');
-  const btnCancel = document.getElementById('btn-cancel');
-  const spinner = document.getElementById('spinner');
-  const notice = document.getElementById('notice-container');
+(function () {
+  'use strict';
 
-  function setTab(mode){
-    if(mode === 'login'){
-      tabLogin.classList.add('active'); tabLogin.setAttribute('aria-pressed','true');
-      tabCreate.classList.remove('active'); tabCreate.setAttribute('aria-pressed','false');
-      loginFields.style.display = ''; createFields.style.display = 'none';
-      actionField.value = 'login';
-      btnCancel.style.display = 'none';
-      btnSubmit.textContent = 'Ingresar';
-    } else {
-      tabCreate.classList.add('active'); tabCreate.setAttribute('aria-pressed','true');
-      tabLogin.classList.remove('active'); tabLogin.setAttribute('aria-pressed','false');
-      loginFields.style.display = 'none'; createFields.style.display = '';
-      actionField.value = 'create';
-      btnCancel.style.display = '';
-      btnSubmit.textContent = 'Crear contraseña';
-      // vaciar el input de login para evitar que exista un campo con el mismo name pero vacío
-document.getElementById('password').value = '';
+  /* ── DOM refs ── */
+  const tabLogin      = document.getElementById('tab-login');
+  const tabCreate     = document.getElementById('tab-create');
+  const loginFields   = document.getElementById('login-fields');
+  const createFields  = document.getElementById('create-fields');
+  const actionField   = document.getElementById('action-field');
+  const form          = document.getElementById('team-form');
+  const btnSubmit     = document.getElementById('btn-submit');
+  const btnText       = document.getElementById('btn-text');
+  const btnCancel     = document.getElementById('btn-cancel');
+  const spinner       = document.getElementById('spinner');
+  const noticeBox     = document.getElementById('notice-container');
 
-    }
+  /* ── Tab switcher ── */
+  function setTab(mode) {
+    const isLogin = mode === 'login';
+    tabLogin.classList.toggle('active', isLogin);
+    tabCreate.classList.toggle('active', !isLogin);
+    tabLogin.setAttribute('aria-pressed', isLogin);
+    tabCreate.setAttribute('aria-pressed', !isLogin);
+    loginFields.style.display  = isLogin ? '' : 'none';
+    createFields.style.display = isLogin ? 'none' : '';
+    actionField.value = isLogin ? 'login' : 'create';
+    btnText.textContent = isLogin ? 'Ingresar' : 'Crear contraseña';
+    btnCancel.style.display = isLogin ? 'none' : '';
+    if (isLogin) document.getElementById('password').value = '';
     clearNotice();
+    if (!isLogin) {
+      const p = document.getElementById('password_new');
+      if (p) setTimeout(() => p.focus(), 50);
+    }
   }
 
-  tabLogin.addEventListener('click', ()=> setTab('login'));
-  tabCreate.addEventListener('click', ()=> setTab('create'));
-  btnCancel.addEventListener('click', ()=> setTab('login'));
+  tabLogin.addEventListener('click',  () => setTab('login'));
+  tabCreate.addEventListener('click', () => setTab('create'));
+  btnCancel.addEventListener('click', () => setTab('login'));
 
-  function showNotice(msg, ok=true){
-    notice.innerHTML = '<div class="notice" role="alert">' + msg + '</div>';
-    if(ok) notice.querySelector('.notice').style.borderColor = 'rgba(0,128,0,0.12)';
+  /* ── Notice ── */
+  function showNotice(msg, type) {
+    const icon = type === 'success' ? 'ph-check-circle' : 'ph-warning-circle';
+    noticeBox.innerHTML = `
+      <div class="form-notice ${type}" role="alert">
+        <i class="ph ${icon}"></i>
+        <span>${msg}</span>
+      </div>`;
   }
-  function clearNotice(){ notice.innerHTML = ''; }
+  function clearNotice() { noticeBox.innerHTML = ''; }
 
-  form.addEventListener('submit', function(e){
+  /* ── Password strength ── */
+  const passInput = document.getElementById('password_new');
+  if (passInput) {
+    passInput.addEventListener('input', function () {
+      const v = this.value;
+      let score = 0;
+      if (v.length >= 8) score++;
+      if (/[A-Z]/.test(v) || /[0-9]/.test(v)) score++;
+      if (/[^A-Za-z0-9]/.test(v) && v.length >= 10) score++;
+      const bars  = ['ps1','ps2','ps3'];
+      const cls   = ['weak','medium','strong'];
+      bars.forEach((id, i) => {
+        const el = document.getElementById(id);
+        el.className = 'ps-bar' + (i < score ? ' ' + cls[score - 1] : '');
+      });
+    });
+  }
+
+  /* ── Toggle password visibility ── */
+  function bindToggle(btnId, inputId, iconId) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      const inp  = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (!inp) return;
+      const hidden = inp.type === 'password';
+      inp.type = hidden ? 'text' : 'password';
+      if (icon) icon.className = hidden ? 'ph ph-eye-slash' : 'ph ph-eye';
+      btn.setAttribute('aria-label', hidden ? 'Ocultar contraseña' : 'Mostrar contraseña');
+    });
+  }
+  bindToggle('toggle-pass',  'password',      'toggle-pass-icon');
+  bindToggle('toggle-pass',  'password_new',  'toggle-pass-icon');   // reused id in create tab
+  bindToggle('toggle-pass2', 'password_new2', 'toggle-pass2-icon');
+
+  /* ── Form submit (AJAX — no backend changes) ── */
+  form.addEventListener('submit', function (e) {
     e.preventDefault();
     clearNotice();
 
-    const formData = new FormData(form);
-    const action = formData.get('action');
+    const fd     = new FormData(form);
+    const action = fd.get('action');
+    const correo = (fd.get('correo') || '').trim();
 
-    // client-side validation
-    const correo = formData.get('correo') || '';
-    if(!correo || correo.indexOf('@') === -1){
-      showNotice('Introduce un correo válido');
-      return;
+    /* Client-side validation */
+    if (!correo || !correo.includes('@')) {
+      showNotice('Introduce un correo válido.', 'error'); return;
     }
-  if(action === 'create'){
-  // ahora usamos los nombres nuevos para no confundir con el campo de login
-  const p1 = formData.get('password_new') || '';
-  const p2 = formData.get('password_new2') || '';
-  if(p1.length < 8){ showNotice('La contraseña debe tener al menos 8 caracteres'); return; }
-  if(p1 !== p2){ showNotice('Las contraseñas no coinciden'); return; }
-  // sobreescribimos los valores que se enviarán con los nombres esperados por el servidor:
-  // (opcional) no hace falta, pero para claridad vamos a setear el campo 'password' para compatibilidad server-side
-  formData.set('password', p1);
-  formData.set('password2', p2);
-  // NOTA: fetch usa el FormData que acabamos de modificar
-}
- else {
-      if((formData.get('password') || '').length === 0){
-        showNotice('Introduce tu contraseña'); return;
+
+    if (action === 'create') {
+      const p1 = fd.get('password_new') || '';
+      const p2 = fd.get('password_new2') || '';
+      if (p1.length < 8) { showNotice('La contraseña debe tener al menos 8 caracteres.', 'error'); return; }
+      if (p1 !== p2)     { showNotice('Las contraseñas no coinciden.', 'error'); return; }
+      fd.set('password',  p1);
+      fd.set('password2', p2);
+    } else {
+      if (!(fd.get('password') || '').length) {
+        showNotice('Introduce tu contraseña.', 'error'); return;
       }
     }
 
-    // UI: bloquear y mostrar spinner
-    btnSubmit.disabled = true;
+    /* Lock UI */
+    btnSubmit.disabled   = true;
     spinner.style.display = 'inline-block';
+    btnText.textContent   = action === 'create' ? 'Creando...' : 'Verificando...';
 
-    // envío AJAX
     fetch('login_equipo.php', {
       method: 'POST',
-      body: formData,
-      headers: {'X-Requested-With':'XMLHttpRequest'}
-    }).then(r => r.json())
+      body: fd,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+      .then(r => r.json())
       .then(j => {
-        if(j.ok){
-          showNotice(j.msg || 'Operación exitosa. Redirigiendo...', true);
-          // pequeña pausa visual luego redirect
-          setTimeout(()=> {
+        if (j.ok) {
+          showNotice(j.msg || 'Acceso correcto. Redirigiendo...', 'success');
+          setTimeout(() => {
             window.location.href = j.redirect || 'dashboard_equipo.php';
-          }, 900);
+          }, 800);
         } else {
-          showNotice(j.msg || 'Ocurrió un error. Revisa tus datos.', false);
-          btnSubmit.disabled = false;
+          showNotice(j.msg || 'Ocurrió un error. Revisa tus datos.', 'error');
+          btnSubmit.disabled    = false;
           spinner.style.display = 'none';
+          btnText.textContent   = action === 'create' ? 'Crear contraseña' : 'Ingresar';
         }
       })
-      .catch(err => {
-        console.error(err);
-        showNotice('Error de conexión. Intenta de nuevo.', false);
-        btnSubmit.disabled = false;
+      .catch(() => {
+        showNotice('Error de conexión. Intenta de nuevo.', 'error');
+        btnSubmit.disabled    = false;
         spinner.style.display = 'none';
+        btnText.textContent   = action === 'create' ? 'Crear contraseña' : 'Ingresar';
       });
   });
 
-  // Optional: al cargar, si el correo está prellenado por PHP, podrías cambiar a create o login
-  // setTab('login');
 })();
-
-// show/hide password toggles (solo para la pestaña Crear)
-const togglePass = document.getElementById('toggle-pass');
-const togglePass2 = document.getElementById('toggle-pass2');
-
-function toggleInputVisibility(btn, inputId) {
-  if (!btn) return;
-  btn.addEventListener('click', function(){
-    const inp = document.getElementById(inputId);
-    if (!inp) return;
-    if (inp.type === 'password') {
-      inp.type = 'text';
-      btn.setAttribute('aria-label','Ocultar contraseña');
-    } else {
-      inp.type = 'password';
-      btn.setAttribute('aria-label','Mostrar contraseña');
-    }
-  });
-}
-toggleInputVisibility(togglePass, 'password_new');
-toggleInputVisibility(togglePass2, 'password_new2');
-
-// Al cambiar a create, enfocamos el primer campo y hacemos scroll suave si es necesario
-function focusCreateFirst() {
-  const p = document.getElementById('password_new');
-  if (p) { p.focus(); p.scrollIntoView({behavior:'smooth', block:'center'}); }
-}
-
-// integra esto dentro de setTab: cuando setTab('create') se llama, ejecuta focusCreateFirst()
-// en tu setTab actual ya puse el vaciado del password; ahora añadimos foco:
-const originalSetTab = setTab;
-setTab = function(mode){
-  originalSetTab(mode);
-  if (mode === 'create') focusCreateFirst();
-};
-
 </script>
 
-
-
-    </section>
-  </main>
-
-  <!-- Registrar Service Worker para PWA -->
-  <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js')
-        .then(function(registration) {
-          console.log('Service Worker registrado con éxito:', registration.scope);
-        })
-        .catch(function(error) {
-          console.log('Error al registrar Service Worker:', error);
-        });
-    });
-  }
-  </script>
+<!-- PWA Service Worker -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  });
+}
+</script>
 </body>
 </html>

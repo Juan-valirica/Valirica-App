@@ -1470,10 +1470,10 @@ function db_get_personas(mysqli $conn, int $user_id): array {
 }
 
 /* ============ Tab Navigation ============ */
-$active_tab = $_GET['tab'] ?? 'overview';
-$valid_tabs = ['overview', 'goals', 'time', 'projects', 'people', 'analytics'];
+$active_tab = $_GET['tab'] ?? 'goals';
+$valid_tabs = ['goals', 'time', 'projects', 'people', 'analytics'];
 if (!in_array($active_tab, $valid_tabs)) {
-    $active_tab = 'overview';
+    $active_tab = 'goals';
 }
 
 /* ============ Queries para Tab 1: Overview ============ */
@@ -1822,6 +1822,34 @@ try {
     // Silenciar error
 }
 
+/* ============ Query: Equipo con metas activas asignadas ============ */
+$team_with_goals = [];
+try {
+    $stmt_twg = $conn->prepare("
+        SELECT e.id, e.nombre_persona, e.cargo,
+               COUNT(mp.id) as metas_count
+        FROM equipo e
+        INNER JOIN metas_personales mp ON mp.persona_id = e.id AND mp.user_id = ?
+        WHERE e.usuario_id = ?
+          AND mp.is_completed = 0
+        GROUP BY e.id, e.nombre_persona, e.cargo
+        HAVING metas_count > 0
+        ORDER BY metas_count DESC
+        LIMIT 20
+    ");
+    if ($stmt_twg) {
+        $stmt_twg->bind_param("ii", $user_id, $user_id);
+        $stmt_twg->execute();
+        $res_twg = stmt_get_result($stmt_twg);
+        while ($row = $res_twg->fetch_assoc()) {
+            $team_with_goals[] = $row;
+        }
+        $stmt_twg->close();
+    }
+} catch (Exception $e) {
+    // Silenciar error
+}
+
 /* ============ Queries para Tab 3: Time & Attendance ============ */
 
 // Variables inicializadas
@@ -1969,14 +1997,17 @@ try {
         $stmt_total->close();
     }
 
-    // 3) Permisos pendientes de aprobación
+    // 3) Permisos pendientes de aprobación (con tipo y color para el panel inline)
     $stmt_permisos_pend = $conn->prepare("
         SELECT
             p.*,
             e.nombre_persona,
-            e.cargo
+            e.cargo,
+            tp.nombre as tipo_nombre,
+            tp.color_hex
         FROM permisos p
-        LEFT JOIN equipo e ON e.id = p.persona_id
+        INNER JOIN equipo e ON p.persona_id = e.id
+        LEFT JOIN tipos_permisos tp ON p.tipo_permiso_id = tp.id
         WHERE p.usuario_id = ?
         AND p.estado = 'pendiente'
         ORDER BY p.created_at DESC
@@ -1987,11 +2018,70 @@ try {
         $stmt_permisos_pend->bind_param("i", $user_id);
         $stmt_permisos_pend->execute();
         $res = stmt_get_result($stmt_permisos_pend);
-
         while ($row = $res->fetch_assoc()) {
             $permisos_pendientes[] = $row;
         }
         $stmt_permisos_pend->close();
+    }
+
+    // 3b) Vacaciones pendientes de aprobación
+    $vacaciones_pendientes = [];
+    $stmt_vac_pend = $conn->prepare("
+        SELECT v.*, e.nombre_persona, e.cargo
+        FROM vacaciones v
+        INNER JOIN equipo e ON v.persona_id = e.id
+        WHERE v.usuario_id = ? AND v.estado = 'pendiente'
+        ORDER BY v.created_at DESC
+        LIMIT 10
+    ");
+    if ($stmt_vac_pend) {
+        $stmt_vac_pend->bind_param("i", $user_id);
+        $stmt_vac_pend->execute();
+        $res = stmt_get_result($stmt_vac_pend);
+        while ($row = $res->fetch_assoc()) {
+            $vacaciones_pendientes[] = $row;
+        }
+        $stmt_vac_pend->close();
+    }
+    $total_pendientes = count($permisos_pendientes) + count($vacaciones_pendientes);
+
+    // 3c) Total horas acumuladas por empleado — capeadas al fin de jornada
+    // LEAST(hora_salida, hora_fin_turno) evita acumular horas por olvido de marcar salida
+    // Si no hay hora_salida, se usa hora_fin del turno (máximo del día)
+    $horas_totales = [];
+    $stmt_horas = $conn->prepare("
+        SELECT
+            a.persona_id,
+            ROUND(SUM(
+                TIMESTAMPDIFF(MINUTE,
+                    a.hora_entrada,
+                    LEAST(
+                        COALESCE(a.hora_salida, t.hora_fin),
+                        t.hora_fin
+                    )
+                )
+            ) / 60.0, 1) as total_horas
+        FROM asistencias a
+        INNER JOIN equipo e ON a.persona_id = e.id AND e.usuario_id = ?
+        INNER JOIN equipo_jornadas ej
+            ON a.persona_id = ej.persona_id
+            AND ej.fecha_inicio <= a.fecha
+            AND (ej.fecha_fin IS NULL OR ej.fecha_fin >= a.fecha)
+        INNER JOIN turnos t
+            ON ej.jornada_id = t.jornada_id
+            AND t.dia_semana = IF(DAYOFWEEK(a.fecha) = 1, 7, DAYOFWEEK(a.fecha) - 1)
+        WHERE a.hora_entrada IS NOT NULL
+          AND a.estado != 'ausente'
+        GROUP BY a.persona_id
+    ");
+    if ($stmt_horas) {
+        $stmt_horas->bind_param("i", $user_id);
+        $stmt_horas->execute();
+        $res_h = stmt_get_result($stmt_horas);
+        while ($row_h = $res_h->fetch_assoc()) {
+            $horas_totales[(int)$row_h['persona_id']] = $row_h['total_horas'];
+        }
+        $stmt_horas->close();
     }
 
     // 4) Permisos para HOY
@@ -2797,6 +2887,11 @@ if (empty($cultura_tipo_final)) {
   <!-- Valírica Design System -->
   <link rel="stylesheet" href="valirica-design-system.css">
 
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+
   <style>
     /* === Desempeño Dashboard Page Specific Styles === */
 
@@ -2872,12 +2967,17 @@ if (empty($cultura_tipo_final)) {
     }
 
     .tab-icon {
-      font-size: 16px;
-      filter: grayscale(0.3);
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      color: currentColor;
+      opacity: 0.65;
+      transition: opacity var(--transition);
     }
 
+    .tab-link:hover .tab-icon,
     .tab-link.is-active .tab-icon {
-      filter: grayscale(0);
+      opacity: 1;
     }
 
     /* ===== Tab Content ===== */
@@ -4075,12 +4175,10 @@ details[open] > summary .caret{ transform:rotate(45deg); }
 <!-- Tab Navigation -->
 <nav class="tab-nav" role="navigation" aria-label="Performance sections">
   <div class="tab-nav-container">
-    <a href="?tab=overview" class="tab-link <?= $active_tab === 'overview' ? 'is-active' : '' ?>">
-      <span class="tab-icon">🏠</span>
-      <span>Overview</span>
-    </a>
     <a href="?tab=goals" class="tab-link <?= $active_tab === 'goals' ? 'is-active' : '' ?>" style="position: relative;">
-      <span class="tab-icon">🎯</span>
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+      </svg>
       <span>Metas</span>
       <?php if ($unread_notifications_count > 0): ?>
         <span style="
@@ -4106,7 +4204,9 @@ details[open] > summary .caret{ transform:rotate(45deg); }
       <?php endif; ?>
     </a>
     <a href="?tab=time" class="tab-link <?= $active_tab === 'time' ? 'is-active' : '' ?>" style="position: relative;">
-      <span class="tab-icon">⏱️</span>
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
       <span>Tiempo & Asistencia</span>
       <?php if ($solicitudes_pendientes_count > 0): ?>
         <span id="solicitudesPendientesBadge" style="
@@ -4132,11 +4232,15 @@ details[open] > summary .caret{ transform:rotate(45deg); }
       <?php endif; ?>
     </a>
     <a href="?tab=projects" class="tab-link <?= $active_tab === 'projects' ? 'is-active' : '' ?>">
-      <span class="tab-icon">📋</span>
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
       <span>Proyectos</span>
     </a>
     <a href="?tab=people" class="tab-link <?= $active_tab === 'people' ? 'is-active' : '' ?>">
-      <span class="tab-icon">👥</span>
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
       <span>Equipo</span>
     </a>
   </div>
@@ -4856,8 +4960,11 @@ document.addEventListener('keydown', function(e) {
       padding-bottom: var(--space-4);
       border-bottom: 2px solid #F3F4F6;
     ">
-      <h2 style="font-size: 20px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-1);">
-        📊 Análisis de Metas
+      <h2 style="font-size: 20px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-1); display:flex; align-items:center; gap:8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Análisis de Metas
       </h2>
       <p style="font-size: 14px; color: var(--c-body); opacity: 0.7; margin: 0;">
         Distribución y estado de todas las metas del equipo
@@ -4892,8 +4999,9 @@ document.addEventListener('keydown', function(e) {
           <!-- Empresa Goals -->
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span style="font-size: 13px; font-weight: 600; color: var(--c-secondary);">
-                🏢 Empresa
+              <span style="font-size: 13px; font-weight: 600; color: var(--c-secondary); display:inline-flex; align-items:center; gap:5px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 22V12h6v10"/><path d="M3 9h18"/></svg>
+                Empresa
               </span>
               <span style="font-size: 15px; font-weight: 700; color: var(--c-accent);">
                 <?= $goals_by_type['empresa'] ?>
@@ -4918,8 +5026,9 @@ document.addEventListener('keydown', function(e) {
           <!-- Area Goals -->
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span style="font-size: 13px; font-weight: 600; color: var(--c-secondary);">
-                👥 Área
+              <span style="font-size: 13px; font-weight: 600; color: var(--c-secondary); display:inline-flex; align-items:center; gap:5px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Área
               </span>
               <span style="font-size: 15px; font-weight: 700; color: #8B5CF6;">
                 <?= $goals_by_type['area'] ?>
@@ -4944,8 +5053,9 @@ document.addEventListener('keydown', function(e) {
           <!-- Personal Goals -->
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span style="font-size: 13px; font-weight: 600; color: var(--c-secondary);">
-                👤 Personal
+              <span style="font-size: 13px; font-weight: 600; color: var(--c-secondary); display:inline-flex; align-items:center; gap:5px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Personal
               </span>
               <span style="font-size: 15px; font-weight: 700; color: #00A3FF;">
                 <?= $goals_by_type['personal'] ?>
@@ -5002,11 +5112,11 @@ document.addEventListener('keydown', function(e) {
 
           <?php
           $status_config = [
-            'completed' => ['icon' => '✅', 'label' => 'Completadas', 'color' => '#00D98F'],
-            'on_track' => ['icon' => '✅', 'label' => 'Encaminadas', 'color' => '#00D98F'],
-            'at_risk' => ['icon' => '⚠️', 'label' => 'En Riesgo', 'color' => '#FFB020'],
-            'critical' => ['icon' => '🔥', 'label' => 'Críticas', 'color' => '#FF3B6D'],
-            'overdue' => ['icon' => '🚨', 'label' => 'Vencidas', 'color' => '#FF3B6D']
+            'completed' => ['color' => '#00D98F', 'label' => 'Completadas'],
+            'on_track'  => ['color' => '#00A3FF', 'label' => 'Encaminadas'],
+            'at_risk'   => ['color' => '#FFB020', 'label' => 'En Riesgo'],
+            'critical'  => ['color' => '#FF3B6D', 'label' => 'Críticas'],
+            'overdue'   => ['color' => '#991b1b', 'label' => 'Vencidas'],
           ];
 
           foreach ($status_config as $key => $config):
@@ -5021,7 +5131,7 @@ document.addEventListener('keydown', function(e) {
               border-radius: 10px;
               border-left: 4px solid <?= $config['color'] ?>;
             ">
-              <span style="font-size: 20px;"><?= $config['icon'] ?></span>
+              <span style="width:10px;height:10px;border-radius:50%;background:<?= $config['color'] ?>;display:inline-block;flex-shrink:0;"></span>
               <div style="flex: 1;">
                 <div style="font-size: 13px; font-weight: 600; color: var(--c-secondary);">
                   <?= $config['label'] ?>
@@ -5048,8 +5158,11 @@ document.addEventListener('keydown', function(e) {
   <!-- Team Pulse -->
   <section style="margin-bottom: var(--space-8);">
     <div style="margin-bottom: var(--space-5); padding-bottom: var(--space-4); border-bottom: 2px solid #F3F4F6;">
-      <h2 style="font-size: 20px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-2);">
-        💪 Pulso del Equipo
+      <h2 style="font-size: 20px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-2); display:flex; align-items:center; gap:8px;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Pulso del Equipo
       </h2>
       <p style="font-size: 14px; color: var(--c-body); opacity: 0.7; margin: 0;">
         Top performers y personas que necesitan apoyo
@@ -5224,187 +5337,149 @@ document.addEventListener('keydown', function(e) {
   <div style="margin-bottom: var(--space-6);">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5); flex-wrap: wrap; gap: var(--space-3);">
       <div>
-        <h1 style="font-size: 28px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-1);">
-          🎯 Metas & OKRs
-        </h1>
-        <p style="color: var(--c-body); opacity: 0.7; margin: 0; font-size: 14px;">
-          Q1 2026 • <?= $metas_total_count ?> metas activas • Última actualización: ahora
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;">
+          <div style="width:38px;height:38px;background:linear-gradient(135deg,#EF7F1B,#f5962c);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(239,127,27,.28);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+            </svg>
+          </div>
+          <h1 style="font-size: 26px; font-weight: 800; color: var(--c-secondary); margin: 0; letter-spacing: -0.3px;">
+            Metas & OKRs
+          </h1>
+        </div>
+        <p style="color: var(--c-body); opacity: 0.55; margin: 0; font-size: 13px; padding-left: 48px;">
+          Q1 2026 · <?= $metas_total_count ?> metas activas
         </p>
       </div>
       <button
         onclick="openCrearMetaModal()"
         style="
-          padding: 12px 24px;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #FF6B35 100%);
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 11px 22px;
+          background: linear-gradient(135deg, #EF7F1B 0%, #f5962c 100%);
           border: none;
-          border-radius: 8px;
+          border-radius: 12px;
           color: white;
-          font-weight: 600;
+          font-weight: 700;
           font-size: 14px;
+          font-family: inherit;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(255, 136, 0, 0.2);
-          transition: all 0.3s ease;
+          box-shadow: 0 4px 16px rgba(239,127,27,.30);
+          transition: filter .12s ease, box-shadow .12s ease, transform .07s ease;
+          letter-spacing: .1px;
         "
-        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 136, 0, 0.3)'"
-        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255, 136, 0, 0.2)'"
+        onmouseover="this.style.filter='brightness(1.05)';this.style.boxShadow='0 6px 22px rgba(239,127,27,.38)'"
+        onmouseout="this.style.filter='none';this.style.boxShadow='0 4px 16px rgba(239,127,27,.30)'"
+        onmousedown="this.style.transform='translateY(1px)'"
+        onmouseup="this.style.transform='translateY(0)'"
       >
-        ✨ Crear Meta
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Nueva Meta
       </button>
 
     </div>
 
-    <!-- KPIs Hero Grid -->
+    <!-- KPIs: solo Avance Global + Críticas -->
     <div style="
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
       gap: var(--space-4);
       margin-bottom: var(--space-6);
     ">
-      <!-- 1. KPI: Avance Global -->
+      <!-- Avance Global -->
       <div style="
-        background: linear-gradient(135deg, #00A3FF 0%, #00A3FF 100%);
-        border-radius: 16px;
+        background: linear-gradient(150deg, #012133 0%, #184656 100%);
+        border-radius: 18px;
         padding: var(--space-5);
         color: white;
         position: relative;
         overflow: hidden;
       ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          📊 Avance Global
+        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-3);">
+          <div style="width:30px;height:30px;background:rgba(239,127,27,.2);border:1px solid rgba(239,127,27,.35);border-radius:9px;display:flex;align-items:center;justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF7F1B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+            </svg>
+          </div>
+          <span style="font-size:11px;font-weight:700;opacity:.6;letter-spacing:.8px;text-transform:uppercase;">Avance Global</span>
         </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $global_completion ?>%
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Progreso general de tus metas
-        </div>
+        <div style="font-size:44px;font-weight:800;line-height:1;margin-bottom:6px;letter-spacing:-2px;"><?= $global_completion ?>%</div>
+        <div style="font-size:12px;opacity:.5;">Progreso general de todas las metas</div>
       </div>
 
-      <!-- 2. KPI: Encaminadas -->
+      <!-- Críticas -->
       <div style="
-        background: linear-gradient(135deg, #00D98F 0%, #00D98F 100%);
-        border-radius: 16px;
+        background: linear-gradient(150deg, #450a0a 0%, #7f1d1d 100%);
+        border-radius: 18px;
         padding: var(--space-5);
         color: white;
         position: relative;
         overflow: hidden;
       ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          ✅ Encaminadas
+        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-3);">
+          <div style="width:30px;height:30px;background:rgba(255,59,109,.2);border:1px solid rgba(255,59,109,.35);border-radius:9px;display:flex;align-items:center;justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF3B6D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <span style="font-size:11px;font-weight:700;opacity:.6;letter-spacing:.8px;text-transform:uppercase;">Críticas</span>
         </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $metas_on_track_count ?>
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Más del 70% o sin urgencia
-        </div>
-      </div>
-
-      <!-- 3. KPI: En Riesgo -->
-      <div style="
-        background: linear-gradient(135deg, #FFB020 0%, #EF7F1B 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          ⚠️ En Riesgo
-        </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $metas_at_risk_count ?>
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Menos del 70% • Vencen en 7 días
-        </div>
-      </div>
-
-      <!-- 4. KPI: Críticas -->
-      <div style="
-        background: linear-gradient(135deg, #FF3B6D 0%, #991B1B 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          🔥 Críticas
-        </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $metas_critical_count ?>
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Menos del 50% • Vencen en 3 días
-        </div>
-      </div>
-
-      <!-- 5. KPI: Vencidas -->
-      <div style="
-        background: linear-gradient(135deg, #FF3B6D 0%, #FF3B6D 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          🚨 Vencidas
-        </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $metas_overdue_count ?>
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Pasaron su fecha límite
-        </div>
+        <div style="font-size:44px;font-weight:800;line-height:1;margin-bottom:6px;letter-spacing:-2px;"><?= $metas_critical_count ?></div>
+        <div style="font-size:12px;opacity:.5;">Menos del 50% · vencen en 3 días</div>
       </div>
     </div>
+
+    <!-- Equipo con metas activas -->
+    <?php if (!empty($team_with_goals)): ?>
+    <div style="margin-bottom: var(--space-7);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-4);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-secondary,#184656)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span style="font-size:13px;font-weight:700;color:var(--c-secondary);">Miembros con metas activas</span>
+        <span style="font-size:11px;font-weight:700;color:#7a7977;background:#f0eeeb;border-radius:9999px;padding:2px 9px;"><?= count($team_with_goals) ?></span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:9px;">
+        <?php
+        $avatar_palette = ['#012133','#184656','#0e3547','#1a4a5c','#0d2e3d'];
+        foreach ($team_with_goals as $member):
+          $parts = explode(' ', trim($member['nombre_persona']));
+          $initials = strtoupper(substr($parts[0] ?? '', 0, 1) . substr($parts[1] ?? '', 0, 1));
+          if (strlen($initials) < 2) $initials = strtoupper(substr($member['nombre_persona'], 0, 2));
+          $bg = $avatar_palette[$member['id'] % count($avatar_palette)];
+          $first_name = $parts[0] ?? $member['nombre_persona'];
+        ?>
+          <div style="
+            display:flex;align-items:center;gap:9px;
+            padding: 7px 13px 7px 7px;
+            background: #fff;
+            border: 1.5px solid #e8e6e3;
+            border-radius: 12px;
+            transition: border-color .15s, box-shadow .15s;
+            cursor: default;
+          "
+          onmouseover="this.style.borderColor='#EF7F1B';this.style.boxShadow='0 2px 12px rgba(239,127,27,.12)'"
+          onmouseout="this.style.borderColor='#e8e6e3';this.style.boxShadow='none'">
+            <div style="width:32px;height:32px;border-radius:9px;background:<?= $bg ?>;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <span style="font-size:11.5px;font-weight:800;color:rgba(255,255,255,.9);letter-spacing:.5px;"><?= htmlspecialchars($initials) ?></span>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--c-secondary);line-height:1.2;"><?= htmlspecialchars($first_name) ?></div>
+              <div style="font-size:11px;color:#7a7977;"><?= (int)$member['metas_count'] ?> <?= $member['metas_count'] == 1 ? 'meta' : 'metas' ?></div>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <?php endif; ?>
 
   <!-- ===============================================
        🚀 VISUALIZACIÓN JERÁRQUICA V2.0 - TOP INDUSTRY LEVEL
@@ -5533,23 +5608,19 @@ document.addEventListener('keydown', function(e) {
           $statusColor = '#00A3FF';
           $statusBg = '#EFF6FF';
           $statusText = 'En curso';
-          $statusIcon = '⟳';
 
           if ($pctCorp >= 100) {
             $statusColor = '#00D98F';
             $statusBg = '#D1FAE5';
             $statusText = 'Completada';
-            $statusIcon = '✓';
           } elseif ($daysToDue !== null && $daysToDue < 0) {
             $statusColor = '#FF3B6D';
             $statusBg = '#FEE2E2';
             $statusText = 'Vencida';
-            $statusIcon = '!';
           } elseif ($daysToDue !== null && $daysToDue <= 7) {
             $statusColor = '#FFB020';
             $statusBg = '#FEF3C7';
             $statusText = 'Próxima';
-            $statusIcon = '⚠';
           }
 
           // Compact circle
@@ -5586,15 +5657,20 @@ document.addEventListener('keydown', function(e) {
                 <div style="
                   width: 48px;
                   height: 48px;
-                  background: linear-gradient(135deg, #EF7F1B, #FFB020);
+                  background: linear-gradient(135deg, #EF7F1B, #f5962c);
                   border-radius: 12px;
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                  font-size: 24px;
                   flex-shrink: 0;
                   box-shadow: 0 4px 12px rgba(239, 127, 27, 0.3);
-                ">🏢</div>
+                ">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="3"/>
+                    <path d="M9 22V12h6v10"/>
+                    <path d="M3 9h18"/>
+                  </svg>
+                </div>
 
                 <!-- Title & Meta -->
                 <div style="flex: 1; min-width: 0;">
@@ -5616,27 +5692,35 @@ document.addEventListener('keydown', function(e) {
                     <span style="
                       display: inline-flex;
                       align-items: center;
-                      gap: 4px;
+                      gap: 5px;
                       padding: 4px 10px;
                       background: <?= $statusBg ?>;
                       border-radius: 6px;
                       font-size: 11px;
                       font-weight: 600;
                       color: <?= $statusColor ?>;
-                    "><?= $statusIcon ?> <?= $statusText ?></span>
+                    ">
+                      <span style="width:6px;height:6px;border-radius:50%;background:<?= $statusColor ?>;display:inline-block;flex-shrink:0;"></span>
+                      <?= htmlspecialchars($statusText) ?>
+                    </span>
 
                     <!-- Date -->
                     <span style="
                       display: inline-flex;
                       align-items: center;
-                      gap: 4px;
+                      gap: 5px;
                       padding: 4px 10px;
                       background: #F9FAFB;
                       border-radius: 6px;
                       font-size: 11px;
                       font-weight: 500;
                       color: #6B7280;
-                    ">📅 <?= fmt_date($meta['due_date']) ?></span>
+                    ">
+                      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="12" height="12" rx="2"/><path d="M2 7h12M6 1v4M10 1v4"/>
+                      </svg>
+                      <?= htmlspecialchars(fmt_date($meta['due_date'])) ?>
+                    </span>
                   </div>
                 </div>
 
@@ -6462,157 +6546,207 @@ document.addEventListener('keydown', function(e) {
 
   <!-- Hero: Asistencia de Hoy -->
   <section style="margin-bottom: var(--space-8);">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5); flex-wrap: wrap; gap: var(--space-3);">
       <div>
-        <h1 style="font-size: 28px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-1);">
-          ⏱️ Asistencia de Hoy
-        </h1>
-        <p style="color: var(--c-body); opacity: 0.7; margin: 0; font-size: 14px;">
-          <?= date('l, d F Y') ?> • Última actualización: hace 2 minutos
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;">
+          <div style="width:38px;height:38px;background:linear-gradient(135deg,#012133,#184656);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(1,33,51,.28);">
+            <i class="ph ph-clock-user" style="font-size:18px;color:rgba(255,255,255,0.88);"></i>
+          </div>
+          <h1 style="font-size: 26px; font-weight: 800; color: var(--c-secondary); margin: 0; letter-spacing: -0.3px;">
+            Asistencia de Hoy
+          </h1>
+        </div>
+        <p style="color: var(--c-body); opacity: 0.55; margin: 0; font-size: 13px; padding-left: 48px;">
+          <?= date('d F Y') ?> · <?= $total_personas ?> personas en turno
         </p>
       </div>
       <button
         style="
-          padding: 12px 24px;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #FF6B35 100%);
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 11px 22px;
+          background: linear-gradient(135deg, #EF7F1B 0%, #f5962c 100%);
           border: none;
-          border-radius: 8px;
+          border-radius: 12px;
           color: white;
-          font-weight: 600;
+          font-weight: 700;
           font-size: 14px;
+          font-family: inherit;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(255, 136, 0, 0.2);
-          transition: all 0.3s ease;
+          box-shadow: 0 4px 16px rgba(239,127,27,.30);
+          transition: filter .12s ease, box-shadow .12s ease, transform .07s ease;
+          letter-spacing: .1px;
         "
-        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 136, 0, 0.3)'"
-        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255, 136, 0, 0.2)'"
+        onmouseover="this.style.filter='brightness(1.05)';this.style.boxShadow='0 6px 22px rgba(239,127,27,.38)'"
+        onmouseout="this.style.filter='none';this.style.boxShadow='0 4px 16px rgba(239,127,27,.30)'"
+        onmousedown="this.style.transform='translateY(1px)'"
+        onmouseup="this.style.transform='translateY(0)'"
       >
-        🔄 Actualizar
+        <i class="ph ph-arrows-clockwise" style="font-size: 15px;"></i>
+        Actualizar
       </button>
     </div>
 
-    <!-- KPIs Hero Grid -->
+    <!-- Hero: 2 KPI cards (izquierda) + Panel Solicitudes Pendientes (derecha) -->
     <div style="
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: 276px 1fr;
       gap: var(--space-4);
       margin-bottom: var(--space-6);
+      align-items: stretch;
     ">
-      <!-- KPI: Presentes -->
+
+      <!-- Columna izquierda: KPI cards apiladas -->
+      <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+
+        <!-- KPI 1: Presentes hoy -->
+        <div style="background:linear-gradient(150deg,#012133 0%,#184656 100%);border-radius:18px;padding:var(--space-5);color:white;position:relative;overflow:hidden;flex:1;">
+          <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-3);">
+            <div style="width:30px;height:30px;background:rgba(0,217,143,.2);border:1px solid rgba(0,217,143,.35);border-radius:9px;display:flex;align-items:center;justify-content:center;">
+              <i class="ph ph-users-three" style="font-size:14px;color:#00D98F;"></i>
+            </div>
+            <span style="font-size:11px;font-weight:700;opacity:.6;letter-spacing:.8px;text-transform:uppercase;">Presentes hoy</span>
+          </div>
+          <div style="font-size:44px;font-weight:800;line-height:1;margin-bottom:6px;letter-spacing:-2px;"><?= $porcentaje_presentes ?>%</div>
+          <div style="font-size:12px;opacity:.5;"><?= $presentes_hoy ?> de <?= $total_personas ?> en turno</div>
+        </div>
+
+        <!-- KPI 2: Ausentes -->
+        <div style="background:linear-gradient(150deg,#450a0a 0%,#7f1d1d 100%);border-radius:18px;padding:var(--space-5);color:white;position:relative;overflow:hidden;flex:1;">
+          <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-3);">
+            <div style="width:30px;height:30px;background:rgba(255,59,109,.2);border:1px solid rgba(255,59,109,.35);border-radius:9px;display:flex;align-items:center;justify-content:center;">
+              <i class="ph ph-user-minus" style="font-size:14px;color:#FF3B6D;"></i>
+            </div>
+            <span style="font-size:11px;font-weight:700;opacity:.6;letter-spacing:.8px;text-transform:uppercase;">Ausentes</span>
+          </div>
+          <div style="font-size:44px;font-weight:800;line-height:1;margin-bottom:6px;letter-spacing:-2px;"><?= $ausentes_hoy ?></div>
+          <div style="font-size:12px;opacity:.5;"><?= $tarde_hoy > 0 ? "+ {$tarde_hoy} con tardanza" : "Sin tardanzas registradas" ?></div>
+        </div>
+
+      </div>
+
+      <!-- Columna derecha: Panel de Solicitudes Pendientes -->
       <div style="
-        background: linear-gradient(135deg, #00D98F 0%, #00D98F 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
+        background: white;
+        border-radius: 18px;
+        border: 1px solid #EBEBEB;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        display: flex;
+        flex-direction: column;
         overflow: hidden;
       ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          Presentes
+
+        <!-- Header del panel -->
+        <div style="padding: 16px 20px 14px; border-bottom: 1px solid #F5F5F5; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width:32px;height:32px;background:rgba(239,127,27,.12);border:1px solid rgba(239,127,27,.22);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="ph ph-clipboard-text" style="font-size:15px;color:#EF7F1B;"></i>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--c-secondary);line-height:1.2;">Solicitudes Pendientes</div>
+              <div style="font-size:11px;color:var(--c-body);opacity:0.5;margin-top:2px;">Permisos y vacaciones · requieren aprobación</div>
+            </div>
+          </div>
+          <?php $pv_total = count($permisos_pendientes) + count($vacaciones_pendientes); ?>
+          <?php if ($pv_total > 0): ?>
+            <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 11px;background:#FEF3C7;color:#D97706;border-radius:20px;white-space:nowrap;flex-shrink:0;">
+              <span style="width:6px;height:6px;border-radius:50%;background:#D97706;"></span>
+              <?= $pv_total ?> pendiente<?= $pv_total > 1 ? 's' : '' ?>
+            </span>
+          <?php endif; ?>
         </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $porcentaje_presentes ?>%
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          <?= $presentes_hoy ?> de <?= $total_personas ?> personas
+
+        <!-- Contenido scrollable -->
+        <div style="overflow-y: auto; flex: 1; padding: 14px 16px; max-height: 320px;">
+          <?php $pv_palette = ['#012133','#184656','#0e3547','#1a4a5c','#0d2e3d']; ?>
+
+          <!-- Permisos pendientes -->
+          <?php if (!empty($permisos_pendientes)): ?>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--c-body);opacity:.5;margin-bottom:10px;display:flex;align-items:center;gap:5px;">
+              <i class="ph ph-file-text" style="font-size:11px;"></i>
+              Permisos · <?= count($permisos_pendientes) ?>
+            </div>
+            <?php foreach ($permisos_pendientes as $pp):
+              $pp_p = explode(' ', trim($pp['nombre_persona'] ?? ''));
+              $pp_i = strtoupper(substr($pp_p[0]??'',0,1).substr($pp_p[1]??'',0,1));
+              if (strlen($pp_i)<2) $pp_i = strtoupper(substr($pp['nombre_persona']??'NA',0,2));
+              $pp_bg = $pv_palette[($pp['id']??0) % count($pv_palette)];
+              $pp_c  = $pp['color_hex'] ?? '#3B82F6';
+            ?>
+              <div style="border:1px solid #F0F0F0;border-left:3px solid <?= h($pp_c) ?>;border-radius:12px;padding:12px 13px;margin-bottom:8px;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 3px 12px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+                <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">
+                  <div style="width:34px;height:34px;border-radius:10px;background:<?= $pp_bg ?>;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <span style="font-size:11px;font-weight:800;color:rgba(255,255,255,.92);letter-spacing:.3px;"><?= h($pp_i) ?></span>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:700;color:var(--c-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= h($pp['nombre_persona']) ?></div>
+                    <div style="font-size:11px;color:var(--c-body);opacity:.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= h($pp['cargo']) ?></div>
+                  </div>
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;background:<?= h($pp_c) ?>18;color:<?= h($pp_c) ?>;border-radius:6px;border:1px solid <?= h($pp_c) ?>30;white-space:nowrap;flex-shrink:0;"><?= h($pp['tipo_nombre'] ?? 'Permiso') ?></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--c-body);opacity:.55;margin-bottom:9px;">
+                  <i class="ph ph-calendar-blank" style="font-size:11px;flex-shrink:0;"></i>
+                  <?= date('d M', strtotime($pp['fecha_inicio'])) ?> → <?= date('d M Y', strtotime($pp['fecha_fin'])) ?>
+                  <?php if (!empty($pp['dias_solicitados'])): ?> · <?= $pp['dias_solicitados'] ?> día<?= $pp['dias_solicitados'] > 1 ? 's' : '' ?><?php endif; ?>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button onclick="decidirPermiso(<?= $pp['id'] ?>, 'aprobar')" style="flex:1;padding:6px 10px;background:#ECFDF5;color:#059669;border:1px solid #D1FAE5;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.12s;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#ECFDF5'"><i class="ph ph-check" style="font-size:11px;"></i> Aprobar</button>
+                  <button onclick="decidirPermisoConMotivo(<?= $pp['id'] ?>)" style="flex:1;padding:6px 10px;background:#FFF1F2;color:#E11D48;border:1px solid #FFE4E6;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.12s;" onmouseover="this.style.background='#FFE4E6'" onmouseout="this.style.background='#FFF1F2'"><i class="ph ph-x" style="font-size:11px;"></i> Rechazar</button>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
+
+          <!-- Vacaciones pendientes -->
+          <?php if (!empty($vacaciones_pendientes)): ?>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--c-body);opacity:.5;margin:<?= !empty($permisos_pendientes)?'14px':'0' ?> 0 10px;display:flex;align-items:center;gap:5px;">
+              <i class="ph ph-sun-horizon" style="font-size:11px;"></i>
+              Vacaciones · <?= count($vacaciones_pendientes) ?>
+            </div>
+            <?php foreach ($vacaciones_pendientes as $vp):
+              $vp_p = explode(' ', trim($vp['nombre_persona'] ?? ''));
+              $vp_i = strtoupper(substr($vp_p[0]??'',0,1).substr($vp_p[1]??'',0,1));
+              if (strlen($vp_i)<2) $vp_i = strtoupper(substr($vp['nombre_persona']??'NA',0,2));
+              $vp_bg = $pv_palette[($vp['id']??0) % count($pv_palette)];
+            ?>
+              <div style="border:1px solid #F0F0F0;border-left:3px solid #10B981;border-radius:12px;padding:12px 13px;margin-bottom:8px;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 3px 12px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+                <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">
+                  <div style="width:34px;height:34px;border-radius:10px;background:<?= $vp_bg ?>;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <span style="font-size:11px;font-weight:800;color:rgba(255,255,255,.92);letter-spacing:.3px;"><?= h($vp_i) ?></span>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:700;color:var(--c-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= h($vp['nombre_persona']) ?></div>
+                    <div style="font-size:11px;color:var(--c-body);opacity:.5;"><?= h($vp['cargo']) ?></div>
+                  </div>
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;background:#D1FAE518;color:#059669;border-radius:6px;border:1px solid #D1FAE530;white-space:nowrap;flex-shrink:0;"><?= $vp['dias_solicitados'] ?? '?' ?> días</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--c-body);opacity:.55;margin-bottom:9px;">
+                  <i class="ph ph-calendar-blank" style="font-size:11px;flex-shrink:0;"></i>
+                  <?= !empty($vp['fecha_inicio_programada']) ? date('d M', strtotime($vp['fecha_inicio_programada'])) : '—' ?><?php if (!empty($vp['fecha_fin_programada'])): ?> → <?= date('d M Y', strtotime($vp['fecha_fin_programada'])) ?><?php endif; ?>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button onclick="decidirVacacion(<?= $vp['id'] ?>, 'aprobar')" style="flex:1;padding:6px 10px;background:#ECFDF5;color:#059669;border:1px solid #D1FAE5;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.12s;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#ECFDF5'"><i class="ph ph-check" style="font-size:11px;"></i> Aprobar</button>
+                  <button onclick="decidirVacacionConMotivo(<?= $vp['id'] ?>)" style="flex:1;padding:6px 10px;background:#FFF1F2;color:#E11D48;border:1px solid #FFE4E6;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.12s;" onmouseover="this.style.background='#FFE4E6'" onmouseout="this.style.background='#FFF1F2'"><i class="ph ph-x" style="font-size:11px;"></i> Rechazar</button>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
+
+          <!-- Empty state -->
+          <?php if (empty($permisos_pendientes) && empty($vacaciones_pendientes)): ?>
+            <div style="text-align:center;padding:36px 20px;">
+              <i class="ph ph-check-circle" style="font-size:46px;color:#D1FAE5;display:block;margin-bottom:14px;"></i>
+              <div style="font-size:14px;font-weight:700;color:var(--c-secondary);margin-bottom:5px;">Todo al día</div>
+              <div style="font-size:12px;color:var(--c-body);opacity:.5;line-height:1.6;">No hay solicitudes pendientes<br>de aprobación</div>
+            </div>
+          <?php endif; ?>
+
         </div>
       </div>
 
-      <!-- KPI: A Tiempo -->
-      <div style="
-        background: linear-gradient(135deg, #00D98F 0%, #00D98F 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          A Tiempo
-        </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $a_tiempo_hoy ?>
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Puntualidad <?= $porcentaje_a_tiempo ?>%
-        </div>
-      </div>
-
-      <!-- KPI: Tardes -->
-      <div style="
-        background: linear-gradient(135deg, #FFB020 0%, #EF7F1B 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          Tardes
-        </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $tarde_hoy ?>
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Exceden su tolerancia
-        </div>
-      </div>
-
-      <!-- KPI: Ausentes -->
-      <div style="
-        background: linear-gradient(135deg, #FF3B6D 0%, #FF3B6D 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          Ausentes
-        </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $ausentes_hoy ?>
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Sin registro hoy
-        </div>
-      </div>
     </div>
 
     <!-- Lista de Asistencia HOY -->
@@ -6622,644 +6756,598 @@ document.addEventListener('keydown', function(e) {
       padding: var(--space-6);
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     ">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5);">
-        <h2 style="font-size: 18px; font-weight: 700; color: var(--c-secondary); margin: 0;">
-          🧑‍💼 Estado del Equipo Hoy
+      <!-- Header con búsqueda y filtro -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5); flex-wrap: wrap; gap: var(--space-3);">
+        <h2 style="font-size: 18px; font-weight: 700; color: var(--c-secondary); margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i class="ph ph-identification-card" style="font-size: 20px; color: var(--c-accent);"></i>
+          Estado del Equipo Hoy
         </h2>
-        <div style="display: flex; gap: var(--space-3);">
-          <input
-            type="text"
-            placeholder="🔍 Buscar..."
-            style="
-              padding: 8px 16px;
-              border: 2px solid #E5E7EB;
-              border-radius: 8px;
-              font-size: 13px;
-              transition: border-color 0.2s;
-            "
-            onfocus="this.style.borderColor='var(--c-accent)'"
-            onblur="this.style.borderColor='#E5E7EB'"
-          >
-          <select style="
-            padding: 8px 16px;
-            border: 2px solid #E5E7EB;
+        <div style="display: flex; gap: var(--space-2); align-items: center;">
+          <div style="position: relative;">
+            <i class="ph ph-magnifying-glass" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #9CA3AF; pointer-events: none;"></i>
+            <input
+              type="text"
+              id="att-search"
+              placeholder="Buscar persona..."
+              style="padding: 8px 12px 8px 32px; border: 1.5px solid #E5E7EB; border-radius: 8px; font-size: 13px; transition: border-color 0.2s; outline: none; width: 180px;"
+              onfocus="this.style.borderColor='var(--c-accent)'"
+              onblur="this.style.borderColor='#E5E7EB'"
+              oninput="filterAttList(this.value, document.getElementById('att-filter').value)"
+            >
+          </div>
+          <select id="att-filter" style="
+            padding: 8px 12px;
+            border: 1.5px solid #E5E7EB;
             border-radius: 8px;
             font-size: 13px;
             cursor: pointer;
-          ">
-            <option>Todos</option>
-            <option>Presentes</option>
-            <option>Ausentes</option>
-            <option>Tardes</option>
+            color: var(--c-secondary);
+            outline: none;
+            background: white;
+          " onchange="filterAttList(document.getElementById('att-search').value, this.value)">
+            <option value="">Todos</option>
+            <option value="a_tiempo">A tiempo</option>
+            <option value="tarde">Con tardanza</option>
+            <option value="ausente">Ausentes</option>
+            <option value="jornada_finalizada">Jornada finalizada</option>
+            <option value="fuera_jornada">Fuera de jornada</option>
           </select>
         </div>
       </div>
 
       <?php if (empty($asistencia_hoy)): ?>
         <!-- Estado vacío -->
-        <div style="text-align: center; padding: var(--space-8) 0; color: var(--c-body); opacity: 0.6;">
-          <div style="font-size: 48px; margin-bottom: var(--space-3);">📋</div>
-          <p style="font-size: 16px; font-weight: 600; margin-bottom: var(--space-2);">
+        <div style="text-align: center; padding: var(--space-8) 0; color: var(--c-body);">
+          <i class="ph ph-clipboard-text" style="font-size: 52px; color: #CBD5E1; display: block; margin-bottom: var(--space-3);"></i>
+          <p style="font-size: 16px; font-weight: 600; margin-bottom: var(--space-2); color: var(--c-secondary);">
             No hay registros de asistencia hoy
           </p>
-          <p style="font-size: 14px;">
+          <p style="font-size: 14px; opacity: 0.6;">
             Los registros aparecerán cuando tu equipo haga check-in
           </p>
         </div>
       <?php else: ?>
-        <!-- Lista de personas -->
-        <div style="display: flex; flex-direction: column; gap: var(--space-3);">
-          <?php foreach ($asistencia_hoy as $persona):
-            $nivel_alerta = $persona['nivel_alerta'] ?? 'ok';
-            $estado_visual = $persona['estado_visual'] ?? 'ausente';
+        <!-- Grilla 4 columnas: card por persona -->
+        <div id="att-list" style="
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+        ">
+          <?php
+            $hora_actual_now = date('H:i:s');
+            $att_avatar_palette = ['#012133', '#184656', '#0e3547', '#1a4a5c', '#0d2e3d'];
 
-            // Colores según alerta
-            $border_colors = [
-              'ok' => '#00D98F',
-              'warning' => '#FFB020',
-              'critico' => '#FF3B6D',
-              'ausente' => '#FF3B6D'
-            ];
-            $bg_colors = [
-              'ok' => '#ECFDF5',
-              'warning' => '#FEF3C7',
-              'critico' => '#FEE2E2',
-              'ausente' => '#FEE2E2'
-            ];
-            $icons = [
-              'ok' => '✅',
-              'warning' => '⚠️',
-              'critico' => '🚨',
-              'ausente' => '❌'
-            ];
+            foreach ($asistencia_hoy as $persona):
+              $hora_inicio_turno = $persona['hora_inicio'] ?? '00:00:00';
+              $minutos_tardanza  = (int)($persona['minutos_tarde'] ?? 0);
 
-            $border_color = $border_colors[$nivel_alerta] ?? '#E5E7EB';
-            $bg_color = $bg_colors[$nivel_alerta] ?? '#F9FAFB';
-            $icon = $icons[$nivel_alerta] ?? '•';
+              // Determinar status key
+              if (!empty($persona['hora_salida'])) {
+                  $status_key = 'jornada_finalizada';
+              } elseif (!empty($persona['hora_entrada'])) {
+                  $status_key = ($minutos_tardanza > 0) ? 'tarde' : 'a_tiempo';
+              } elseif ($hora_actual_now < $hora_inicio_turno) {
+                  $status_key = 'fuera_jornada';
+              } else {
+                  $status_key = 'ausente';
+              }
+
+              $st_map = [
+                  'a_tiempo' => [
+                      'label'       => 'A tiempo',
+                      'label_color' => '#059669',
+                      'label_bg'    => '#ECFDF5',
+                      'badge_bg'    => '#00D98F',
+                      'badge_icon'  => 'ph ph-check-circle-fill',
+                      'accent'      => '#00D98F',
+                  ],
+                  'tarde' => [
+                      'label'       => 'Tarde · ' . $minutos_tardanza . ' min',
+                      'label_color' => '#D97706',
+                      'label_bg'    => '#FEF3C7',
+                      'badge_bg'    => '#FFB020',
+                      'badge_icon'  => 'ph ph-clock-countdown-fill',
+                      'accent'      => '#FFB020',
+                  ],
+                  'jornada_finalizada' => [
+                      'label'       => 'Finalizada',
+                      'label_color' => '#4F46E5',
+                      'label_bg'    => '#EEF2FF',
+                      'badge_bg'    => '#6366F1',
+                      'badge_icon'  => 'ph ph-check-fat-fill',
+                      'accent'      => '#6366F1',
+                  ],
+                  'fuera_jornada' => [
+                      'label'       => 'Fuera de jornada',
+                      'label_color' => '#64748B',
+                      'label_bg'    => '#F1F5F9',
+                      'badge_bg'    => '#94A3B8',
+                      'badge_icon'  => 'ph ph-moon-fill',
+                      'accent'      => '#CBD5E1',
+                  ],
+                  'ausente' => [
+                      'label'       => 'Ausente',
+                      'label_color' => '#E11D48',
+                      'label_bg'    => '#FFF1F2',
+                      'badge_bg'    => '#FF3B6D',
+                      'badge_icon'  => 'ph ph-x-circle-fill',
+                      'accent'      => '#FF3B6D',
+                  ],
+              ];
+              $st = $st_map[$status_key];
+
+              // Avatar initials
+              $att_parts = explode(' ', trim($persona['nombre_persona'] ?? ''));
+              $att_initials = strtoupper(substr($att_parts[0] ?? '', 0, 1) . substr($att_parts[1] ?? '', 0, 1));
+              if (strlen($att_initials) < 2) $att_initials = strtoupper(substr($persona['nombre_persona'] ?? 'NA', 0, 2));
+              $att_avatar_bg = $att_avatar_palette[($persona['persona_id'] ?? 0) % count($att_avatar_palette)];
+              $jornada_hex = $persona['jornada_color'] ?? '#94A3B8';
           ?>
-            <div style="
-              border: 2px solid <?= $border_color ?>;
-              border-radius: 12px;
-              padding: var(--space-4);
-              background: <?= $bg_color ?>;
-              transition: all 0.3s ease;
-              cursor: pointer;
-            "
-            onmouseover="this.style.transform='translateX(4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'"
-            onmouseout="this.style.transform='translateX(0)'; this.style.boxShadow='none'"
+            <!-- Card persona -->
+            <div
+              data-status="<?= h($status_key) ?>"
+              data-name="<?= h(mb_strtolower($persona['nombre_persona'] ?? '')) ?>"
+              style="
+                background: white;
+                border-radius: 16px;
+                border: 1px solid #EBEBEB;
+                border-top: 3px solid <?= $st['accent'] ?>;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+                overflow: hidden;
+                transition: box-shadow 0.18s ease, transform 0.18s ease;
+                cursor: pointer;
+                display: flex;
+                flex-direction: column;
+              "
+              onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.10)'; this.style.transform='translateY(-2px)'"
+              onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.05)'; this.style.transform='translateY(0)'"
             >
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: var(--space-3); flex: 1;">
-                  <div style="font-size: 24px;"><?= $icon ?></div>
-                  <div style="flex: 1;">
-                    <div style="font-weight: 600; color: var(--c-secondary); font-size: 15px; margin-bottom: 2px;">
-                      <?= h($persona['nombre_persona'] ?? 'N/A') ?>
+
+              <!-- Cuerpo de la card -->
+              <div style="padding: 16px 16px 14px; flex: 1;">
+
+                <!-- Fila 1: Avatar + Status pill -->
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px;">
+
+                  <!-- Avatar con badge de estado -->
+                  <div style="position: relative; flex-shrink: 0;">
+                    <div style="
+                      width: 50px;
+                      height: 50px;
+                      border-radius: 14px;
+                      background: <?= $att_avatar_bg ?>;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                    ">
+                      <span style="
+                        font-size: 15px;
+                        font-weight: 800;
+                        color: rgba(255,255,255,0.92);
+                        letter-spacing: 0.5px;
+                        user-select: none;
+                      "><?= h($att_initials) ?></span>
                     </div>
-                    <div style="font-size: 13px; color: var(--c-body); opacity: 0.7;">
-                      <?= h($persona['cargo'] ?? 'Sin cargo') ?>
+                    <!-- Status badge en esquina inferior derecha -->
+                    <div style="
+                      position: absolute;
+                      bottom: -3px;
+                      right: -3px;
+                      width: 18px;
+                      height: 18px;
+                      border-radius: 50%;
+                      background: <?= $st['badge_bg'] ?>;
+                      border: 2.5px solid white;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      box-shadow: 0 1px 4px rgba(0,0,0,0.20);
+                    ">
+                      <i class="<?= $st['badge_icon'] ?>" style="font-size: 8px; color: white;"></i>
+                    </div>
+                  </div>
+
+                  <!-- Status pill -->
+                  <span style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 4px 9px;
+                    background: <?= $st['label_bg'] ?>;
+                    color: <?= $st['label_color'] ?>;
+                    border-radius: 20px;
+                    font-size: 10.5px;
+                    font-weight: 700;
+                    white-space: nowrap;
+                    max-width: calc(100% - 64px);
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                  ">
+                    <span style="width: 5px; height: 5px; border-radius: 50%; background: <?= $st['label_color'] ?>; flex-shrink: 0;"></span>
+                    <?= h($st['label']) ?>
+                  </span>
+                </div>
+
+                <!-- Fila 2: Nombre completo -->
+                <div style="
+                  font-size: 14px;
+                  font-weight: 700;
+                  color: var(--c-secondary);
+                  margin-bottom: 3px;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                  letter-spacing: -0.1px;
+                "><?= h($persona['nombre_persona'] ?? 'N/A') ?></div>
+
+                <!-- Fila 3: Área de trabajo (cargo) -->
+                <div style="
+                  font-size: 12px;
+                  color: var(--c-body);
+                  opacity: 0.55;
+                  margin-bottom: 8px;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                "><?= h($persona['cargo'] ?? 'Sin cargo') ?></div>
+
+                <!-- Fila 4: Jornada badge -->
+                <?php if (!empty($persona['jornada_nombre'])): ?>
+                  <span style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    font-size: 10px;
+                    font-weight: 700;
+                    padding: 3px 8px;
+                    background: <?= $jornada_hex ?>18;
+                    color: <?= $jornada_hex ?>;
+                    border-radius: 6px;
+                    border: 1px solid <?= $jornada_hex ?>30;
+                    letter-spacing: 0.1px;
+                  ">
+                    <i class="ph ph-clock" style="font-size: 10px;"></i>
+                    <?= h($persona['jornada_nombre']) ?>
+                  </span>
+                <?php endif; ?>
+
+                <!-- Fila 5: Horas acumuladas -->
+                <?php $persona_total_h = $horas_totales[(int)($persona['persona_id'] ?? 0)] ?? null; ?>
+                <?php if ($persona_total_h !== null): ?>
+                  <div style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    font-size: 10px;
+                    font-weight: 600;
+                    color: var(--c-body);
+                    opacity: 0.55;
+                    margin-top: 5px;
+                  ">
+                    <i class="ph ph-timer" style="font-size: 10px;"></i>
+                    <?= number_format((float)$persona_total_h, 1) ?> h acumuladas
+                  </div>
+                <?php endif; ?>
+
+              </div>
+
+              <!-- Footer: Entrada | Salida -->
+              <div style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                border-top: 1px solid #F5F5F5;
+              ">
+                <!-- Entrada -->
+                <div style="padding: 10px 14px;">
+                  <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--c-body); opacity: 0.4; margin-bottom: 3px;">
+                    Entrada
+                  </div>
+                  <?php if (!empty($persona['hora_entrada'])): ?>
+                    <div style="font-size: 13px; font-weight: 800; color: var(--c-secondary); line-height: 1; letter-spacing: -0.3px;">
+                      <?= date('g:i', strtotime($persona['hora_entrada'])) ?>
+                      <span style="font-size: 9px; font-weight: 500; opacity: 0.5; letter-spacing: 0;"><?= date('A', strtotime($persona['hora_entrada'])) ?></span>
+                    </div>
+                  <?php else: ?>
+                    <div style="font-size: 18px; font-weight: 300; color: #D1D5DB; line-height: 1;">—</div>
+                  <?php endif; ?>
+                </div>
+
+                <!-- Salida -->
+                <div style="padding: 10px 14px; border-left: 1px solid #F5F5F5;">
+                  <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--c-body); opacity: 0.4; margin-bottom: 3px;">
+                    Salida
+                  </div>
+                  <?php if (!empty($persona['hora_salida'])): ?>
+                    <div style="font-size: 13px; font-weight: 800; color: var(--c-secondary); line-height: 1; letter-spacing: -0.3px;">
+                      <?= date('g:i', strtotime($persona['hora_salida'])) ?>
+                      <span style="font-size: 9px; font-weight: 500; opacity: 0.5; letter-spacing: 0;"><?= date('A', strtotime($persona['hora_salida'])) ?></span>
+                    </div>
+                  <?php else: ?>
+                    <div style="font-size: 18px; font-weight: 300; color: #D1D5DB; line-height: 1;">—</div>
+                  <?php endif; ?>
+                </div>
+              </div>
+
+            </div>
+          <?php endforeach; ?>
+        </div>
+
+        <script>
+        function filterAttList(query, statusFilter) {
+          var items = document.querySelectorAll('#att-list > div[data-status]');
+          var q = (query || '').toLowerCase().trim();
+          var sf = (statusFilter || '').toLowerCase().trim();
+          items.forEach(function(el) {
+            var name = (el.getAttribute('data-name') || '').toLowerCase();
+            var status = (el.getAttribute('data-status') || '').toLowerCase();
+            var matchName = !q || name.indexOf(q) !== -1;
+            var matchStatus = !sf || status === sf;
+            el.style.display = (matchName && matchStatus) ? '' : 'none';
+          });
+        }
+        </script>
+
+      <?php endif; ?>
+    </div>
+  </section>
+
+  <script>
+  async function decidirPermiso(permisoId, decision) {
+    if (!confirm('¿Estás seguro de aprobar este permiso?')) return;
+    const fd = new FormData();
+    fd.append('action', 'decidir_permiso'); fd.append('permiso_id', permisoId); fd.append('decision', decision);
+    try { const r = await fetch('permisos_vacaciones_backend.php', {method:'POST',body:fd}); const d = await r.json(); if(d.success){alert('✅ '+d.message);location.reload();}else{alert('❌ '+d.message);} } catch(e){alert('Error: '+e.message);}
+  }
+  async function decidirPermisoConMotivo(permisoId) {
+    const motivo = prompt('Escribe el motivo del rechazo:');
+    if (!motivo || !motivo.trim()) { alert('Debes proporcionar un motivo para rechazar'); return; }
+    const fd = new FormData();
+    fd.append('action', 'decidir_permiso'); fd.append('permiso_id', permisoId); fd.append('decision', 'rechazar'); fd.append('motivo_rechazo', motivo);
+    try { const r = await fetch('permisos_vacaciones_backend.php', {method:'POST',body:fd}); const d = await r.json(); if(d.success){alert('✅ '+d.message);location.reload();}else{alert('❌ '+d.message);} } catch(e){alert('Error: '+e.message);}
+  }
+  async function decidirVacacion(vacacionId, decision) {
+    if (!confirm('¿Estás seguro de aprobar estas vacaciones?')) return;
+    const fd = new FormData();
+    fd.append('action', 'decidir_vacacion'); fd.append('vacacion_id', vacacionId); fd.append('decision', decision);
+    try { const r = await fetch('permisos_vacaciones_backend.php', {method:'POST',body:fd}); const d = await r.json(); if(d.success){alert('✅ '+d.message);location.reload();}else{alert('❌ '+d.message);} } catch(e){alert('Error: '+e.message);}
+  }
+  async function decidirVacacionConMotivo(vacacionId) {
+    const motivo = prompt('Escribe el motivo del rechazo:');
+    if (!motivo || !motivo.trim()) { alert('Debes proporcionar un motivo para rechazar'); return; }
+    const fd = new FormData();
+    fd.append('action', 'decidir_vacacion'); fd.append('vacacion_id', vacacionId); fd.append('decision', 'rechazar'); fd.append('motivo_rechazo', motivo);
+    try { const r = await fetch('permisos_vacaciones_backend.php', {method:'POST',body:fd}); const d = await r.json(); if(d.success){alert('✅ '+d.message);location.reload();}else{alert('❌ '+d.message);} } catch(e){alert('Error: '+e.message);}
+  }
+  </script>
+
+  <!-- ============ SECCIÓN: PATRONES + JORNADAS (2 columnas) ============ -->
+  <section style="margin-bottom: var(--space-8);">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); align-items: start;">
+
+      <!-- ── COLUMNA IZQUIERDA: Patrones de Asistencia ── -->
+      <div>
+
+        <!-- Sub-header -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:var(--space-4);">
+          <div style="width:38px;height:38px;background:linear-gradient(135deg,#012133,#184656);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(1,33,51,.22);">
+            <i class="ph ph-chart-line-up" style="font-size:18px;color:rgba(255,255,255,.88);"></i>
+          </div>
+          <div>
+            <h2 style="font-size:18px;font-weight:800;color:var(--c-secondary);margin:0;letter-spacing:-0.2px;">Patrones de Asistencia</h2>
+            <p style="font-size:12px;color:var(--c-body);opacity:.5;margin:2px 0 0;">Últimos 30 días · análisis automático</p>
+          </div>
+        </div>
+
+        <!-- Panel unificado -->
+        <div style="background:white;border-radius:18px;border:1px solid #EBEBEB;box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden;">
+
+          <?php
+          // Merge: primero excelentes, luego atención
+          $todos_patrones = [];
+          foreach (($patrones_excelentes ?? []) as $p) {
+              $p['_tipo'] = 'excelente';
+              $todos_patrones[] = $p;
+          }
+          foreach (($patrones_atencion ?? []) as $p) {
+              $p['_tipo'] = 'atencion';
+              $todos_patrones[] = $p;
+          }
+          $pat_palette = ['#012133','#184656','#0e3547','#1a4a5c','#0d2e3d'];
+          ?>
+
+          <?php if (empty($todos_patrones)): ?>
+            <div style="text-align:center;padding:44px 20px;">
+              <i class="ph ph-chart-line-up" style="font-size:44px;color:#D1FAE5;display:block;margin-bottom:12px;"></i>
+              <div style="font-size:14px;font-weight:700;color:var(--c-secondary);margin-bottom:4px;">Sin datos aún</div>
+              <div style="font-size:12px;color:var(--c-body);opacity:.5;">Los patrones aparecerán con más registros de asistencia</div>
+            </div>
+          <?php else: ?>
+            <!-- Leyenda compacta -->
+            <div style="display:flex;gap:16px;padding:12px 16px;border-bottom:1px solid #F5F5F5;background:#FAFAFA;">
+              <span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:#059669;">
+                <i class="ph ph-seal-check-fill" style="font-size:12px;"></i> Excelente (<?= count($patrones_excelentes ?? []) ?>)
+              </span>
+              <span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:#D97706;">
+                <i class="ph ph-warning-fill" style="font-size:12px;"></i> Requiere atención (<?= count($patrones_atencion ?? []) ?>)
+              </span>
+            </div>
+
+            <?php foreach ($todos_patrones as $idx => $pat):
+              $pat_p = explode(' ', trim($pat['nombre_persona'] ?? ''));
+              $pat_i = strtoupper(substr($pat_p[0]??'',0,1).substr($pat_p[1]??'',0,1));
+              if (strlen($pat_i)<2) $pat_i = strtoupper(substr($pat['nombre_persona']??'NA',0,2));
+              $pat_bg = $pat_palette[$idx % count($pat_palette)];
+              $es_excelente = $pat['_tipo'] === 'excelente';
+              $asist = (int)($pat['tasa_asistencia'] ?? 0);
+              $puntual = (int)($pat['tasa_puntualidad'] ?? 0);
+            ?>
+              <div style="
+                display:flex;align-items:center;gap:12px;
+                padding:12px 16px;
+                border-bottom:1px solid #F8F8F8;
+                transition:background 0.15s;
+              " onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='white'">
+
+                <!-- Avatar -->
+                <div style="width:38px;height:38px;border-radius:11px;background:<?= $pat_bg ?>;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <span style="font-size:12px;font-weight:800;color:rgba(255,255,255,.92);letter-spacing:.3px;"><?= h($pat_i) ?></span>
+                </div>
+
+                <!-- Nombre -->
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:13px;font-weight:700;color:var(--c-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px;"><?= h($pat['nombre_persona'] ?? 'N/A') ?></div>
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    <!-- Asistencia bar -->
+                    <div style="display:flex;align-items:center;gap:4px;">
+                      <span style="font-size:10px;color:var(--c-body);opacity:.5;font-weight:600;">Asist.</span>
+                      <div style="width:52px;height:5px;background:#F0F0F0;border-radius:3px;overflow:hidden;">
+                        <div style="height:100%;width:<?= $asist ?>%;background:<?= $asist >= 90 ? '#00D98F' : ($asist >= 75 ? '#FFB020' : '#FF3B6D') ?>;border-radius:3px;transition:width .4s;"></div>
+                      </div>
+                      <span style="font-size:10px;font-weight:700;color:var(--c-secondary);"><?= $asist ?>%</span>
+                    </div>
+                    <!-- Puntualidad bar -->
+                    <div style="display:flex;align-items:center;gap:4px;">
+                      <span style="font-size:10px;color:var(--c-body);opacity:.5;font-weight:600;">Puntual.</span>
+                      <div style="width:52px;height:5px;background:#F0F0F0;border-radius:3px;overflow:hidden;">
+                        <div style="height:100%;width:<?= $puntual ?>%;background:<?= $puntual >= 90 ? '#00D98F' : ($puntual >= 75 ? '#FFB020' : '#FF3B6D') ?>;border-radius:3px;transition:width .4s;"></div>
+                      </div>
+                      <span style="font-size:10px;font-weight:700;color:var(--c-secondary);"><?= $puntual ?>%</span>
                     </div>
                   </div>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: var(--space-4);">
-                  <?php if (!empty($persona['hora_entrada'])): ?>
-                    <div style="text-align: right;">
-                      <div style="font-size: 12px; color: var(--c-body); opacity: 0.6; margin-bottom: 2px;">
-                        Entrada
-                      </div>
-                      <div style="font-weight: 600; color: var(--c-secondary); font-size: 14px;">
-                        <?= date('g:i A', strtotime($persona['hora_entrada'])) ?>
-                      </div>
-                      <?php if (!empty($persona['minutos_tarde']) && $persona['minutos_tarde'] > 0): ?>
-                        <div style="font-size: 11px; color: #FFB020; font-weight: 600;">
-                          +<?= $persona['minutos_tarde'] ?> min tarde
-                        </div>
-                      <?php endif; ?>
-                    </div>
-                  <?php else: ?>
-                    <div style="text-align: right;">
-                      <div style="font-size: 12px; color: var(--c-body); opacity: 0.6; margin-bottom: 2px;">
-                        Entrada
-                      </div>
-                      <div style="font-weight: 600; color: #FF3B6D; font-size: 14px;">
-                        Sin registro
-                      </div>
-                    </div>
-                  <?php endif; ?>
-
-                  <?php if (!empty($persona['hora_salida'])): ?>
-                    <div style="text-align: right;">
-                      <div style="font-size: 12px; color: var(--c-body); opacity: 0.6; margin-bottom: 2px;">
-                        Salida
-                      </div>
-                      <div style="font-weight: 600; color: var(--c-secondary); font-size: 14px;">
-                        <?= date('g:i A', strtotime($persona['hora_salida'])) ?>
-                      </div>
-                      <?php
-                      $minutos_tarde_salida = (int)($persona['minutos_tarde_salida'] ?? 0);
-                      if ($minutos_tarde_salida > 0): ?>
-                        <div style="font-size: 11px; color: #FF3B6D; font-weight: 600;">
-                          ⚠️ <?= $minutos_tarde_salida ?> min antes
-                        </div>
-                      <?php elseif ($minutos_tarde_salida < 0):
-                        $minutos_extra = abs($minutos_tarde_salida);
-                        $horas = floor($minutos_extra / 60);
-                        $mins = $minutos_extra % 60;
-                      ?>
-                        <div style="font-size: 11px; color: #10B981; font-weight: 600;">
-                          💼 <?= $horas > 0 ? "{$horas}h {$mins}m" : "{$mins}m" ?> extra
-                        </div>
-                      <?php endif; ?>
-                    </div>
-                  <?php else: ?>
-                    <div style="text-align: right;">
-                      <div style="font-size: 12px; color: var(--c-body); opacity: 0.6; margin-bottom: 2px;">
-                        Salida
-                      </div>
-                      <div style="font-weight: 600; color: var(--c-body); opacity: 0.4; font-size: 14px;">
-                        --:-- --
-                      </div>
-                    </div>
-                  <?php endif; ?>
-
-                  <button style="
-                    padding: 8px 16px;
-                    background: white;
-                    border: 1px solid #E5E7EB;
-                    border-radius: 6px;
-                    font-size: 12px;
-                    font-weight: 600;
-                    color: var(--c-secondary);
-                    cursor: pointer;
-                    transition: all 0.2s;
-                  "
-                  onmouseover="this.style.background='#F9FAFB'"
-                  onmouseout="this.style.background='white'"
-                  >
-                    Ver detalles
-                  </button>
-                </div>
-              </div>
-            </div>
-          <?php endforeach; ?>
-        </div>
-      <?php endif; ?>
-    </div>
-  </section>
-
-  <!-- Análisis de Patrones -->
-  <?php if (!empty($patrones_atencion) || !empty($patrones_excelentes)): ?>
-  <section style="margin-bottom: var(--space-8);">
-    <h2 style="font-size: 22px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-4);">
-      🔍 Análisis de Patrones de Asistencia
-    </h2>
-    <p style="color: var(--c-body); opacity: 0.7; margin: 0 0 var(--space-5); font-size: 14px;">
-      Período: Últimos 30 días • Actualizado automáticamente
-    </p>
-
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--space-5);">
-      <!-- Patrones Excelentes -->
-      <?php if (!empty($patrones_excelentes)): ?>
-      <div style="
-        background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
-        border: 2px solid #00D98F;
-        border-radius: 16px;
-        padding: var(--space-5);
-      ">
-        <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);">
-          <div style="font-size: 24px;">🏆</div>
-          <h3 style="font-size: 16px; font-weight: 700; color: #00D98F; margin: 0;">
-            Patrones Excelentes
-          </h3>
-        </div>
-
-        <?php foreach ($patrones_excelentes as $patron): ?>
-          <div style="
-            background: white;
-            border-radius: 10px;
-            padding: var(--space-3);
-            margin-bottom: var(--space-3);
-          ">
-            <div style="font-weight: 600; color: var(--c-secondary); font-size: 14px; margin-bottom: var(--space-1);">
-              <?= h($patron['nombre_persona'] ?? 'N/A') ?>
-            </div>
-            <div style="display: flex; gap: var(--space-3); font-size: 12px; color: var(--c-body);">
-              <span>✨ <?= number_format($patron['tasa_asistencia'] ?? 0, 0) ?>% asistencia</span>
-              <span>⏰ <?= number_format($patron['tasa_puntualidad'] ?? 0, 0) ?>% puntualidad</span>
-            </div>
-          </div>
-        <?php endforeach; ?>
-      </div>
-      <?php endif; ?>
-
-      <!-- Patrones que Requieren Atención -->
-      <?php if (!empty($patrones_atencion)): ?>
-      <div style="
-        background: linear-gradient(135deg, #fff8f0 0%, #facb99 100%);
-        border: 2px solid #FFB020;
-        border-radius: 16px;
-        padding: var(--space-5);
-      ">
-        <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);">
-          <div style="font-size: 24px;">⚠️</div>
-          <h3 style="font-size: 16px; font-weight: 700; color: #EF7F1B; margin: 0;">
-            Requieren Atención
-          </h3>
-        </div>
-
-        <?php foreach (array_slice($patrones_atencion, 0, 3) as $patron): ?>
-          <div style="
-            background: white;
-            border-radius: 10px;
-            padding: var(--space-3);
-            margin-bottom: var(--space-3);
-          ">
-            <div style="font-weight: 600; color: var(--c-secondary); font-size: 14px; margin-bottom: var(--space-1);">
-              🚨 <?= h($patron['nombre_persona'] ?? 'N/A') ?>
-            </div>
-            <div style="font-size: 12px; color: var(--c-body); margin-bottom: var(--space-2);">
-              Asistencia: <?= number_format($patron['tasa_asistencia'] ?? 0, 0) ?>% •
-              Puntualidad: <?= number_format($patron['tasa_puntualidad'] ?? 0, 0) ?>%
-            </div>
-            <div style="
-              padding: var(--space-2);
-              background: #FEF3C7;
-              border-radius: 6px;
-              font-size: 11px;
-              color: #8a4709;
-            ">
-              💡 Acción sugerida: Reunión 1-on-1 con manager
-            </div>
-          </div>
-        <?php endforeach; ?>
-      </div>
-      <?php endif; ?>
-    </div>
-  </section>
-  <?php endif; ?>
-
-  <!-- ========================================================================== -->
-  <!-- PANEL DE PERMISOS Y VACACIONES (EMPLEADOR) -->
-  <!-- Sistema profesional de gestión de solicitudes con aprobación/rechazo -->
-  <!-- ========================================================================== -->
-  <?php include 'permisos_vacaciones_empleador_panel.php'; ?>
-
-  <!-- ============ SECCIÓN: HORARIOS DE TRABAJO ============ -->
-  <section style="margin-bottom: var(--space-8);">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5);">
-      <div>
-        <h1 style="font-size: 28px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-1);">
-          🕒 Horarios de Trabajo
-        </h1>
-        <p style="color: var(--c-body); opacity: 0.7; margin: 0; font-size: 14px;">
-          Gestiona las jornadas laborales y asigna empleados a cada horario
-        </p>
-      </div>
-      <div style="display: flex; gap: 12px;">
-        <button
-          onclick="abrirModalDescargarHistorico()"
-          style="
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-            transition: all 0.3s ease;
-          "
-          onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(16, 185, 129, 0.3)'"
-          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.2)'"
-        >
-          📥 Descargar Histórico
-        </button>
-        <button
-          onclick="abrirModalJornadaWizard()"
-          style="
-            padding: 12px 24px;
-            background: linear-gradient(135deg, var(--c-accent) 0%, #FF6B35 100%);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(255, 136, 0, 0.2);
-            transition: all 0.3s ease;
-          "
-          onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 136, 0, 0.3)'"
-          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255, 136, 0, 0.2)'"
-        >
-          ➕ Crear Jornada
-        </button>
-      </div>
-    </div>
-
-    <!-- KPIs Horarios -->
-    <div style="
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: var(--space-4);
-      margin-bottom: var(--space-6);
-    ">
-      <!-- KPI: Jornadas Activas -->
-      <div style="
-        background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="position: relative; z-index: 1;">
-          <div style="font-size: 13px; opacity: 0.9; margin-bottom: var(--space-2);">
-            Jornadas Activas
-          </div>
-          <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-            <?= $jornadas_activas ?>
-          </div>
-          <div style="font-size: 12px; opacity: 0.8;">
-            De <?= $total_jornadas ?> totales
-          </div>
-        </div>
-        <div style="
-          position: absolute;
-          right: -20px;
-          bottom: -20px;
-          font-size: 80px;
-          opacity: 0.15;
-        ">📋</div>
-      </div>
-
-      <!-- KPI: Empleados Asignados -->
-      <div style="
-        background: linear-gradient(135deg, #F093FB 0%, #F5576C 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="position: relative; z-index: 1;">
-          <div style="font-size: 13px; opacity: 0.9; margin-bottom: var(--space-2);">
-            Empleados con Jornada
-          </div>
-          <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-            <?= $total_empleados_con_jornada ?>
-          </div>
-          <div style="font-size: 12px; opacity: 0.8;">
-            De <?= $total_personas ?> empleados
-          </div>
-        </div>
-        <div style="
-          position: absolute;
-          right: -20px;
-          bottom: -20px;
-          font-size: 80px;
-          opacity: 0.15;
-        ">👥</div>
-      </div>
-
-      <!-- KPI: Cobertura -->
-      <div style="
-        background: linear-gradient(135deg, #4FACFE 0%, #00F2FE 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="position: relative; z-index: 1;">
-          <div style="font-size: 13px; opacity: 0.9; margin-bottom: var(--space-2);">
-            Cobertura de Horarios
-          </div>
-          <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-            <?= $total_personas > 0 ? round(($total_empleados_con_jornada / $total_personas) * 100) : 0 ?>%
-          </div>
-          <div style="font-size: 12px; opacity: 0.8;">
-            Del equipo total
-          </div>
-        </div>
-        <div style="
-          position: absolute;
-          right: -20px;
-          bottom: -20px;
-          font-size: 80px;
-          opacity: 0.15;
-        ">📊</div>
-      </div>
-    </div>
-
-    <!-- Lista de Jornadas -->
-    <?php if (empty($jornadas_trabajo)): ?>
-      <div style="
-        background: white;
-        border-radius: 16px;
-        padding: var(--space-8);
-        text-align: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      ">
-        <div style="font-size: 64px; margin-bottom: var(--space-4); opacity: 0.3;">🕒</div>
-        <h3 style="font-size: 20px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-2);">
-          No hay jornadas configuradas
-        </h3>
-        <p style="color: var(--c-body); opacity: 0.7; margin: 0 0 var(--space-5); font-size: 14px;">
-          Crea tu primera jornada laboral para comenzar a gestionar los horarios del equipo
-        </p>
-        <button
-          onclick="abrirModalJornadaWizard()"
-          style="
-            padding: 12px 32px;
-            background: var(--c-accent);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(255, 136, 0, 0.2);
-          "
-        >
-          ➕ Crear Primera Jornada
-        </button>
-      </div>
-    <?php else: ?>
-      <div style="
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: var(--space-4);
-      ">
-        <?php foreach ($jornadas_trabajo as $jornada): ?>
-          <div style="
-            background: white;
-            border-radius: 16px;
-            padding: var(--space-5);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-left: 4px solid <?= h($jornada['color_hex']) ?>;
-            position: relative;
-            transition: all 0.3s ease;
-          "
-          onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)'"
-          onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)'"
-          >
-            <!-- Header -->
-            <div style="display: flex; align-items: start; justify-content: space-between; margin-bottom: var(--space-3);">
-              <div style="flex: 1;">
-                <h3 style="font-size: 18px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-1);">
-                  <?= h($jornada['nombre']) ?>
-                </h3>
-                <?php if (!empty($jornada['codigo_corto'])): ?>
-                  <span style="
-                    display: inline-block;
-                    padding: 2px 8px;
-                    background: <?= h($jornada['color_hex']) ?>20;
-                    color: <?= h($jornada['color_hex']) ?>;
-                    border-radius: 4px;
-                    font-size: 11px;
-                    font-weight: 600;
-                    text-transform: uppercase;
-                  ">
-                    <?= h($jornada['codigo_corto']) ?>
+                <!-- Badge tipo -->
+                <?php if ($es_excelente): ?>
+                  <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:4px 9px;background:#ECFDF5;color:#059669;border-radius:20px;white-space:nowrap;flex-shrink:0;">
+                    <i class="ph ph-seal-check-fill" style="font-size:11px;"></i> Excelente
+                  </span>
+                <?php else: ?>
+                  <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:4px 9px;background:#FEF3C7;color:#D97706;border-radius:20px;white-space:nowrap;flex-shrink:0;">
+                    <i class="ph ph-warning-fill" style="font-size:11px;"></i> Atención
                   </span>
                 <?php endif; ?>
               </div>
-              <div style="
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: <?= $jornada['is_active'] ? '#00D98F' : '#CCCCCC' ?>;
-              "></div>
+            <?php endforeach; ?>
+          <?php endif; ?>
+
+        </div>
+      </div>
+
+      <!-- ── COLUMNA DERECHA: Jornadas de Trabajo ── -->
+      <div>
+
+        <!-- Sub-header con botones -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:var(--space-4);">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+            <div style="width:38px;height:38px;background:linear-gradient(135deg,#EF7F1B,#f5962c);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(239,127,27,.28);">
+              <i class="ph ph-calendar-check" style="font-size:18px;color:white;"></i>
             </div>
-
-            <!-- Descripción -->
-            <?php if (!empty($jornada['descripcion'])): ?>
-              <p style="font-size: 13px; color: var(--c-body); opacity: 0.7; margin: 0 0 var(--space-3); line-height: 1.5;">
-                <?= h($jornada['descripcion']) ?>
-              </p>
-            <?php endif; ?>
-
-            <!-- Detalles -->
-            <div style="margin-bottom: var(--space-4);">
-              <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
-                <span style="font-size: 14px;">📅</span>
-                <span style="font-size: 13px; color: var(--c-body);">
-                  <?= format_dias_turno($jornada['turnos']) ?>
-                </span>
-              </div>
-              <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
-                <span style="font-size: 14px;">⏰</span>
-                <span style="font-size: 13px; color: var(--c-body);">
-                  <?= rango_horas_turno($jornada['turnos']) ?>
-                </span>
-              </div>
-              <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
-                <span style="font-size: 14px;">📊</span>
-                <span style="font-size: 13px; color: var(--c-body);">
-                  <?= number_format($jornada['horas_semanales_esperadas'], 1) ?> hrs/semana
-                </span>
-              </div>
-              <?php if (tiene_turno_nocturno($jornada['turnos'])): ?>
-                <div style="display: flex; align-items: center; gap: var(--space-2);">
-                  <span style="font-size: 14px;">🌙</span>
-                  <span style="font-size: 13px; color: #667EEA; font-weight: 600;">
-                    Incluye turno nocturno
-                  </span>
-                </div>
-              <?php endif; ?>
-            </div>
-
-            <!-- Estadísticas -->
-            <div style="
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: var(--space-3);
-              padding: var(--space-3);
-              background: #F9FAFB;
-              border-radius: 8px;
-              margin-bottom: var(--space-4);
-            ">
-              <div>
-                <div style="font-size: 11px; color: var(--c-body); opacity: 0.6; margin-bottom: 4px;">
-                  Empleados
-                </div>
-                <div style="font-size: 20px; font-weight: 700; color: var(--c-secondary);">
-                  <?= (int)$jornada['total_empleados'] ?>
-                </div>
-              </div>
-              <div>
-                <div style="font-size: 11px; color: var(--c-body); opacity: 0.6; margin-bottom: 4px;">
-                  Tolerancia
-                </div>
-                <div style="font-size: 20px; font-weight: 700; color: var(--c-secondary);">
-                  <?= (int)$jornada['tolerancia_entrada_min'] ?> min
-                </div>
-              </div>
-            </div>
-
-            <!-- Acciones -->
-            <div style="display: flex; gap: var(--space-2);">
-              <button
-                onclick="verDetallesJornada(<?= (int)$jornada['id'] ?>)"
-                style="
-                  flex: 1;
-                  padding: 8px 12px;
-                  background: white;
-                  border: 1px solid #E5E7EB;
-                  border-radius: 6px;
-                  color: var(--c-secondary);
-                  font-size: 12px;
-                  font-weight: 600;
-                  cursor: pointer;
-                  transition: all 0.2s ease;
-                "
-                onmouseover="this.style.background='#F9FAFB'"
-                onmouseout="this.style.background='white'"
-              >
-                👁️ Ver
-              </button>
-              <button
-                onclick="abrirModalAsignarEmpleados(<?= (int)$jornada['id'] ?>, '<?= h($jornada['nombre']) ?>')"
-                style="
-                  flex: 1;
-                  padding: 8px 12px;
-                  background: var(--c-accent);
-                  border: none;
-                  border-radius: 6px;
-                  color: white;
-                  font-size: 12px;
-                  font-weight: 600;
-                  cursor: pointer;
-                  transition: all 0.2s ease;
-                "
-                onmouseover="this.style.opacity='0.9'"
-                onmouseout="this.style.opacity='1'"
-              >
-                👥 Asignar
-              </button>
-              <button
-                onclick="editarJornada(<?= (int)$jornada['id'] ?>)"
-                style="
-                  padding: 8px 12px;
-                  background: white;
-                  border: 1px solid #E5E7EB;
-                  border-radius: 6px;
-                  color: var(--c-secondary);
-                  font-size: 12px;
-                  cursor: pointer;
-                  transition: all 0.2s ease;
-                "
-                onmouseover="this.style.background='#F9FAFB'"
-                onmouseout="this.style.background='white'"
-              >
-                ✏️
-              </button>
+            <div>
+              <h2 style="font-size:18px;font-weight:800;color:var(--c-secondary);margin:0;letter-spacing:-0.2px;">Jornadas de Trabajo</h2>
+              <p style="font-size:12px;color:var(--c-body);opacity:.5;margin:2px 0 0;">Horarios asignados al equipo</p>
             </div>
           </div>
-        <?php endforeach; ?>
+          <div style="display:flex;gap:8px;flex-shrink:0;">
+            <button onclick="abrirModalDescargarHistorico()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:white;border:1.5px solid #E5E7EB;border-radius:10px;color:var(--c-secondary);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;" onmouseover="this.style.borderColor='#012133';this.style.background='#F9FAFB'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='white'">
+              <i class="ph ph-download-simple" style="font-size:13px;"></i> CSV
+            </button>
+            <button onclick="abrirModalJornadaWizard()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg,#EF7F1B 0%,#f5962c 100%);border:none;border-radius:10px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(239,127,27,.28);transition:filter .12s,box-shadow .12s;" onmouseover="this.style.filter='brightness(1.05)'" onmouseout="this.style.filter='none'">
+              <i class="ph ph-plus" style="font-size:13px;"></i> Crear Jornada
+            </button>
+          </div>
+        </div>
+
+        <!-- Lista de jornadas -->
+        <?php if (empty($jornadas_trabajo)): ?>
+          <div style="background:white;border-radius:18px;border:1px solid #EBEBEB;padding:44px 20px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+            <i class="ph ph-calendar-x" style="font-size:48px;color:#D1D5DB;display:block;margin-bottom:14px;"></i>
+            <div style="font-size:15px;font-weight:700;color:var(--c-secondary);margin-bottom:5px;">No hay jornadas configuradas</div>
+            <p style="font-size:13px;color:var(--c-body);opacity:.6;margin:0 0 20px;">Crea tu primera jornada para gestionar horarios</p>
+            <button onclick="abrirModalJornadaWizard()" style="display:inline-flex;align-items:center;gap:6px;padding:10px 22px;background:linear-gradient(135deg,#EF7F1B,#f5962c);border:none;border-radius:10px;color:white;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(239,127,27,.28);">
+              <i class="ph ph-plus" style="font-size:14px;"></i> Crear Primera Jornada
+            </button>
+          </div>
+        <?php else: ?>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <?php foreach ($jornadas_trabajo as $jornada): ?>
+              <div style="
+                background:white;
+                border-radius:14px;
+                border:1px solid #EBEBEB;
+                border-left:4px solid <?= h($jornada['color_hex']) ?>;
+                padding:14px 16px;
+                box-shadow:0 1px 3px rgba(0,0,0,.05);
+                transition:box-shadow .18s,transform .18s;
+              " onmouseover="this.style.boxShadow='0 6px 18px rgba(0,0,0,.09)';this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.05)';this.style.transform='translateY(0)'">
+
+                <!-- Fila 1: Nombre + código + status dot -->
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                  <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                    <span style="font-size:14px;font-weight:800;color:var(--c-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= h($jornada['nombre']) ?></span>
+                    <?php if (!empty($jornada['codigo_corto'])): ?>
+                      <span style="font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 7px;background:<?= h($jornada['color_hex']) ?>18;color:<?= h($jornada['color_hex']) ?>;border-radius:5px;border:1px solid <?= h($jornada['color_hex']) ?>30;flex-shrink:0;"><?= h($jornada['codigo_corto']) ?></span>
+                    <?php endif; ?>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                    <span style="width:7px;height:7px;border-radius:50%;background:<?= $jornada['is_active'] ? '#00D98F' : '#CBD5E1' ?>;display:inline-block;"></span>
+                    <span style="font-size:10px;font-weight:600;color:<?= $jornada['is_active'] ? '#059669' : '#94A3B8' ?>;"><?= $jornada['is_active'] ? 'Activa' : 'Inactiva' ?></span>
+                  </div>
+                </div>
+
+                <!-- Fila 2: Detalles en línea -->
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px;">
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--c-body);opacity:.65;">
+                    <i class="ph ph-calendar-blank" style="font-size:13px;color:<?= h($jornada['color_hex']) ?>;"></i>
+                    <?= format_dias_turno($jornada['turnos']) ?>
+                  </span>
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--c-body);opacity:.65;">
+                    <i class="ph ph-clock" style="font-size:13px;color:<?= h($jornada['color_hex']) ?>;"></i>
+                    <?= rango_horas_turno($jornada['turnos']) ?>
+                  </span>
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--c-body);opacity:.65;">
+                    <i class="ph ph-timer" style="font-size:13px;color:<?= h($jornada['color_hex']) ?>;"></i>
+                    <?= number_format($jornada['horas_semanales_esperadas'], 1) ?> hrs/sem
+                  </span>
+                  <?php if (tiene_turno_nocturno($jornada['turnos'])): ?>
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#6366F1;">
+                      <i class="ph ph-moon-stars" style="font-size:12px;"></i> Nocturno
+                    </span>
+                  <?php endif; ?>
+                </div>
+
+                <!-- Fila 3: Stats + acciones -->
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #F5F5F5;">
+                  <div style="display:flex;gap:16px;">
+                    <div>
+                      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--c-body);opacity:.45;margin-bottom:2px;">Empleados</div>
+                      <div style="font-size:16px;font-weight:800;color:var(--c-secondary);letter-spacing:-0.5px;"><?= (int)$jornada['total_empleados'] ?></div>
+                    </div>
+                    <div>
+                      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--c-body);opacity:.45;margin-bottom:2px;">Tolerancia</div>
+                      <div style="font-size:16px;font-weight:800;color:var(--c-secondary);letter-spacing:-0.5px;"><?= (int)$jornada['tolerancia_entrada_min'] ?> <span style="font-size:11px;font-weight:500;opacity:.6;">min</span></div>
+                    </div>
+                  </div>
+                  <!-- Acciones -->
+                  <div style="display:flex;gap:6px;">
+                    <button onclick="verDetallesJornada(<?= (int)$jornada['id'] ?>)" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;background:white;border:1.5px solid #E5E7EB;border-radius:8px;color:var(--c-secondary);font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='white'">
+                      <i class="ph ph-eye" style="font-size:13px;"></i> Ver
+                    </button>
+                    <button onclick="abrirModalAsignarEmpleados(<?= (int)$jornada['id'] ?>, '<?= h($jornada['nombre']) ?>')" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;background:linear-gradient(135deg,#EF7F1B,#f5962c);border:none;border-radius:8px;color:white;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:filter .12s;" onmouseover="this.style.filter='brightness(1.05)'" onmouseout="this.style.filter='none'">
+                      <i class="ph ph-users-three" style="font-size:13px;"></i> Asignar
+                    </button>
+                    <button onclick="editarJornada(<?= (int)$jornada['id'] ?>)" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;background:white;border:1.5px solid #E5E7EB;border-radius:8px;color:var(--c-secondary);cursor:pointer;transition:all .15s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='white'" title="Editar">
+                      <i class="ph ph-pencil-simple" style="font-size:14px;"></i>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+
       </div>
-    <?php endif; ?>
+    </div>
   </section>
 
 </div>
