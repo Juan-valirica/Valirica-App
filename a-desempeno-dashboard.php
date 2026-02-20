@@ -1997,14 +1997,17 @@ try {
         $stmt_total->close();
     }
 
-    // 3) Permisos pendientes de aprobación
+    // 3) Permisos pendientes de aprobación (con tipo y color para el panel inline)
     $stmt_permisos_pend = $conn->prepare("
         SELECT
             p.*,
             e.nombre_persona,
-            e.cargo
+            e.cargo,
+            tp.nombre as tipo_nombre,
+            tp.color_hex
         FROM permisos p
-        LEFT JOIN equipo e ON e.id = p.persona_id
+        INNER JOIN equipo e ON p.persona_id = e.id
+        LEFT JOIN tipos_permisos tp ON p.tipo_permiso_id = tp.id
         WHERE p.usuario_id = ?
         AND p.estado = 'pendiente'
         ORDER BY p.created_at DESC
@@ -2015,12 +2018,32 @@ try {
         $stmt_permisos_pend->bind_param("i", $user_id);
         $stmt_permisos_pend->execute();
         $res = stmt_get_result($stmt_permisos_pend);
-
         while ($row = $res->fetch_assoc()) {
             $permisos_pendientes[] = $row;
         }
         $stmt_permisos_pend->close();
     }
+
+    // 3b) Vacaciones pendientes de aprobación
+    $vacaciones_pendientes = [];
+    $stmt_vac_pend = $conn->prepare("
+        SELECT v.*, e.nombre_persona, e.cargo
+        FROM vacaciones v
+        INNER JOIN equipo e ON v.persona_id = e.id
+        WHERE v.usuario_id = ? AND v.estado = 'pendiente'
+        ORDER BY v.created_at DESC
+        LIMIT 10
+    ");
+    if ($stmt_vac_pend) {
+        $stmt_vac_pend->bind_param("i", $user_id);
+        $stmt_vac_pend->execute();
+        $res = stmt_get_result($stmt_vac_pend);
+        while ($row = $res->fetch_assoc()) {
+            $vacaciones_pendientes[] = $row;
+        }
+        $stmt_vac_pend->close();
+    }
+    $total_pendientes = count($permisos_pendientes) + count($vacaciones_pendientes);
 
     // 4) Permisos para HOY
     $stmt_permisos_hoy = $conn->prepare("
@@ -6526,52 +6549,163 @@ document.addEventListener('keydown', function(e) {
       </button>
     </div>
 
-    <!-- KPIs: 2 cards clave — mismo patrón visual que Metas -->
+    <!-- Hero: 2 KPI cards (izquierda) + Panel Solicitudes Pendientes (derecha) -->
     <div style="
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
+      grid-template-columns: 276px 1fr;
       gap: var(--space-4);
       margin-bottom: var(--space-6);
+      align-items: stretch;
     ">
 
-      <!-- KPI 1: Presentes hoy -->
-      <div style="
-        background: linear-gradient(150deg, #012133 0%, #184656 100%);
-        border-radius: 18px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;"></div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-3);">
-          <div style="width:30px;height:30px;background:rgba(0,217,143,.2);border:1px solid rgba(0,217,143,.35);border-radius:9px;display:flex;align-items:center;justify-content:center;">
-            <i class="ph ph-users-three" style="font-size:14px;color:#00D98F;"></i>
+      <!-- Columna izquierda: KPI cards apiladas -->
+      <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+
+        <!-- KPI 1: Presentes hoy -->
+        <div style="background:linear-gradient(150deg,#012133 0%,#184656 100%);border-radius:18px;padding:var(--space-5);color:white;position:relative;overflow:hidden;flex:1;">
+          <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-3);">
+            <div style="width:30px;height:30px;background:rgba(0,217,143,.2);border:1px solid rgba(0,217,143,.35);border-radius:9px;display:flex;align-items:center;justify-content:center;">
+              <i class="ph ph-users-three" style="font-size:14px;color:#00D98F;"></i>
+            </div>
+            <span style="font-size:11px;font-weight:700;opacity:.6;letter-spacing:.8px;text-transform:uppercase;">Presentes hoy</span>
           </div>
-          <span style="font-size:11px;font-weight:700;opacity:.6;letter-spacing:.8px;text-transform:uppercase;">Presentes hoy</span>
+          <div style="font-size:44px;font-weight:800;line-height:1;margin-bottom:6px;letter-spacing:-2px;"><?= $porcentaje_presentes ?>%</div>
+          <div style="font-size:12px;opacity:.5;"><?= $presentes_hoy ?> de <?= $total_personas ?> en turno</div>
         </div>
-        <div style="font-size:44px;font-weight:800;line-height:1;margin-bottom:6px;letter-spacing:-2px;"><?= $porcentaje_presentes ?>%</div>
-        <div style="font-size:12px;opacity:.5;"><?= $presentes_hoy ?> de <?= $total_personas ?> personas en turno</div>
+
+        <!-- KPI 2: Ausentes -->
+        <div style="background:linear-gradient(150deg,#450a0a 0%,#7f1d1d 100%);border-radius:18px;padding:var(--space-5);color:white;position:relative;overflow:hidden;flex:1;">
+          <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-3);">
+            <div style="width:30px;height:30px;background:rgba(255,59,109,.2);border:1px solid rgba(255,59,109,.35);border-radius:9px;display:flex;align-items:center;justify-content:center;">
+              <i class="ph ph-user-minus" style="font-size:14px;color:#FF3B6D;"></i>
+            </div>
+            <span style="font-size:11px;font-weight:700;opacity:.6;letter-spacing:.8px;text-transform:uppercase;">Ausentes</span>
+          </div>
+          <div style="font-size:44px;font-weight:800;line-height:1;margin-bottom:6px;letter-spacing:-2px;"><?= $ausentes_hoy ?></div>
+          <div style="font-size:12px;opacity:.5;"><?= $tarde_hoy > 0 ? "+ {$tarde_hoy} con tardanza" : "Sin tardanzas registradas" ?></div>
+        </div>
+
       </div>
 
-      <!-- KPI 2: Ausentes -->
+      <!-- Columna derecha: Panel de Solicitudes Pendientes -->
       <div style="
-        background: linear-gradient(150deg, #450a0a 0%, #7f1d1d 100%);
+        background: white;
         border-radius: 18px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
+        border: 1px solid #EBEBEB;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        display: flex;
+        flex-direction: column;
         overflow: hidden;
       ">
-        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;"></div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-3);">
-          <div style="width:30px;height:30px;background:rgba(255,59,109,.2);border:1px solid rgba(255,59,109,.35);border-radius:9px;display:flex;align-items:center;justify-content:center;">
-            <i class="ph ph-user-minus" style="font-size:14px;color:#FF3B6D;"></i>
+
+        <!-- Header del panel -->
+        <div style="padding: 16px 20px 14px; border-bottom: 1px solid #F5F5F5; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width:32px;height:32px;background:rgba(239,127,27,.12);border:1px solid rgba(239,127,27,.22);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="ph ph-clipboard-text" style="font-size:15px;color:#EF7F1B;"></i>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--c-secondary);line-height:1.2;">Solicitudes Pendientes</div>
+              <div style="font-size:11px;color:var(--c-body);opacity:0.5;margin-top:2px;">Permisos y vacaciones · requieren aprobación</div>
+            </div>
           </div>
-          <span style="font-size:11px;font-weight:700;opacity:.6;letter-spacing:.8px;text-transform:uppercase;">Ausentes</span>
+          <?php $pv_total = count($permisos_pendientes) + count($vacaciones_pendientes); ?>
+          <?php if ($pv_total > 0): ?>
+            <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 11px;background:#FEF3C7;color:#D97706;border-radius:20px;white-space:nowrap;flex-shrink:0;">
+              <span style="width:6px;height:6px;border-radius:50%;background:#D97706;"></span>
+              <?= $pv_total ?> pendiente<?= $pv_total > 1 ? 's' : '' ?>
+            </span>
+          <?php endif; ?>
         </div>
-        <div style="font-size:44px;font-weight:800;line-height:1;margin-bottom:6px;letter-spacing:-2px;"><?= $ausentes_hoy ?></div>
-        <div style="font-size:12px;opacity:.5;"><?= $tarde_hoy > 0 ? "+ {$tarde_hoy} con tardanza hoy" : "Sin tardanzas registradas" ?></div>
+
+        <!-- Contenido scrollable -->
+        <div style="overflow-y: auto; flex: 1; padding: 14px 16px; max-height: 320px;">
+          <?php $pv_palette = ['#012133','#184656','#0e3547','#1a4a5c','#0d2e3d']; ?>
+
+          <!-- Permisos pendientes -->
+          <?php if (!empty($permisos_pendientes)): ?>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--c-body);opacity:.5;margin-bottom:10px;display:flex;align-items:center;gap:5px;">
+              <i class="ph ph-file-text" style="font-size:11px;"></i>
+              Permisos · <?= count($permisos_pendientes) ?>
+            </div>
+            <?php foreach ($permisos_pendientes as $pp):
+              $pp_p = explode(' ', trim($pp['nombre_persona'] ?? ''));
+              $pp_i = strtoupper(substr($pp_p[0]??'',0,1).substr($pp_p[1]??'',0,1));
+              if (strlen($pp_i)<2) $pp_i = strtoupper(substr($pp['nombre_persona']??'NA',0,2));
+              $pp_bg = $pv_palette[($pp['id']??0) % count($pv_palette)];
+              $pp_c  = $pp['color_hex'] ?? '#3B82F6';
+            ?>
+              <div style="border:1px solid #F0F0F0;border-left:3px solid <?= h($pp_c) ?>;border-radius:12px;padding:12px 13px;margin-bottom:8px;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 3px 12px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+                <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">
+                  <div style="width:34px;height:34px;border-radius:10px;background:<?= $pp_bg ?>;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <span style="font-size:11px;font-weight:800;color:rgba(255,255,255,.92);letter-spacing:.3px;"><?= h($pp_i) ?></span>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:700;color:var(--c-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= h($pp['nombre_persona']) ?></div>
+                    <div style="font-size:11px;color:var(--c-body);opacity:.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= h($pp['cargo']) ?></div>
+                  </div>
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;background:<?= h($pp_c) ?>18;color:<?= h($pp_c) ?>;border-radius:6px;border:1px solid <?= h($pp_c) ?>30;white-space:nowrap;flex-shrink:0;"><?= h($pp['tipo_nombre'] ?? 'Permiso') ?></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--c-body);opacity:.55;margin-bottom:9px;">
+                  <i class="ph ph-calendar-blank" style="font-size:11px;flex-shrink:0;"></i>
+                  <?= date('d M', strtotime($pp['fecha_inicio'])) ?> → <?= date('d M Y', strtotime($pp['fecha_fin'])) ?>
+                  <?php if (!empty($pp['dias_solicitados'])): ?> · <?= $pp['dias_solicitados'] ?> día<?= $pp['dias_solicitados'] > 1 ? 's' : '' ?><?php endif; ?>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button onclick="decidirPermiso(<?= $pp['id'] ?>, 'aprobar')" style="flex:1;padding:6px 10px;background:#ECFDF5;color:#059669;border:1px solid #D1FAE5;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.12s;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#ECFDF5'"><i class="ph ph-check" style="font-size:11px;"></i> Aprobar</button>
+                  <button onclick="decidirPermisoConMotivo(<?= $pp['id'] ?>)" style="flex:1;padding:6px 10px;background:#FFF1F2;color:#E11D48;border:1px solid #FFE4E6;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.12s;" onmouseover="this.style.background='#FFE4E6'" onmouseout="this.style.background='#FFF1F2'"><i class="ph ph-x" style="font-size:11px;"></i> Rechazar</button>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
+
+          <!-- Vacaciones pendientes -->
+          <?php if (!empty($vacaciones_pendientes)): ?>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--c-body);opacity:.5;margin:<?= !empty($permisos_pendientes)?'14px':'0' ?> 0 10px;display:flex;align-items:center;gap:5px;">
+              <i class="ph ph-sun-horizon" style="font-size:11px;"></i>
+              Vacaciones · <?= count($vacaciones_pendientes) ?>
+            </div>
+            <?php foreach ($vacaciones_pendientes as $vp):
+              $vp_p = explode(' ', trim($vp['nombre_persona'] ?? ''));
+              $vp_i = strtoupper(substr($vp_p[0]??'',0,1).substr($vp_p[1]??'',0,1));
+              if (strlen($vp_i)<2) $vp_i = strtoupper(substr($vp['nombre_persona']??'NA',0,2));
+              $vp_bg = $pv_palette[($vp['id']??0) % count($pv_palette)];
+            ?>
+              <div style="border:1px solid #F0F0F0;border-left:3px solid #10B981;border-radius:12px;padding:12px 13px;margin-bottom:8px;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 3px 12px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+                <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">
+                  <div style="width:34px;height:34px;border-radius:10px;background:<?= $vp_bg ?>;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <span style="font-size:11px;font-weight:800;color:rgba(255,255,255,.92);letter-spacing:.3px;"><?= h($vp_i) ?></span>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:700;color:var(--c-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= h($vp['nombre_persona']) ?></div>
+                    <div style="font-size:11px;color:var(--c-body);opacity:.5;"><?= h($vp['cargo']) ?></div>
+                  </div>
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;background:#D1FAE518;color:#059669;border-radius:6px;border:1px solid #D1FAE530;white-space:nowrap;flex-shrink:0;"><?= $vp['dias_solicitados'] ?? '?' ?> días</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--c-body);opacity:.55;margin-bottom:9px;">
+                  <i class="ph ph-calendar-blank" style="font-size:11px;flex-shrink:0;"></i>
+                  <?= !empty($vp['fecha_inicio_programada']) ? date('d M', strtotime($vp['fecha_inicio_programada'])) : '—' ?><?php if (!empty($vp['fecha_fin_programada'])): ?> → <?= date('d M Y', strtotime($vp['fecha_fin_programada'])) ?><?php endif; ?>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button onclick="decidirVacacion(<?= $vp['id'] ?>, 'aprobar')" style="flex:1;padding:6px 10px;background:#ECFDF5;color:#059669;border:1px solid #D1FAE5;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.12s;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#ECFDF5'"><i class="ph ph-check" style="font-size:11px;"></i> Aprobar</button>
+                  <button onclick="decidirVacacionConMotivo(<?= $vp['id'] ?>)" style="flex:1;padding:6px 10px;background:#FFF1F2;color:#E11D48;border:1px solid #FFE4E6;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.12s;" onmouseover="this.style.background='#FFE4E6'" onmouseout="this.style.background='#FFF1F2'"><i class="ph ph-x" style="font-size:11px;"></i> Rechazar</button>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
+
+          <!-- Empty state -->
+          <?php if (empty($permisos_pendientes) && empty($vacaciones_pendientes)): ?>
+            <div style="text-align:center;padding:36px 20px;">
+              <i class="ph ph-check-circle" style="font-size:46px;color:#D1FAE5;display:block;margin-bottom:14px;"></i>
+              <div style="font-size:14px;font-weight:700;color:var(--c-secondary);margin-bottom:5px;">Todo al día</div>
+              <div style="font-size:12px;color:var(--c-body);opacity:.5;line-height:1.6;">No hay solicitudes pendientes<br>de aprobación</div>
+            </div>
+          <?php endif; ?>
+
+        </div>
       </div>
 
     </div>
@@ -6991,11 +7125,11 @@ document.addEventListener('keydown', function(e) {
   </section>
   <?php endif; ?>
 
-  <!-- ========================================================================== -->
-  <!-- PANEL DE PERMISOS Y VACACIONES (EMPLEADOR) -->
-  <!-- Sistema profesional de gestión de solicitudes con aprobación/rechazo -->
-  <!-- ========================================================================== -->
-  <?php include 'permisos_vacaciones_empleador_panel.php'; ?>
+  <?php
+  // Cargar JS de aprobación/rechazo desde el panel (HTML ya renderizado inline arriba)
+  $pv_panel_inline = true;
+  include 'permisos_vacaciones_empleador_panel.php';
+  ?>
 
   <!-- ============ SECCIÓN: HORARIOS DE TRABAJO ============ -->
   <section style="margin-bottom: var(--space-8);">

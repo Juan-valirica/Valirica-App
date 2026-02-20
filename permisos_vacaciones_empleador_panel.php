@@ -112,6 +112,7 @@ $total_pendientes = count($permisos_pendientes) + count($vacaciones_pendientes);
 }
 </style>
 
+<?php if (!isset($pv_panel_inline)): ?>
 <section style="margin-bottom: var(--space-8);">
     <h2 style="font-size: 22px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-5); display: flex; align-items: center;">
         📝 Permisos y Vacaciones
@@ -235,6 +236,7 @@ $total_pendientes = count($permisos_pendientes) + count($vacaciones_pendientes);
         <?php endif; ?>
     </div>
 </section>
+<?php endif; // pv_panel_inline ?>
 
 <script>
 // Aprobar permiso
