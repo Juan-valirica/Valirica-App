@@ -2045,6 +2045,29 @@ try {
     }
     $total_pendientes = count($permisos_pendientes) + count($vacaciones_pendientes);
 
+    // 3c) Total horas acumuladas por empleado (todas las jornadas)
+    $horas_totales = [];
+    $stmt_horas = $conn->prepare("
+        SELECT
+            a.persona_id,
+            ROUND(SUM(TIMESTAMPDIFF(MINUTE, a.hora_entrada, a.hora_salida)) / 60.0, 1) as total_horas
+        FROM asistencias a
+        INNER JOIN equipo e ON a.persona_id = e.id AND e.usuario_id = ?
+        WHERE a.hora_entrada IS NOT NULL
+          AND a.hora_salida IS NOT NULL
+          AND a.estado != 'ausente'
+        GROUP BY a.persona_id
+    ");
+    if ($stmt_horas) {
+        $stmt_horas->bind_param("i", $user_id);
+        $stmt_horas->execute();
+        $res_h = stmt_get_result($stmt_horas);
+        while ($row_h = $res_h->fetch_assoc()) {
+            $horas_totales[(int)$row_h['persona_id']] = $row_h['total_horas'];
+        }
+        $stmt_horas->close();
+    }
+
     // 4) Permisos para HOY
     $stmt_permisos_hoy = $conn->prepare("
         SELECT
@@ -6972,6 +6995,24 @@ document.addEventListener('keydown', function(e) {
                   </span>
                 <?php endif; ?>
 
+                <!-- Fila 5: Horas acumuladas -->
+                <?php $persona_total_h = $horas_totales[(int)($persona['persona_id'] ?? 0)] ?? null; ?>
+                <?php if ($persona_total_h !== null): ?>
+                  <div style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    font-size: 10px;
+                    font-weight: 600;
+                    color: var(--c-body);
+                    opacity: 0.55;
+                    margin-top: 5px;
+                  ">
+                    <i class="ph ph-timer" style="font-size: 10px;"></i>
+                    <?= number_format((float)$persona_total_h, 1) ?> h acumuladas
+                  </div>
+                <?php endif; ?>
+
               </div>
 
               <!-- Footer: Entrada | Salida -->
@@ -7034,12 +7075,34 @@ document.addEventListener('keydown', function(e) {
     </div>
   </section>
 
-  <!-- Análisis de Patrones -->
-  <?php
-  // Cargar JS de aprobación/rechazo desde el panel (HTML ya renderizado inline arriba)
-  $pv_panel_inline = true;
-  include 'permisos_vacaciones_empleador_panel.php';
-  ?>
+  <script>
+  async function decidirPermiso(permisoId, decision) {
+    if (!confirm('¿Estás seguro de aprobar este permiso?')) return;
+    const fd = new FormData();
+    fd.append('action', 'decidir_permiso'); fd.append('permiso_id', permisoId); fd.append('decision', decision);
+    try { const r = await fetch('permisos_vacaciones_backend.php', {method:'POST',body:fd}); const d = await r.json(); if(d.success){alert('✅ '+d.message);location.reload();}else{alert('❌ '+d.message);} } catch(e){alert('Error: '+e.message);}
+  }
+  async function decidirPermisoConMotivo(permisoId) {
+    const motivo = prompt('Escribe el motivo del rechazo:');
+    if (!motivo || !motivo.trim()) { alert('Debes proporcionar un motivo para rechazar'); return; }
+    const fd = new FormData();
+    fd.append('action', 'decidir_permiso'); fd.append('permiso_id', permisoId); fd.append('decision', 'rechazar'); fd.append('motivo_rechazo', motivo);
+    try { const r = await fetch('permisos_vacaciones_backend.php', {method:'POST',body:fd}); const d = await r.json(); if(d.success){alert('✅ '+d.message);location.reload();}else{alert('❌ '+d.message);} } catch(e){alert('Error: '+e.message);}
+  }
+  async function decidirVacacion(vacacionId, decision) {
+    if (!confirm('¿Estás seguro de aprobar estas vacaciones?')) return;
+    const fd = new FormData();
+    fd.append('action', 'decidir_vacacion'); fd.append('vacacion_id', vacacionId); fd.append('decision', decision);
+    try { const r = await fetch('permisos_vacaciones_backend.php', {method:'POST',body:fd}); const d = await r.json(); if(d.success){alert('✅ '+d.message);location.reload();}else{alert('❌ '+d.message);} } catch(e){alert('Error: '+e.message);}
+  }
+  async function decidirVacacionConMotivo(vacacionId) {
+    const motivo = prompt('Escribe el motivo del rechazo:');
+    if (!motivo || !motivo.trim()) { alert('Debes proporcionar un motivo para rechazar'); return; }
+    const fd = new FormData();
+    fd.append('action', 'decidir_vacacion'); fd.append('vacacion_id', vacacionId); fd.append('decision', 'rechazar'); fd.append('motivo_rechazo', motivo);
+    try { const r = await fetch('permisos_vacaciones_backend.php', {method:'POST',body:fd}); const d = await r.json(); if(d.success){alert('✅ '+d.message);location.reload();}else{alert('❌ '+d.message);} } catch(e){alert('Error: '+e.message);}
+  }
+  </script>
 
   <!-- ============ SECCIÓN: PATRONES + JORNADAS (2 columnas) ============ -->
   <section style="margin-bottom: var(--space-8);">
