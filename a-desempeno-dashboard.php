@@ -6481,8 +6481,9 @@ document.addEventListener('keydown', function(e) {
   <section style="margin-bottom: var(--space-8);">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5);">
       <div>
-        <h1 style="font-size: 28px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-1);">
-          ⏱️ Asistencia de Hoy
+        <h1 style="font-size: 28px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-1); display: flex; align-items: center; gap: 10px;">
+          <i class="ph ph-clock-user" style="font-size: 26px; color: var(--c-accent);"></i>
+          Asistencia de Hoy
         </h1>
         <p style="color: var(--c-body); opacity: 0.7; margin: 0; font-size: 14px;">
           <?= date('l, d F Y') ?> • Última actualización: hace 2 minutos
@@ -6504,132 +6505,87 @@ document.addEventListener('keydown', function(e) {
         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 136, 0, 0.3)'"
         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255, 136, 0, 0.2)'"
       >
-        🔄 Actualizar
+        <i class="ph ph-arrows-clockwise" style="font-size: 15px; margin-right: 6px; vertical-align: middle;"></i>
+        Actualizar
       </button>
     </div>
 
-    <!-- KPIs Hero Grid -->
+    <!-- KPIs: 2 cards clave -->
     <div style="
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(2, 1fr);
       gap: var(--space-4);
       margin-bottom: var(--space-6);
     ">
-      <!-- KPI: Presentes -->
+
+      <!-- KPI 1: Presentes -->
       <div style="
-        background: linear-gradient(135deg, #00D98F 0%, #00D98F 100%);
+        background: white;
         border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
+        padding: 22px var(--space-6);
+        border: 1px solid #E5E7EB;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        display: flex;
+        align-items: center;
+        gap: var(--space-5);
         position: relative;
         overflow: hidden;
-      ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          Presentes
+        transition: box-shadow 0.2s;
+      "
+      onmouseover="this.style.boxShadow='0 4px 16px rgba(0,217,143,0.12)'"
+      onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.06)'"
+      >
+        <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, #00D98F 0%, #00b377 100%); border-radius: 4px 0 0 4px;"></div>
+        <div style="width: 52px; height: 52px; background: #ECFDF5; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <i class="ph ph-users-three" style="font-size: 24px; color: #00D98F;"></i>
         </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $porcentaje_presentes ?>%
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          <?= $presentes_hoy ?> de <?= $total_personas ?> personas
+        <div>
+          <div style="font-size: 11px; font-weight: 600; color: var(--c-body); opacity: 0.55; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 5px;">
+            Presentes hoy
+          </div>
+          <div style="font-size: 40px; font-weight: 800; color: var(--c-secondary); line-height: 1; margin-bottom: 4px; letter-spacing: -1px;">
+            <?= $porcentaje_presentes ?>%
+          </div>
+          <div style="font-size: 13px; color: var(--c-body); opacity: 0.55;">
+            <?= $presentes_hoy ?> de <?= $total_personas ?> personas
+          </div>
         </div>
       </div>
 
-      <!-- KPI: A Tiempo -->
+      <!-- KPI 2: Ausentes / Atención -->
       <div style="
-        background: linear-gradient(135deg, #00D98F 0%, #00D98F 100%);
+        background: white;
         border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
+        padding: 22px var(--space-6);
+        border: 1px solid #E5E7EB;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        display: flex;
+        align-items: center;
+        gap: var(--space-5);
         position: relative;
         overflow: hidden;
-      ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          A Tiempo
+        transition: box-shadow 0.2s;
+      "
+      onmouseover="this.style.boxShadow='0 4px 16px rgba(255,59,109,0.10)'"
+      onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.06)'"
+      >
+        <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, #FF3B6D 0%, #cc1f4f 100%); border-radius: 4px 0 0 4px;"></div>
+        <div style="width: 52px; height: 52px; background: #FFF1F2; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <i class="ph ph-user-minus" style="font-size: 24px; color: #FF3B6D;"></i>
         </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $a_tiempo_hoy ?>
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Puntualidad <?= $porcentaje_a_tiempo ?>%
+        <div>
+          <div style="font-size: 11px; font-weight: 600; color: var(--c-body); opacity: 0.55; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 5px;">
+            Ausentes
+          </div>
+          <div style="font-size: 40px; font-weight: 800; color: var(--c-secondary); line-height: 1; margin-bottom: 4px; letter-spacing: -1px;">
+            <?= $ausentes_hoy ?>
+          </div>
+          <div style="font-size: 13px; color: var(--c-body); opacity: 0.55;">
+            <?= $tarde_hoy > 0 ? "+ {$tarde_hoy} con tardanza" : "Sin tardanzas registradas" ?>
+          </div>
         </div>
       </div>
 
-      <!-- KPI: Tardes -->
-      <div style="
-        background: linear-gradient(135deg, #FFB020 0%, #EF7F1B 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          Tardes
-        </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $tarde_hoy ?>
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Exceden su tolerancia
-        </div>
-      </div>
-
-      <!-- KPI: Ausentes -->
-      <div style="
-        background: linear-gradient(135deg, #FF3B6D 0%, #FF3B6D 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="
-          position: absolute;
-          top: -20px;
-          right: -20px;
-          width: 100px;
-          height: 100px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        "></div>
-        <div style="font-size: 13px; font-weight: 500; opacity: 0.9; margin-bottom: var(--space-2);">
-          Ausentes
-        </div>
-        <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-          <?= $ausentes_hoy ?>
-        </div>
-        <div style="font-size: 12px; opacity: 0.8;">
-          Sin registro hoy
-        </div>
-      </div>
     </div>
 
     <!-- Lista de Asistencia HOY -->
@@ -6639,187 +6595,281 @@ document.addEventListener('keydown', function(e) {
       padding: var(--space-6);
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     ">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5);">
-        <h2 style="font-size: 18px; font-weight: 700; color: var(--c-secondary); margin: 0;">
-          🧑‍💼 Estado del Equipo Hoy
+      <!-- Header con búsqueda y filtro -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5); flex-wrap: wrap; gap: var(--space-3);">
+        <h2 style="font-size: 18px; font-weight: 700; color: var(--c-secondary); margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i class="ph ph-identification-card" style="font-size: 20px; color: var(--c-accent);"></i>
+          Estado del Equipo Hoy
         </h2>
-        <div style="display: flex; gap: var(--space-3);">
-          <input
-            type="text"
-            placeholder="🔍 Buscar..."
-            style="
-              padding: 8px 16px;
-              border: 2px solid #E5E7EB;
-              border-radius: 8px;
-              font-size: 13px;
-              transition: border-color 0.2s;
-            "
-            onfocus="this.style.borderColor='var(--c-accent)'"
-            onblur="this.style.borderColor='#E5E7EB'"
-          >
-          <select style="
-            padding: 8px 16px;
-            border: 2px solid #E5E7EB;
+        <div style="display: flex; gap: var(--space-2); align-items: center;">
+          <div style="position: relative;">
+            <i class="ph ph-magnifying-glass" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #9CA3AF; pointer-events: none;"></i>
+            <input
+              type="text"
+              id="att-search"
+              placeholder="Buscar persona..."
+              style="padding: 8px 12px 8px 32px; border: 1.5px solid #E5E7EB; border-radius: 8px; font-size: 13px; transition: border-color 0.2s; outline: none; width: 180px;"
+              onfocus="this.style.borderColor='var(--c-accent)'"
+              onblur="this.style.borderColor='#E5E7EB'"
+              oninput="filterAttList(this.value, document.getElementById('att-filter').value)"
+            >
+          </div>
+          <select id="att-filter" style="
+            padding: 8px 12px;
+            border: 1.5px solid #E5E7EB;
             border-radius: 8px;
             font-size: 13px;
             cursor: pointer;
-          ">
-            <option>Todos</option>
-            <option>Presentes</option>
-            <option>Ausentes</option>
-            <option>Tardes</option>
+            color: var(--c-secondary);
+            outline: none;
+            background: white;
+          " onchange="filterAttList(document.getElementById('att-search').value, this.value)">
+            <option value="">Todos</option>
+            <option value="a_tiempo">A tiempo</option>
+            <option value="tarde">Con tardanza</option>
+            <option value="ausente">Ausentes</option>
+            <option value="jornada_finalizada">Jornada finalizada</option>
+            <option value="fuera_jornada">Fuera de jornada</option>
           </select>
         </div>
       </div>
 
       <?php if (empty($asistencia_hoy)): ?>
         <!-- Estado vacío -->
-        <div style="text-align: center; padding: var(--space-8) 0; color: var(--c-body); opacity: 0.6;">
-          <div style="font-size: 48px; margin-bottom: var(--space-3);">📋</div>
-          <p style="font-size: 16px; font-weight: 600; margin-bottom: var(--space-2);">
+        <div style="text-align: center; padding: var(--space-8) 0; color: var(--c-body);">
+          <i class="ph ph-clipboard-text" style="font-size: 52px; color: #CBD5E1; display: block; margin-bottom: var(--space-3);"></i>
+          <p style="font-size: 16px; font-weight: 600; margin-bottom: var(--space-2); color: var(--c-secondary);">
             No hay registros de asistencia hoy
           </p>
-          <p style="font-size: 14px;">
+          <p style="font-size: 14px; opacity: 0.6;">
             Los registros aparecerán cuando tu equipo haga check-in
           </p>
         </div>
       <?php else: ?>
-        <!-- Lista de personas -->
-        <div style="display: flex; flex-direction: column; gap: var(--space-3);">
-          <?php foreach ($asistencia_hoy as $persona):
-            $nivel_alerta = $persona['nivel_alerta'] ?? 'ok';
-            $estado_visual = $persona['estado_visual'] ?? 'ausente';
+        <!-- Lista con avatares + status badge -->
+        <div id="att-list" style="display: flex; flex-direction: column; gap: 8px;">
+          <?php
+            $hora_actual_now = date('H:i:s');
+            $att_avatar_palette = ['#012133', '#184656', '#0e3547', '#1a4a5c', '#0d2e3d'];
 
-            // Colores según alerta
-            $border_colors = [
-              'ok' => '#00D98F',
-              'warning' => '#FFB020',
-              'critico' => '#FF3B6D',
-              'ausente' => '#FF3B6D'
-            ];
-            $bg_colors = [
-              'ok' => '#ECFDF5',
-              'warning' => '#FEF3C7',
-              'critico' => '#FEE2E2',
-              'ausente' => '#FEE2E2'
-            ];
-            $icons = [
-              'ok' => '✅',
-              'warning' => '⚠️',
-              'critico' => '🚨',
-              'ausente' => '❌'
-            ];
+            foreach ($asistencia_hoy as $persona):
+              $hora_inicio_turno = $persona['hora_inicio'] ?? '00:00:00';
+              $minutos_tardanza  = (int)($persona['minutos_tarde'] ?? 0);
 
-            $border_color = $border_colors[$nivel_alerta] ?? '#E5E7EB';
-            $bg_color = $bg_colors[$nivel_alerta] ?? '#F9FAFB';
-            $icon = $icons[$nivel_alerta] ?? '•';
+              // Determinar status key
+              if (!empty($persona['hora_salida'])) {
+                  $status_key = 'jornada_finalizada';
+              } elseif (!empty($persona['hora_entrada'])) {
+                  $status_key = ($minutos_tardanza > 0) ? 'tarde' : 'a_tiempo';
+              } elseif ($hora_actual_now < $hora_inicio_turno) {
+                  $status_key = 'fuera_jornada';
+              } else {
+                  $status_key = 'ausente';
+              }
+
+              $st_map = [
+                  'a_tiempo' => [
+                      'label'       => 'A tiempo',
+                      'label_color' => '#059669',
+                      'label_bg'    => '#ECFDF5',
+                      'badge_bg'    => '#00D98F',
+                      'badge_icon'  => 'ph-check-circle-fill',
+                      'accent'      => '#00D98F',
+                  ],
+                  'tarde' => [
+                      'label'       => 'Tarde · ' . $minutos_tardanza . ' min',
+                      'label_color' => '#D97706',
+                      'label_bg'    => '#FEF3C7',
+                      'badge_bg'    => '#FFB020',
+                      'badge_icon'  => 'ph-clock-countdown-fill',
+                      'accent'      => '#FFB020',
+                  ],
+                  'jornada_finalizada' => [
+                      'label'       => 'Jornada finalizada',
+                      'label_color' => '#4F46E5',
+                      'label_bg'    => '#EEF2FF',
+                      'badge_bg'    => '#6366F1',
+                      'badge_icon'  => 'ph-check-fat-fill',
+                      'accent'      => '#6366F1',
+                  ],
+                  'fuera_jornada' => [
+                      'label'       => 'Fuera de jornada',
+                      'label_color' => '#64748B',
+                      'label_bg'    => '#F1F5F9',
+                      'badge_bg'    => '#94A3B8',
+                      'badge_icon'  => 'ph-moon-fill',
+                      'accent'      => '#CBD5E1',
+                  ],
+                  'ausente' => [
+                      'label'       => 'Ausente',
+                      'label_color' => '#E11D48',
+                      'label_bg'    => '#FFF1F2',
+                      'badge_bg'    => '#FF3B6D',
+                      'badge_icon'  => 'ph-x-circle-fill',
+                      'accent'      => '#FF3B6D',
+                  ],
+              ];
+              $st = $st_map[$status_key];
+
+              // Avatar initials
+              $att_parts = explode(' ', trim($persona['nombre_persona'] ?? ''));
+              $att_initials = strtoupper(substr($att_parts[0] ?? '', 0, 1) . substr($att_parts[1] ?? '', 0, 1));
+              if (strlen($att_initials) < 2) $att_initials = strtoupper(substr($persona['nombre_persona'] ?? 'NA', 0, 2));
+              $att_avatar_bg = $att_avatar_palette[($persona['persona_id'] ?? 0) % count($att_avatar_palette)];
+              $jornada_hex = $persona['jornada_color'] ?? '#64748B';
           ?>
-            <div style="
-              border: 2px solid <?= $border_color ?>;
-              border-radius: 12px;
-              padding: var(--space-4);
-              background: <?= $bg_color ?>;
-              transition: all 0.3s ease;
-              cursor: pointer;
-            "
-            onmouseover="this.style.transform='translateX(4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'"
-            onmouseout="this.style.transform='translateX(0)'; this.style.boxShadow='none'"
+            <div
+              data-status="<?= h($status_key) ?>"
+              data-name="<?= h(mb_strtolower($persona['nombre_persona'] ?? '')) ?>"
+              style="
+                background: white;
+                border: 1px solid #F0F0F0;
+                border-left: 3px solid <?= $st['accent'] ?>;
+                border-radius: 12px;
+                padding: 13px 16px;
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                transition: all 0.2s ease;
+                cursor: pointer;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+              "
+              onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'; this.style.transform='translateY(-1px)'"
+              onmouseout="this.style.boxShadow='0 1px 2px rgba(0,0,0,0.04)'; this.style.transform='translateY(0)'"
             >
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: var(--space-3); flex: 1;">
-                  <div style="font-size: 24px;"><?= $icon ?></div>
-                  <div style="flex: 1;">
-                    <div style="font-weight: 600; color: var(--c-secondary); font-size: 15px; margin-bottom: 2px;">
-                      <?= h($persona['nombre_persona'] ?? 'N/A') ?>
-                    </div>
-                    <div style="font-size: 13px; color: var(--c-body); opacity: 0.7;">
-                      <?= h($persona['cargo'] ?? 'Sin cargo') ?>
-                    </div>
-                  </div>
+
+              <!-- Avatar con status badge en esquina -->
+              <div style="position: relative; flex-shrink: 0;">
+                <div style="
+                  width: 44px;
+                  height: 44px;
+                  border-radius: 12px;
+                  background: <?= $att_avatar_bg ?>;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                ">
+                  <span style="
+                    font-size: 13.5px;
+                    font-weight: 800;
+                    color: rgba(255,255,255,0.92);
+                    letter-spacing: 0.5px;
+                    user-select: none;
+                  "><?= h($att_initials) ?></span>
                 </div>
-
-                <div style="display: flex; align-items: center; gap: var(--space-4);">
-                  <?php if (!empty($persona['hora_entrada'])): ?>
-                    <div style="text-align: right;">
-                      <div style="font-size: 12px; color: var(--c-body); opacity: 0.6; margin-bottom: 2px;">
-                        Entrada
-                      </div>
-                      <div style="font-weight: 600; color: var(--c-secondary); font-size: 14px;">
-                        <?= date('g:i A', strtotime($persona['hora_entrada'])) ?>
-                      </div>
-                      <?php if (!empty($persona['minutos_tarde']) && $persona['minutos_tarde'] > 0): ?>
-                        <div style="font-size: 11px; color: #FFB020; font-weight: 600;">
-                          +<?= $persona['minutos_tarde'] ?> min tarde
-                        </div>
-                      <?php endif; ?>
-                    </div>
-                  <?php else: ?>
-                    <div style="text-align: right;">
-                      <div style="font-size: 12px; color: var(--c-body); opacity: 0.6; margin-bottom: 2px;">
-                        Entrada
-                      </div>
-                      <div style="font-weight: 600; color: #FF3B6D; font-size: 14px;">
-                        Sin registro
-                      </div>
-                    </div>
-                  <?php endif; ?>
-
-                  <?php if (!empty($persona['hora_salida'])): ?>
-                    <div style="text-align: right;">
-                      <div style="font-size: 12px; color: var(--c-body); opacity: 0.6; margin-bottom: 2px;">
-                        Salida
-                      </div>
-                      <div style="font-weight: 600; color: var(--c-secondary); font-size: 14px;">
-                        <?= date('g:i A', strtotime($persona['hora_salida'])) ?>
-                      </div>
-                      <?php
-                      $minutos_tarde_salida = (int)($persona['minutos_tarde_salida'] ?? 0);
-                      if ($minutos_tarde_salida > 0): ?>
-                        <div style="font-size: 11px; color: #FF3B6D; font-weight: 600;">
-                          ⚠️ <?= $minutos_tarde_salida ?> min antes
-                        </div>
-                      <?php elseif ($minutos_tarde_salida < 0):
-                        $minutos_extra = abs($minutos_tarde_salida);
-                        $horas = floor($minutos_extra / 60);
-                        $mins = $minutos_extra % 60;
-                      ?>
-                        <div style="font-size: 11px; color: #10B981; font-weight: 600;">
-                          💼 <?= $horas > 0 ? "{$horas}h {$mins}m" : "{$mins}m" ?> extra
-                        </div>
-                      <?php endif; ?>
-                    </div>
-                  <?php else: ?>
-                    <div style="text-align: right;">
-                      <div style="font-size: 12px; color: var(--c-body); opacity: 0.6; margin-bottom: 2px;">
-                        Salida
-                      </div>
-                      <div style="font-weight: 600; color: var(--c-body); opacity: 0.4; font-size: 14px;">
-                        --:-- --
-                      </div>
-                    </div>
-                  <?php endif; ?>
-
-                  <button style="
-                    padding: 8px 16px;
-                    background: white;
-                    border: 1px solid #E5E7EB;
-                    border-radius: 6px;
-                    font-size: 12px;
-                    font-weight: 600;
-                    color: var(--c-secondary);
-                    cursor: pointer;
-                    transition: all 0.2s;
-                  "
-                  onmouseover="this.style.background='#F9FAFB'"
-                  onmouseout="this.style.background='white'"
-                  >
-                    Ver detalles
-                  </button>
+                <!-- Badge de estado en esquina inferior derecha -->
+                <div style="
+                  position: absolute;
+                  bottom: -3px;
+                  right: -3px;
+                  width: 18px;
+                  height: 18px;
+                  border-radius: 50%;
+                  background: <?= $st['badge_bg'] ?>;
+                  border: 2.5px solid white;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+                ">
+                  <i class="<?= $st['badge_icon'] ?>" style="font-size: 8px; color: white;"></i>
                 </div>
               </div>
+
+              <!-- Nombre + cargo + jornada -->
+              <div style="flex: 1; min-width: 0;">
+                <div style="
+                  font-size: 14px;
+                  font-weight: 700;
+                  color: var(--c-secondary);
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  margin-bottom: 3px;
+                "><?= h($persona['nombre_persona'] ?? 'N/A') ?></div>
+                <div style="font-size: 12px; color: var(--c-body); opacity: 0.6; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <span><?= h($persona['cargo'] ?? 'Sin cargo') ?></span>
+                  <?php if (!empty($persona['jornada_nombre'])): ?>
+                    <span style="color: #D1D5DB; line-height: 1;">·</span>
+                    <span style="
+                      font-size: 10px;
+                      font-weight: 700;
+                      padding: 2px 7px;
+                      background: <?= $jornada_hex ?>1a;
+                      color: <?= $jornada_hex ?>;
+                      border-radius: 4px;
+                      border: 1px solid <?= $jornada_hex ?>33;
+                      letter-spacing: 0.2px;
+                    "><?= h($persona['jornada_nombre']) ?></span>
+                  <?php endif; ?>
+                </div>
+              </div>
+
+              <!-- Status pill -->
+              <div style="flex-shrink: 0;">
+                <span style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 5px;
+                  padding: 5px 11px;
+                  background: <?= $st['label_bg'] ?>;
+                  color: <?= $st['label_color'] ?>;
+                  border-radius: 20px;
+                  font-size: 11.5px;
+                  font-weight: 700;
+                  white-space: nowrap;
+                ">
+                  <span style="width: 5px; height: 5px; border-radius: 50%; background: <?= $st['label_color'] ?>; flex-shrink: 0;"></span>
+                  <?= h($st['label']) ?>
+                </span>
+              </div>
+
+              <!-- Tiempos: Entrada | Salida -->
+              <div style="display: flex; align-items: center; gap: 14px; flex-shrink: 0;">
+                <div style="text-align: right;">
+                  <div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--c-body); opacity: 0.45; margin-bottom: 3px;">Entrada</div>
+                  <?php if (!empty($persona['hora_entrada'])): ?>
+                    <div style="font-size: 13px; font-weight: 700; color: var(--c-secondary); line-height: 1.2;">
+                      <?= date('g:i', strtotime($persona['hora_entrada'])) ?><span style="font-size: 10px; font-weight: 500; opacity: 0.55;"> <?= date('A', strtotime($persona['hora_entrada'])) ?></span>
+                    </div>
+                  <?php else: ?>
+                    <div style="font-size: 16px; font-weight: 500; color: #D1D5DB; line-height: 1;">—</div>
+                  <?php endif; ?>
+                </div>
+
+                <div style="width: 1px; height: 26px; background: #F0F0F0;"></div>
+
+                <div style="text-align: right;">
+                  <div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--c-body); opacity: 0.45; margin-bottom: 3px;">Salida</div>
+                  <?php if (!empty($persona['hora_salida'])): ?>
+                    <div style="font-size: 13px; font-weight: 700; color: var(--c-secondary); line-height: 1.2;">
+                      <?= date('g:i', strtotime($persona['hora_salida'])) ?><span style="font-size: 10px; font-weight: 500; opacity: 0.55;"> <?= date('A', strtotime($persona['hora_salida'])) ?></span>
+                    </div>
+                  <?php else: ?>
+                    <div style="font-size: 16px; font-weight: 500; color: #D1D5DB; line-height: 1;">—</div>
+                  <?php endif; ?>
+                </div>
+              </div>
+
             </div>
           <?php endforeach; ?>
         </div>
+
+        <script>
+        function filterAttList(query, statusFilter) {
+          var items = document.querySelectorAll('#att-list > div[data-status]');
+          var q = (query || '').toLowerCase().trim();
+          var sf = (statusFilter || '').toLowerCase().trim();
+          items.forEach(function(el) {
+            var name = (el.getAttribute('data-name') || '').toLowerCase();
+            var status = (el.getAttribute('data-status') || '').toLowerCase();
+            var matchName = !q || name.indexOf(q) !== -1;
+            var matchStatus = !sf || status === sf;
+            el.style.display = (matchName && matchStatus) ? '' : 'none';
+          });
+        }
+        </script>
+
       <?php endif; ?>
     </div>
   </section>
