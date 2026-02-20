@@ -2045,16 +2045,32 @@ try {
     }
     $total_pendientes = count($permisos_pendientes) + count($vacaciones_pendientes);
 
-    // 3c) Total horas acumuladas por empleado (todas las jornadas)
+    // 3c) Total horas acumuladas por empleado — capeadas al fin de jornada
+    // LEAST(hora_salida, hora_fin_turno) evita acumular horas por olvido de marcar salida
+    // Si no hay hora_salida, se usa hora_fin del turno (máximo del día)
     $horas_totales = [];
     $stmt_horas = $conn->prepare("
         SELECT
             a.persona_id,
-            ROUND(SUM(TIMESTAMPDIFF(MINUTE, a.hora_entrada, a.hora_salida)) / 60.0, 1) as total_horas
+            ROUND(SUM(
+                TIMESTAMPDIFF(MINUTE,
+                    a.hora_entrada,
+                    LEAST(
+                        COALESCE(a.hora_salida, t.hora_fin),
+                        t.hora_fin
+                    )
+                )
+            ) / 60.0, 1) as total_horas
         FROM asistencias a
         INNER JOIN equipo e ON a.persona_id = e.id AND e.usuario_id = ?
+        INNER JOIN equipo_jornadas ej
+            ON a.persona_id = ej.persona_id
+            AND ej.fecha_inicio <= a.fecha
+            AND (ej.fecha_fin IS NULL OR ej.fecha_fin >= a.fecha)
+        INNER JOIN turnos t
+            ON ej.jornada_id = t.jornada_id
+            AND t.dia_semana = IF(DAYOFWEEK(a.fecha) = 1, 7, DAYOFWEEK(a.fecha) - 1)
         WHERE a.hora_entrada IS NOT NULL
-          AND a.hora_salida IS NOT NULL
           AND a.estado != 'ausente'
         GROUP BY a.persona_id
     ");
