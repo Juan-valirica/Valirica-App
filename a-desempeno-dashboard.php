@@ -7035,458 +7035,240 @@ document.addEventListener('keydown', function(e) {
   </section>
 
   <!-- Análisis de Patrones -->
-  <?php if (!empty($patrones_atencion) || !empty($patrones_excelentes)): ?>
-  <section style="margin-bottom: var(--space-8);">
-    <h2 style="font-size: 22px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-4);">
-      🔍 Análisis de Patrones de Asistencia
-    </h2>
-    <p style="color: var(--c-body); opacity: 0.7; margin: 0 0 var(--space-5); font-size: 14px;">
-      Período: Últimos 30 días • Actualizado automáticamente
-    </p>
-
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--space-5);">
-      <!-- Patrones Excelentes -->
-      <?php if (!empty($patrones_excelentes)): ?>
-      <div style="
-        background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
-        border: 2px solid #00D98F;
-        border-radius: 16px;
-        padding: var(--space-5);
-      ">
-        <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);">
-          <div style="font-size: 24px;">🏆</div>
-          <h3 style="font-size: 16px; font-weight: 700; color: #00D98F; margin: 0;">
-            Patrones Excelentes
-          </h3>
-        </div>
-
-        <?php foreach ($patrones_excelentes as $patron): ?>
-          <div style="
-            background: white;
-            border-radius: 10px;
-            padding: var(--space-3);
-            margin-bottom: var(--space-3);
-          ">
-            <div style="font-weight: 600; color: var(--c-secondary); font-size: 14px; margin-bottom: var(--space-1);">
-              <?= h($patron['nombre_persona'] ?? 'N/A') ?>
-            </div>
-            <div style="display: flex; gap: var(--space-3); font-size: 12px; color: var(--c-body);">
-              <span>✨ <?= number_format($patron['tasa_asistencia'] ?? 0, 0) ?>% asistencia</span>
-              <span>⏰ <?= number_format($patron['tasa_puntualidad'] ?? 0, 0) ?>% puntualidad</span>
-            </div>
-          </div>
-        <?php endforeach; ?>
-      </div>
-      <?php endif; ?>
-
-      <!-- Patrones que Requieren Atención -->
-      <?php if (!empty($patrones_atencion)): ?>
-      <div style="
-        background: linear-gradient(135deg, #fff8f0 0%, #facb99 100%);
-        border: 2px solid #FFB020;
-        border-radius: 16px;
-        padding: var(--space-5);
-      ">
-        <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);">
-          <div style="font-size: 24px;">⚠️</div>
-          <h3 style="font-size: 16px; font-weight: 700; color: #EF7F1B; margin: 0;">
-            Requieren Atención
-          </h3>
-        </div>
-
-        <?php foreach (array_slice($patrones_atencion, 0, 3) as $patron): ?>
-          <div style="
-            background: white;
-            border-radius: 10px;
-            padding: var(--space-3);
-            margin-bottom: var(--space-3);
-          ">
-            <div style="font-weight: 600; color: var(--c-secondary); font-size: 14px; margin-bottom: var(--space-1);">
-              🚨 <?= h($patron['nombre_persona'] ?? 'N/A') ?>
-            </div>
-            <div style="font-size: 12px; color: var(--c-body); margin-bottom: var(--space-2);">
-              Asistencia: <?= number_format($patron['tasa_asistencia'] ?? 0, 0) ?>% •
-              Puntualidad: <?= number_format($patron['tasa_puntualidad'] ?? 0, 0) ?>%
-            </div>
-            <div style="
-              padding: var(--space-2);
-              background: #FEF3C7;
-              border-radius: 6px;
-              font-size: 11px;
-              color: #8a4709;
-            ">
-              💡 Acción sugerida: Reunión 1-on-1 con manager
-            </div>
-          </div>
-        <?php endforeach; ?>
-      </div>
-      <?php endif; ?>
-    </div>
-  </section>
-  <?php endif; ?>
-
   <?php
   // Cargar JS de aprobación/rechazo desde el panel (HTML ya renderizado inline arriba)
   $pv_panel_inline = true;
   include 'permisos_vacaciones_empleador_panel.php';
   ?>
 
-  <!-- ============ SECCIÓN: HORARIOS DE TRABAJO ============ -->
+  <!-- ============ SECCIÓN: PATRONES + JORNADAS (2 columnas) ============ -->
   <section style="margin-bottom: var(--space-8);">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5);">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); align-items: start;">
+
+      <!-- ── COLUMNA IZQUIERDA: Patrones de Asistencia ── -->
       <div>
-        <h1 style="font-size: 28px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-1);">
-          🕒 Horarios de Trabajo
-        </h1>
-        <p style="color: var(--c-body); opacity: 0.7; margin: 0; font-size: 14px;">
-          Gestiona las jornadas laborales y asigna empleados a cada horario
-        </p>
-      </div>
-      <div style="display: flex; gap: 12px;">
-        <button
-          onclick="abrirModalDescargarHistorico()"
-          style="
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-            transition: all 0.3s ease;
-          "
-          onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(16, 185, 129, 0.3)'"
-          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.2)'"
-        >
-          📥 Descargar Histórico
-        </button>
-        <button
-          onclick="abrirModalJornadaWizard()"
-          style="
-            padding: 12px 24px;
-            background: linear-gradient(135deg, var(--c-accent) 0%, #FF6B35 100%);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(255, 136, 0, 0.2);
-            transition: all 0.3s ease;
-          "
-          onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 136, 0, 0.3)'"
-          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255, 136, 0, 0.2)'"
-        >
-          ➕ Crear Jornada
-        </button>
-      </div>
-    </div>
 
-    <!-- KPIs Horarios -->
-    <div style="
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: var(--space-4);
-      margin-bottom: var(--space-6);
-    ">
-      <!-- KPI: Jornadas Activas -->
-      <div style="
-        background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="position: relative; z-index: 1;">
-          <div style="font-size: 13px; opacity: 0.9; margin-bottom: var(--space-2);">
-            Jornadas Activas
+        <!-- Sub-header -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:var(--space-4);">
+          <div style="width:38px;height:38px;background:linear-gradient(135deg,#012133,#184656);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(1,33,51,.22);">
+            <i class="ph ph-chart-line-up" style="font-size:18px;color:rgba(255,255,255,.88);"></i>
           </div>
-          <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-            <?= $jornadas_activas ?>
-          </div>
-          <div style="font-size: 12px; opacity: 0.8;">
-            De <?= $total_jornadas ?> totales
+          <div>
+            <h2 style="font-size:18px;font-weight:800;color:var(--c-secondary);margin:0;letter-spacing:-0.2px;">Patrones de Asistencia</h2>
+            <p style="font-size:12px;color:var(--c-body);opacity:.5;margin:2px 0 0;">Últimos 30 días · análisis automático</p>
           </div>
         </div>
-        <div style="
-          position: absolute;
-          right: -20px;
-          bottom: -20px;
-          font-size: 80px;
-          opacity: 0.15;
-        ">📋</div>
-      </div>
 
-      <!-- KPI: Empleados Asignados -->
-      <div style="
-        background: linear-gradient(135deg, #F093FB 0%, #F5576C 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="position: relative; z-index: 1;">
-          <div style="font-size: 13px; opacity: 0.9; margin-bottom: var(--space-2);">
-            Empleados con Jornada
-          </div>
-          <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-            <?= $total_empleados_con_jornada ?>
-          </div>
-          <div style="font-size: 12px; opacity: 0.8;">
-            De <?= $total_personas ?> empleados
-          </div>
-        </div>
-        <div style="
-          position: absolute;
-          right: -20px;
-          bottom: -20px;
-          font-size: 80px;
-          opacity: 0.15;
-        ">👥</div>
-      </div>
+        <!-- Panel unificado -->
+        <div style="background:white;border-radius:18px;border:1px solid #EBEBEB;box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden;">
 
-      <!-- KPI: Cobertura -->
-      <div style="
-        background: linear-gradient(135deg, #4FACFE 0%, #00F2FE 100%);
-        border-radius: 16px;
-        padding: var(--space-5);
-        color: white;
-        position: relative;
-        overflow: hidden;
-      ">
-        <div style="position: relative; z-index: 1;">
-          <div style="font-size: 13px; opacity: 0.9; margin-bottom: var(--space-2);">
-            Cobertura de Horarios
-          </div>
-          <div style="font-size: 36px; font-weight: 700; margin-bottom: var(--space-1);">
-            <?= $total_personas > 0 ? round(($total_empleados_con_jornada / $total_personas) * 100) : 0 ?>%
-          </div>
-          <div style="font-size: 12px; opacity: 0.8;">
-            Del equipo total
-          </div>
-        </div>
-        <div style="
-          position: absolute;
-          right: -20px;
-          bottom: -20px;
-          font-size: 80px;
-          opacity: 0.15;
-        ">📊</div>
-      </div>
-    </div>
+          <?php
+          // Merge: primero excelentes, luego atención
+          $todos_patrones = [];
+          foreach (($patrones_excelentes ?? []) as $p) {
+              $p['_tipo'] = 'excelente';
+              $todos_patrones[] = $p;
+          }
+          foreach (($patrones_atencion ?? []) as $p) {
+              $p['_tipo'] = 'atencion';
+              $todos_patrones[] = $p;
+          }
+          $pat_palette = ['#012133','#184656','#0e3547','#1a4a5c','#0d2e3d'];
+          ?>
 
-    <!-- Lista de Jornadas -->
-    <?php if (empty($jornadas_trabajo)): ?>
-      <div style="
-        background: white;
-        border-radius: 16px;
-        padding: var(--space-8);
-        text-align: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      ">
-        <div style="font-size: 64px; margin-bottom: var(--space-4); opacity: 0.3;">🕒</div>
-        <h3 style="font-size: 20px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-2);">
-          No hay jornadas configuradas
-        </h3>
-        <p style="color: var(--c-body); opacity: 0.7; margin: 0 0 var(--space-5); font-size: 14px;">
-          Crea tu primera jornada laboral para comenzar a gestionar los horarios del equipo
-        </p>
-        <button
-          onclick="abrirModalJornadaWizard()"
-          style="
-            padding: 12px 32px;
-            background: var(--c-accent);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(255, 136, 0, 0.2);
-          "
-        >
-          ➕ Crear Primera Jornada
-        </button>
-      </div>
-    <?php else: ?>
-      <div style="
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: var(--space-4);
-      ">
-        <?php foreach ($jornadas_trabajo as $jornada): ?>
-          <div style="
-            background: white;
-            border-radius: 16px;
-            padding: var(--space-5);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-left: 4px solid <?= h($jornada['color_hex']) ?>;
-            position: relative;
-            transition: all 0.3s ease;
-          "
-          onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)'"
-          onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)'"
-          >
-            <!-- Header -->
-            <div style="display: flex; align-items: start; justify-content: space-between; margin-bottom: var(--space-3);">
-              <div style="flex: 1;">
-                <h3 style="font-size: 18px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-1);">
-                  <?= h($jornada['nombre']) ?>
-                </h3>
-                <?php if (!empty($jornada['codigo_corto'])): ?>
-                  <span style="
-                    display: inline-block;
-                    padding: 2px 8px;
-                    background: <?= h($jornada['color_hex']) ?>20;
-                    color: <?= h($jornada['color_hex']) ?>;
-                    border-radius: 4px;
-                    font-size: 11px;
-                    font-weight: 600;
-                    text-transform: uppercase;
-                  ">
-                    <?= h($jornada['codigo_corto']) ?>
+          <?php if (empty($todos_patrones)): ?>
+            <div style="text-align:center;padding:44px 20px;">
+              <i class="ph ph-chart-line-up" style="font-size:44px;color:#D1FAE5;display:block;margin-bottom:12px;"></i>
+              <div style="font-size:14px;font-weight:700;color:var(--c-secondary);margin-bottom:4px;">Sin datos aún</div>
+              <div style="font-size:12px;color:var(--c-body);opacity:.5;">Los patrones aparecerán con más registros de asistencia</div>
+            </div>
+          <?php else: ?>
+            <!-- Leyenda compacta -->
+            <div style="display:flex;gap:16px;padding:12px 16px;border-bottom:1px solid #F5F5F5;background:#FAFAFA;">
+              <span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:#059669;">
+                <i class="ph ph-seal-check-fill" style="font-size:12px;"></i> Excelente (<?= count($patrones_excelentes ?? []) ?>)
+              </span>
+              <span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:#D97706;">
+                <i class="ph ph-warning-fill" style="font-size:12px;"></i> Requiere atención (<?= count($patrones_atencion ?? []) ?>)
+              </span>
+            </div>
+
+            <?php foreach ($todos_patrones as $idx => $pat):
+              $pat_p = explode(' ', trim($pat['nombre_persona'] ?? ''));
+              $pat_i = strtoupper(substr($pat_p[0]??'',0,1).substr($pat_p[1]??'',0,1));
+              if (strlen($pat_i)<2) $pat_i = strtoupper(substr($pat['nombre_persona']??'NA',0,2));
+              $pat_bg = $pat_palette[$idx % count($pat_palette)];
+              $es_excelente = $pat['_tipo'] === 'excelente';
+              $asist = (int)($pat['tasa_asistencia'] ?? 0);
+              $puntual = (int)($pat['tasa_puntualidad'] ?? 0);
+            ?>
+              <div style="
+                display:flex;align-items:center;gap:12px;
+                padding:12px 16px;
+                border-bottom:1px solid #F8F8F8;
+                transition:background 0.15s;
+              " onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='white'">
+
+                <!-- Avatar -->
+                <div style="width:38px;height:38px;border-radius:11px;background:<?= $pat_bg ?>;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <span style="font-size:12px;font-weight:800;color:rgba(255,255,255,.92);letter-spacing:.3px;"><?= h($pat_i) ?></span>
+                </div>
+
+                <!-- Nombre -->
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:13px;font-weight:700;color:var(--c-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px;"><?= h($pat['nombre_persona'] ?? 'N/A') ?></div>
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    <!-- Asistencia bar -->
+                    <div style="display:flex;align-items:center;gap:4px;">
+                      <span style="font-size:10px;color:var(--c-body);opacity:.5;font-weight:600;">Asist.</span>
+                      <div style="width:52px;height:5px;background:#F0F0F0;border-radius:3px;overflow:hidden;">
+                        <div style="height:100%;width:<?= $asist ?>%;background:<?= $asist >= 90 ? '#00D98F' : ($asist >= 75 ? '#FFB020' : '#FF3B6D') ?>;border-radius:3px;transition:width .4s;"></div>
+                      </div>
+                      <span style="font-size:10px;font-weight:700;color:var(--c-secondary);"><?= $asist ?>%</span>
+                    </div>
+                    <!-- Puntualidad bar -->
+                    <div style="display:flex;align-items:center;gap:4px;">
+                      <span style="font-size:10px;color:var(--c-body);opacity:.5;font-weight:600;">Puntual.</span>
+                      <div style="width:52px;height:5px;background:#F0F0F0;border-radius:3px;overflow:hidden;">
+                        <div style="height:100%;width:<?= $puntual ?>%;background:<?= $puntual >= 90 ? '#00D98F' : ($puntual >= 75 ? '#FFB020' : '#FF3B6D') ?>;border-radius:3px;transition:width .4s;"></div>
+                      </div>
+                      <span style="font-size:10px;font-weight:700;color:var(--c-secondary);"><?= $puntual ?>%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Badge tipo -->
+                <?php if ($es_excelente): ?>
+                  <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:4px 9px;background:#ECFDF5;color:#059669;border-radius:20px;white-space:nowrap;flex-shrink:0;">
+                    <i class="ph ph-seal-check-fill" style="font-size:11px;"></i> Excelente
+                  </span>
+                <?php else: ?>
+                  <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:4px 9px;background:#FEF3C7;color:#D97706;border-radius:20px;white-space:nowrap;flex-shrink:0;">
+                    <i class="ph ph-warning-fill" style="font-size:11px;"></i> Atención
                   </span>
                 <?php endif; ?>
               </div>
-              <div style="
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: <?= $jornada['is_active'] ? '#00D98F' : '#CCCCCC' ?>;
-              "></div>
+            <?php endforeach; ?>
+          <?php endif; ?>
+
+        </div>
+      </div>
+
+      <!-- ── COLUMNA DERECHA: Jornadas de Trabajo ── -->
+      <div>
+
+        <!-- Sub-header con botones -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:var(--space-4);">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+            <div style="width:38px;height:38px;background:linear-gradient(135deg,#EF7F1B,#f5962c);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(239,127,27,.28);">
+              <i class="ph ph-calendar-check" style="font-size:18px;color:white;"></i>
             </div>
-
-            <!-- Descripción -->
-            <?php if (!empty($jornada['descripcion'])): ?>
-              <p style="font-size: 13px; color: var(--c-body); opacity: 0.7; margin: 0 0 var(--space-3); line-height: 1.5;">
-                <?= h($jornada['descripcion']) ?>
-              </p>
-            <?php endif; ?>
-
-            <!-- Detalles -->
-            <div style="margin-bottom: var(--space-4);">
-              <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
-                <span style="font-size: 14px;">📅</span>
-                <span style="font-size: 13px; color: var(--c-body);">
-                  <?= format_dias_turno($jornada['turnos']) ?>
-                </span>
-              </div>
-              <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
-                <span style="font-size: 14px;">⏰</span>
-                <span style="font-size: 13px; color: var(--c-body);">
-                  <?= rango_horas_turno($jornada['turnos']) ?>
-                </span>
-              </div>
-              <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
-                <span style="font-size: 14px;">📊</span>
-                <span style="font-size: 13px; color: var(--c-body);">
-                  <?= number_format($jornada['horas_semanales_esperadas'], 1) ?> hrs/semana
-                </span>
-              </div>
-              <?php if (tiene_turno_nocturno($jornada['turnos'])): ?>
-                <div style="display: flex; align-items: center; gap: var(--space-2);">
-                  <span style="font-size: 14px;">🌙</span>
-                  <span style="font-size: 13px; color: #667EEA; font-weight: 600;">
-                    Incluye turno nocturno
-                  </span>
-                </div>
-              <?php endif; ?>
-            </div>
-
-            <!-- Estadísticas -->
-            <div style="
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: var(--space-3);
-              padding: var(--space-3);
-              background: #F9FAFB;
-              border-radius: 8px;
-              margin-bottom: var(--space-4);
-            ">
-              <div>
-                <div style="font-size: 11px; color: var(--c-body); opacity: 0.6; margin-bottom: 4px;">
-                  Empleados
-                </div>
-                <div style="font-size: 20px; font-weight: 700; color: var(--c-secondary);">
-                  <?= (int)$jornada['total_empleados'] ?>
-                </div>
-              </div>
-              <div>
-                <div style="font-size: 11px; color: var(--c-body); opacity: 0.6; margin-bottom: 4px;">
-                  Tolerancia
-                </div>
-                <div style="font-size: 20px; font-weight: 700; color: var(--c-secondary);">
-                  <?= (int)$jornada['tolerancia_entrada_min'] ?> min
-                </div>
-              </div>
-            </div>
-
-            <!-- Acciones -->
-            <div style="display: flex; gap: var(--space-2);">
-              <button
-                onclick="verDetallesJornada(<?= (int)$jornada['id'] ?>)"
-                style="
-                  flex: 1;
-                  padding: 8px 12px;
-                  background: white;
-                  border: 1px solid #E5E7EB;
-                  border-radius: 6px;
-                  color: var(--c-secondary);
-                  font-size: 12px;
-                  font-weight: 600;
-                  cursor: pointer;
-                  transition: all 0.2s ease;
-                "
-                onmouseover="this.style.background='#F9FAFB'"
-                onmouseout="this.style.background='white'"
-              >
-                👁️ Ver
-              </button>
-              <button
-                onclick="abrirModalAsignarEmpleados(<?= (int)$jornada['id'] ?>, '<?= h($jornada['nombre']) ?>')"
-                style="
-                  flex: 1;
-                  padding: 8px 12px;
-                  background: var(--c-accent);
-                  border: none;
-                  border-radius: 6px;
-                  color: white;
-                  font-size: 12px;
-                  font-weight: 600;
-                  cursor: pointer;
-                  transition: all 0.2s ease;
-                "
-                onmouseover="this.style.opacity='0.9'"
-                onmouseout="this.style.opacity='1'"
-              >
-                👥 Asignar
-              </button>
-              <button
-                onclick="editarJornada(<?= (int)$jornada['id'] ?>)"
-                style="
-                  padding: 8px 12px;
-                  background: white;
-                  border: 1px solid #E5E7EB;
-                  border-radius: 6px;
-                  color: var(--c-secondary);
-                  font-size: 12px;
-                  cursor: pointer;
-                  transition: all 0.2s ease;
-                "
-                onmouseover="this.style.background='#F9FAFB'"
-                onmouseout="this.style.background='white'"
-              >
-                ✏️
-              </button>
+            <div>
+              <h2 style="font-size:18px;font-weight:800;color:var(--c-secondary);margin:0;letter-spacing:-0.2px;">Jornadas de Trabajo</h2>
+              <p style="font-size:12px;color:var(--c-body);opacity:.5;margin:2px 0 0;">Horarios asignados al equipo</p>
             </div>
           </div>
-        <?php endforeach; ?>
+          <div style="display:flex;gap:8px;flex-shrink:0;">
+            <button onclick="abrirModalDescargarHistorico()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:white;border:1.5px solid #E5E7EB;border-radius:10px;color:var(--c-secondary);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;" onmouseover="this.style.borderColor='#012133';this.style.background='#F9FAFB'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='white'">
+              <i class="ph ph-download-simple" style="font-size:13px;"></i> CSV
+            </button>
+            <button onclick="abrirModalJornadaWizard()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg,#EF7F1B 0%,#f5962c 100%);border:none;border-radius:10px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(239,127,27,.28);transition:filter .12s,box-shadow .12s;" onmouseover="this.style.filter='brightness(1.05)'" onmouseout="this.style.filter='none'">
+              <i class="ph ph-plus" style="font-size:13px;"></i> Crear Jornada
+            </button>
+          </div>
+        </div>
+
+        <!-- Lista de jornadas -->
+        <?php if (empty($jornadas_trabajo)): ?>
+          <div style="background:white;border-radius:18px;border:1px solid #EBEBEB;padding:44px 20px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+            <i class="ph ph-calendar-x" style="font-size:48px;color:#D1D5DB;display:block;margin-bottom:14px;"></i>
+            <div style="font-size:15px;font-weight:700;color:var(--c-secondary);margin-bottom:5px;">No hay jornadas configuradas</div>
+            <p style="font-size:13px;color:var(--c-body);opacity:.6;margin:0 0 20px;">Crea tu primera jornada para gestionar horarios</p>
+            <button onclick="abrirModalJornadaWizard()" style="display:inline-flex;align-items:center;gap:6px;padding:10px 22px;background:linear-gradient(135deg,#EF7F1B,#f5962c);border:none;border-radius:10px;color:white;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(239,127,27,.28);">
+              <i class="ph ph-plus" style="font-size:14px;"></i> Crear Primera Jornada
+            </button>
+          </div>
+        <?php else: ?>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <?php foreach ($jornadas_trabajo as $jornada): ?>
+              <div style="
+                background:white;
+                border-radius:14px;
+                border:1px solid #EBEBEB;
+                border-left:4px solid <?= h($jornada['color_hex']) ?>;
+                padding:14px 16px;
+                box-shadow:0 1px 3px rgba(0,0,0,.05);
+                transition:box-shadow .18s,transform .18s;
+              " onmouseover="this.style.boxShadow='0 6px 18px rgba(0,0,0,.09)';this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.05)';this.style.transform='translateY(0)'">
+
+                <!-- Fila 1: Nombre + código + status dot -->
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                  <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                    <span style="font-size:14px;font-weight:800;color:var(--c-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= h($jornada['nombre']) ?></span>
+                    <?php if (!empty($jornada['codigo_corto'])): ?>
+                      <span style="font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 7px;background:<?= h($jornada['color_hex']) ?>18;color:<?= h($jornada['color_hex']) ?>;border-radius:5px;border:1px solid <?= h($jornada['color_hex']) ?>30;flex-shrink:0;"><?= h($jornada['codigo_corto']) ?></span>
+                    <?php endif; ?>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                    <span style="width:7px;height:7px;border-radius:50%;background:<?= $jornada['is_active'] ? '#00D98F' : '#CBD5E1' ?>;display:inline-block;"></span>
+                    <span style="font-size:10px;font-weight:600;color:<?= $jornada['is_active'] ? '#059669' : '#94A3B8' ?>;"><?= $jornada['is_active'] ? 'Activa' : 'Inactiva' ?></span>
+                  </div>
+                </div>
+
+                <!-- Fila 2: Detalles en línea -->
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px;">
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--c-body);opacity:.65;">
+                    <i class="ph ph-calendar-blank" style="font-size:13px;color:<?= h($jornada['color_hex']) ?>;"></i>
+                    <?= format_dias_turno($jornada['turnos']) ?>
+                  </span>
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--c-body);opacity:.65;">
+                    <i class="ph ph-clock" style="font-size:13px;color:<?= h($jornada['color_hex']) ?>;"></i>
+                    <?= rango_horas_turno($jornada['turnos']) ?>
+                  </span>
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--c-body);opacity:.65;">
+                    <i class="ph ph-timer" style="font-size:13px;color:<?= h($jornada['color_hex']) ?>;"></i>
+                    <?= number_format($jornada['horas_semanales_esperadas'], 1) ?> hrs/sem
+                  </span>
+                  <?php if (tiene_turno_nocturno($jornada['turnos'])): ?>
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#6366F1;">
+                      <i class="ph ph-moon-stars" style="font-size:12px;"></i> Nocturno
+                    </span>
+                  <?php endif; ?>
+                </div>
+
+                <!-- Fila 3: Stats + acciones -->
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #F5F5F5;">
+                  <div style="display:flex;gap:16px;">
+                    <div>
+                      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--c-body);opacity:.45;margin-bottom:2px;">Empleados</div>
+                      <div style="font-size:16px;font-weight:800;color:var(--c-secondary);letter-spacing:-0.5px;"><?= (int)$jornada['total_empleados'] ?></div>
+                    </div>
+                    <div>
+                      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--c-body);opacity:.45;margin-bottom:2px;">Tolerancia</div>
+                      <div style="font-size:16px;font-weight:800;color:var(--c-secondary);letter-spacing:-0.5px;"><?= (int)$jornada['tolerancia_entrada_min'] ?> <span style="font-size:11px;font-weight:500;opacity:.6;">min</span></div>
+                    </div>
+                  </div>
+                  <!-- Acciones -->
+                  <div style="display:flex;gap:6px;">
+                    <button onclick="verDetallesJornada(<?= (int)$jornada['id'] ?>)" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;background:white;border:1.5px solid #E5E7EB;border-radius:8px;color:var(--c-secondary);font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='white'">
+                      <i class="ph ph-eye" style="font-size:13px;"></i> Ver
+                    </button>
+                    <button onclick="abrirModalAsignarEmpleados(<?= (int)$jornada['id'] ?>, '<?= h($jornada['nombre']) ?>')" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;background:linear-gradient(135deg,#EF7F1B,#f5962c);border:none;border-radius:8px;color:white;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:filter .12s;" onmouseover="this.style.filter='brightness(1.05)'" onmouseout="this.style.filter='none'">
+                      <i class="ph ph-users-three" style="font-size:13px;"></i> Asignar
+                    </button>
+                    <button onclick="editarJornada(<?= (int)$jornada['id'] ?>)" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;background:white;border:1.5px solid #E5E7EB;border-radius:8px;color:var(--c-secondary);cursor:pointer;transition:all .15s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='white'" title="Editar">
+                      <i class="ph ph-pencil-simple" style="font-size:14px;"></i>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+
       </div>
-    <?php endif; ?>
+    </div>
   </section>
 
 </div>
