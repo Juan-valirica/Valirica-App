@@ -2825,6 +2825,11 @@ if (empty($cultura_tipo_final)) {
   <!-- Valírica Design System -->
   <link rel="stylesheet" href="valirica-design-system.css">
 
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+
   <style>
     /* === Desempeño Dashboard Page Specific Styles === */
 
@@ -6629,8 +6634,12 @@ document.addEventListener('keydown', function(e) {
           </p>
         </div>
       <?php else: ?>
-        <!-- Lista con avatares + status badge -->
-        <div id="att-list" style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- Grilla 4 columnas: card por persona -->
+        <div id="att-list" style="
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+        ">
           <?php
             $hora_actual_now = date('H:i:s');
             $att_avatar_palette = ['#012133', '#184656', '#0e3547', '#1a4a5c', '#0d2e3d'];
@@ -6656,7 +6665,7 @@ document.addEventListener('keydown', function(e) {
                       'label_color' => '#059669',
                       'label_bg'    => '#ECFDF5',
                       'badge_bg'    => '#00D98F',
-                      'badge_icon'  => 'ph-check-circle-fill',
+                      'badge_icon'  => 'ph ph-check-circle-fill',
                       'accent'      => '#00D98F',
                   ],
                   'tarde' => [
@@ -6664,15 +6673,15 @@ document.addEventListener('keydown', function(e) {
                       'label_color' => '#D97706',
                       'label_bg'    => '#FEF3C7',
                       'badge_bg'    => '#FFB020',
-                      'badge_icon'  => 'ph-clock-countdown-fill',
+                      'badge_icon'  => 'ph ph-clock-countdown-fill',
                       'accent'      => '#FFB020',
                   ],
                   'jornada_finalizada' => [
-                      'label'       => 'Jornada finalizada',
+                      'label'       => 'Finalizada',
                       'label_color' => '#4F46E5',
                       'label_bg'    => '#EEF2FF',
                       'badge_bg'    => '#6366F1',
-                      'badge_icon'  => 'ph-check-fat-fill',
+                      'badge_icon'  => 'ph ph-check-fat-fill',
                       'accent'      => '#6366F1',
                   ],
                   'fuera_jornada' => [
@@ -6680,7 +6689,7 @@ document.addEventListener('keydown', function(e) {
                       'label_color' => '#64748B',
                       'label_bg'    => '#F1F5F9',
                       'badge_bg'    => '#94A3B8',
-                      'badge_icon'  => 'ph-moon-fill',
+                      'badge_icon'  => 'ph ph-moon-fill',
                       'accent'      => '#CBD5E1',
                   ],
                   'ausente' => [
@@ -6688,7 +6697,7 @@ document.addEventListener('keydown', function(e) {
                       'label_color' => '#E11D48',
                       'label_bg'    => '#FFF1F2',
                       'badge_bg'    => '#FF3B6D',
-                      'badge_icon'  => 'ph-x-circle-fill',
+                      'badge_icon'  => 'ph ph-x-circle-fill',
                       'accent'      => '#FF3B6D',
                   ],
               ];
@@ -6699,137 +6708,171 @@ document.addEventListener('keydown', function(e) {
               $att_initials = strtoupper(substr($att_parts[0] ?? '', 0, 1) . substr($att_parts[1] ?? '', 0, 1));
               if (strlen($att_initials) < 2) $att_initials = strtoupper(substr($persona['nombre_persona'] ?? 'NA', 0, 2));
               $att_avatar_bg = $att_avatar_palette[($persona['persona_id'] ?? 0) % count($att_avatar_palette)];
-              $jornada_hex = $persona['jornada_color'] ?? '#64748B';
+              $jornada_hex = $persona['jornada_color'] ?? '#94A3B8';
           ?>
+            <!-- Card persona -->
             <div
               data-status="<?= h($status_key) ?>"
               data-name="<?= h(mb_strtolower($persona['nombre_persona'] ?? '')) ?>"
               style="
                 background: white;
-                border: 1px solid #F0F0F0;
-                border-left: 3px solid <?= $st['accent'] ?>;
-                border-radius: 12px;
-                padding: 13px 16px;
-                display: flex;
-                align-items: center;
-                gap: 14px;
-                transition: all 0.2s ease;
+                border-radius: 16px;
+                border: 1px solid #EBEBEB;
+                border-top: 3px solid <?= $st['accent'] ?>;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+                overflow: hidden;
+                transition: box-shadow 0.18s ease, transform 0.18s ease;
                 cursor: pointer;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+                display: flex;
+                flex-direction: column;
               "
-              onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'; this.style.transform='translateY(-1px)'"
-              onmouseout="this.style.boxShadow='0 1px 2px rgba(0,0,0,0.04)'; this.style.transform='translateY(0)'"
+              onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.10)'; this.style.transform='translateY(-2px)'"
+              onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.05)'; this.style.transform='translateY(0)'"
             >
 
-              <!-- Avatar con status badge en esquina -->
-              <div style="position: relative; flex-shrink: 0;">
-                <div style="
-                  width: 44px;
-                  height: 44px;
-                  border-radius: 12px;
-                  background: <?= $att_avatar_bg ?>;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                ">
-                  <span style="
-                    font-size: 13.5px;
-                    font-weight: 800;
-                    color: rgba(255,255,255,0.92);
-                    letter-spacing: 0.5px;
-                    user-select: none;
-                  "><?= h($att_initials) ?></span>
-                </div>
-                <!-- Badge de estado en esquina inferior derecha -->
-                <div style="
-                  position: absolute;
-                  bottom: -3px;
-                  right: -3px;
-                  width: 18px;
-                  height: 18px;
-                  border-radius: 50%;
-                  background: <?= $st['badge_bg'] ?>;
-                  border: 2.5px solid white;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
-                ">
-                  <i class="<?= $st['badge_icon'] ?>" style="font-size: 8px; color: white;"></i>
-                </div>
-              </div>
+              <!-- Cuerpo de la card -->
+              <div style="padding: 16px 16px 14px; flex: 1;">
 
-              <!-- Nombre + cargo + jornada -->
-              <div style="flex: 1; min-width: 0;">
+                <!-- Fila 1: Avatar + Status pill -->
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px;">
+
+                  <!-- Avatar con badge de estado -->
+                  <div style="position: relative; flex-shrink: 0;">
+                    <div style="
+                      width: 50px;
+                      height: 50px;
+                      border-radius: 14px;
+                      background: <?= $att_avatar_bg ?>;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                    ">
+                      <span style="
+                        font-size: 15px;
+                        font-weight: 800;
+                        color: rgba(255,255,255,0.92);
+                        letter-spacing: 0.5px;
+                        user-select: none;
+                      "><?= h($att_initials) ?></span>
+                    </div>
+                    <!-- Status badge en esquina inferior derecha -->
+                    <div style="
+                      position: absolute;
+                      bottom: -3px;
+                      right: -3px;
+                      width: 18px;
+                      height: 18px;
+                      border-radius: 50%;
+                      background: <?= $st['badge_bg'] ?>;
+                      border: 2.5px solid white;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      box-shadow: 0 1px 4px rgba(0,0,0,0.20);
+                    ">
+                      <i class="<?= $st['badge_icon'] ?>" style="font-size: 8px; color: white;"></i>
+                    </div>
+                  </div>
+
+                  <!-- Status pill -->
+                  <span style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 4px 9px;
+                    background: <?= $st['label_bg'] ?>;
+                    color: <?= $st['label_color'] ?>;
+                    border-radius: 20px;
+                    font-size: 10.5px;
+                    font-weight: 700;
+                    white-space: nowrap;
+                    max-width: calc(100% - 64px);
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                  ">
+                    <span style="width: 5px; height: 5px; border-radius: 50%; background: <?= $st['label_color'] ?>; flex-shrink: 0;"></span>
+                    <?= h($st['label']) ?>
+                  </span>
+                </div>
+
+                <!-- Fila 2: Nombre completo -->
                 <div style="
                   font-size: 14px;
                   font-weight: 700;
                   color: var(--c-secondary);
-                  white-space: nowrap;
+                  margin-bottom: 3px;
                   overflow: hidden;
                   text-overflow: ellipsis;
-                  margin-bottom: 3px;
-                "><?= h($persona['nombre_persona'] ?? 'N/A') ?></div>
-                <div style="font-size: 12px; color: var(--c-body); opacity: 0.6; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                  <span><?= h($persona['cargo'] ?? 'Sin cargo') ?></span>
-                  <?php if (!empty($persona['jornada_nombre'])): ?>
-                    <span style="color: #D1D5DB; line-height: 1;">·</span>
-                    <span style="
-                      font-size: 10px;
-                      font-weight: 700;
-                      padding: 2px 7px;
-                      background: <?= $jornada_hex ?>1a;
-                      color: <?= $jornada_hex ?>;
-                      border-radius: 4px;
-                      border: 1px solid <?= $jornada_hex ?>33;
-                      letter-spacing: 0.2px;
-                    "><?= h($persona['jornada_nombre']) ?></span>
-                  <?php endif; ?>
-                </div>
-              </div>
-
-              <!-- Status pill -->
-              <div style="flex-shrink: 0;">
-                <span style="
-                  display: inline-flex;
-                  align-items: center;
-                  gap: 5px;
-                  padding: 5px 11px;
-                  background: <?= $st['label_bg'] ?>;
-                  color: <?= $st['label_color'] ?>;
-                  border-radius: 20px;
-                  font-size: 11.5px;
-                  font-weight: 700;
                   white-space: nowrap;
-                ">
-                  <span style="width: 5px; height: 5px; border-radius: 50%; background: <?= $st['label_color'] ?>; flex-shrink: 0;"></span>
-                  <?= h($st['label']) ?>
-                </span>
+                  letter-spacing: -0.1px;
+                "><?= h($persona['nombre_persona'] ?? 'N/A') ?></div>
+
+                <!-- Fila 3: Área de trabajo (cargo) -->
+                <div style="
+                  font-size: 12px;
+                  color: var(--c-body);
+                  opacity: 0.55;
+                  margin-bottom: 8px;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                "><?= h($persona['cargo'] ?? 'Sin cargo') ?></div>
+
+                <!-- Fila 4: Jornada badge -->
+                <?php if (!empty($persona['jornada_nombre'])): ?>
+                  <span style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    font-size: 10px;
+                    font-weight: 700;
+                    padding: 3px 8px;
+                    background: <?= $jornada_hex ?>18;
+                    color: <?= $jornada_hex ?>;
+                    border-radius: 6px;
+                    border: 1px solid <?= $jornada_hex ?>30;
+                    letter-spacing: 0.1px;
+                  ">
+                    <i class="ph ph-clock" style="font-size: 10px;"></i>
+                    <?= h($persona['jornada_nombre']) ?>
+                  </span>
+                <?php endif; ?>
+
               </div>
 
-              <!-- Tiempos: Entrada | Salida -->
-              <div style="display: flex; align-items: center; gap: 14px; flex-shrink: 0;">
-                <div style="text-align: right;">
-                  <div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--c-body); opacity: 0.45; margin-bottom: 3px;">Entrada</div>
+              <!-- Footer: Entrada | Salida -->
+              <div style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                border-top: 1px solid #F5F5F5;
+              ">
+                <!-- Entrada -->
+                <div style="padding: 10px 14px;">
+                  <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--c-body); opacity: 0.4; margin-bottom: 3px;">
+                    Entrada
+                  </div>
                   <?php if (!empty($persona['hora_entrada'])): ?>
-                    <div style="font-size: 13px; font-weight: 700; color: var(--c-secondary); line-height: 1.2;">
-                      <?= date('g:i', strtotime($persona['hora_entrada'])) ?><span style="font-size: 10px; font-weight: 500; opacity: 0.55;"> <?= date('A', strtotime($persona['hora_entrada'])) ?></span>
+                    <div style="font-size: 13px; font-weight: 800; color: var(--c-secondary); line-height: 1; letter-spacing: -0.3px;">
+                      <?= date('g:i', strtotime($persona['hora_entrada'])) ?>
+                      <span style="font-size: 9px; font-weight: 500; opacity: 0.5; letter-spacing: 0;"><?= date('A', strtotime($persona['hora_entrada'])) ?></span>
                     </div>
                   <?php else: ?>
-                    <div style="font-size: 16px; font-weight: 500; color: #D1D5DB; line-height: 1;">—</div>
+                    <div style="font-size: 18px; font-weight: 300; color: #D1D5DB; line-height: 1;">—</div>
                   <?php endif; ?>
                 </div>
 
-                <div style="width: 1px; height: 26px; background: #F0F0F0;"></div>
-
-                <div style="text-align: right;">
-                  <div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--c-body); opacity: 0.45; margin-bottom: 3px;">Salida</div>
+                <!-- Salida -->
+                <div style="padding: 10px 14px; border-left: 1px solid #F5F5F5;">
+                  <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--c-body); opacity: 0.4; margin-bottom: 3px;">
+                    Salida
+                  </div>
                   <?php if (!empty($persona['hora_salida'])): ?>
-                    <div style="font-size: 13px; font-weight: 700; color: var(--c-secondary); line-height: 1.2;">
-                      <?= date('g:i', strtotime($persona['hora_salida'])) ?><span style="font-size: 10px; font-weight: 500; opacity: 0.55;"> <?= date('A', strtotime($persona['hora_salida'])) ?></span>
+                    <div style="font-size: 13px; font-weight: 800; color: var(--c-secondary); line-height: 1; letter-spacing: -0.3px;">
+                      <?= date('g:i', strtotime($persona['hora_salida'])) ?>
+                      <span style="font-size: 9px; font-weight: 500; opacity: 0.5; letter-spacing: 0;"><?= date('A', strtotime($persona['hora_salida'])) ?></span>
                     </div>
                   <?php else: ?>
-                    <div style="font-size: 16px; font-weight: 500; color: #D1D5DB; line-height: 1;">—</div>
+                    <div style="font-size: 18px; font-weight: 300; color: #D1D5DB; line-height: 1;">—</div>
                   <?php endif; ?>
                 </div>
               </div>
