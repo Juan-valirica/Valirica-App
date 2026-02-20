@@ -6479,111 +6479,94 @@ document.addEventListener('keydown', function(e) {
 
   <!-- Hero: Asistencia de Hoy -->
   <section style="margin-bottom: var(--space-8);">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5); flex-wrap: wrap; gap: var(--space-3);">
       <div>
-        <h1 style="font-size: 28px; font-weight: 700; color: var(--c-secondary); margin: 0 0 var(--space-1); display: flex; align-items: center; gap: 10px;">
-          <i class="ph ph-clock-user" style="font-size: 26px; color: var(--c-accent);"></i>
-          Asistencia de Hoy
-        </h1>
-        <p style="color: var(--c-body); opacity: 0.7; margin: 0; font-size: 14px;">
-          <?= date('l, d F Y') ?> • Última actualización: hace 2 minutos
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;">
+          <div style="width:38px;height:38px;background:linear-gradient(135deg,#012133,#184656);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(1,33,51,.28);">
+            <i class="ph ph-clock-user" style="font-size:18px;color:rgba(255,255,255,0.88);"></i>
+          </div>
+          <h1 style="font-size: 26px; font-weight: 800; color: var(--c-secondary); margin: 0; letter-spacing: -0.3px;">
+            Asistencia de Hoy
+          </h1>
+        </div>
+        <p style="color: var(--c-body); opacity: 0.55; margin: 0; font-size: 13px; padding-left: 48px;">
+          <?= date('d F Y') ?> · <?= $total_personas ?> personas en turno
         </p>
       </div>
       <button
         style="
-          padding: 12px 24px;
-          background: linear-gradient(135deg, var(--c-accent) 0%, #FF6B35 100%);
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 11px 22px;
+          background: linear-gradient(135deg, #EF7F1B 0%, #f5962c 100%);
           border: none;
-          border-radius: 8px;
+          border-radius: 12px;
           color: white;
-          font-weight: 600;
+          font-weight: 700;
           font-size: 14px;
+          font-family: inherit;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(255, 136, 0, 0.2);
-          transition: all 0.3s ease;
+          box-shadow: 0 4px 16px rgba(239,127,27,.30);
+          transition: filter .12s ease, box-shadow .12s ease, transform .07s ease;
+          letter-spacing: .1px;
         "
-        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 136, 0, 0.3)'"
-        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255, 136, 0, 0.2)'"
+        onmouseover="this.style.filter='brightness(1.05)';this.style.boxShadow='0 6px 22px rgba(239,127,27,.38)'"
+        onmouseout="this.style.filter='none';this.style.boxShadow='0 4px 16px rgba(239,127,27,.30)'"
+        onmousedown="this.style.transform='translateY(1px)'"
+        onmouseup="this.style.transform='translateY(0)'"
       >
-        <i class="ph ph-arrows-clockwise" style="font-size: 15px; margin-right: 6px; vertical-align: middle;"></i>
+        <i class="ph ph-arrows-clockwise" style="font-size: 15px;"></i>
         Actualizar
       </button>
     </div>
 
-    <!-- KPIs: 2 cards clave -->
+    <!-- KPIs: 2 cards clave — mismo patrón visual que Metas -->
     <div style="
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
       gap: var(--space-4);
       margin-bottom: var(--space-6);
     ">
 
-      <!-- KPI 1: Presentes -->
+      <!-- KPI 1: Presentes hoy -->
       <div style="
-        background: white;
-        border-radius: 16px;
-        padding: 22px var(--space-6);
-        border: 1px solid #E5E7EB;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        display: flex;
-        align-items: center;
-        gap: var(--space-5);
+        background: linear-gradient(150deg, #012133 0%, #184656 100%);
+        border-radius: 18px;
+        padding: var(--space-5);
+        color: white;
         position: relative;
         overflow: hidden;
-        transition: box-shadow 0.2s;
-      "
-      onmouseover="this.style.boxShadow='0 4px 16px rgba(0,217,143,0.12)'"
-      onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.06)'"
-      >
-        <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, #00D98F 0%, #00b377 100%); border-radius: 4px 0 0 4px;"></div>
-        <div style="width: 52px; height: 52px; background: #ECFDF5; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-          <i class="ph ph-users-three" style="font-size: 24px; color: #00D98F;"></i>
+      ">
+        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-3);">
+          <div style="width:30px;height:30px;background:rgba(0,217,143,.2);border:1px solid rgba(0,217,143,.35);border-radius:9px;display:flex;align-items:center;justify-content:center;">
+            <i class="ph ph-users-three" style="font-size:14px;color:#00D98F;"></i>
+          </div>
+          <span style="font-size:11px;font-weight:700;opacity:.6;letter-spacing:.8px;text-transform:uppercase;">Presentes hoy</span>
         </div>
-        <div>
-          <div style="font-size: 11px; font-weight: 600; color: var(--c-body); opacity: 0.55; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 5px;">
-            Presentes hoy
-          </div>
-          <div style="font-size: 40px; font-weight: 800; color: var(--c-secondary); line-height: 1; margin-bottom: 4px; letter-spacing: -1px;">
-            <?= $porcentaje_presentes ?>%
-          </div>
-          <div style="font-size: 13px; color: var(--c-body); opacity: 0.55;">
-            <?= $presentes_hoy ?> de <?= $total_personas ?> personas
-          </div>
-        </div>
+        <div style="font-size:44px;font-weight:800;line-height:1;margin-bottom:6px;letter-spacing:-2px;"><?= $porcentaje_presentes ?>%</div>
+        <div style="font-size:12px;opacity:.5;"><?= $presentes_hoy ?> de <?= $total_personas ?> personas en turno</div>
       </div>
 
-      <!-- KPI 2: Ausentes / Atención -->
+      <!-- KPI 2: Ausentes -->
       <div style="
-        background: white;
-        border-radius: 16px;
-        padding: 22px var(--space-6);
-        border: 1px solid #E5E7EB;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        display: flex;
-        align-items: center;
-        gap: var(--space-5);
+        background: linear-gradient(150deg, #450a0a 0%, #7f1d1d 100%);
+        border-radius: 18px;
+        padding: var(--space-5);
+        color: white;
         position: relative;
         overflow: hidden;
-        transition: box-shadow 0.2s;
-      "
-      onmouseover="this.style.boxShadow='0 4px 16px rgba(255,59,109,0.10)'"
-      onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.06)'"
-      >
-        <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, #FF3B6D 0%, #cc1f4f 100%); border-radius: 4px 0 0 4px;"></div>
-        <div style="width: 52px; height: 52px; background: #FFF1F2; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-          <i class="ph ph-user-minus" style="font-size: 24px; color: #FF3B6D;"></i>
+      ">
+        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-3);">
+          <div style="width:30px;height:30px;background:rgba(255,59,109,.2);border:1px solid rgba(255,59,109,.35);border-radius:9px;display:flex;align-items:center;justify-content:center;">
+            <i class="ph ph-user-minus" style="font-size:14px;color:#FF3B6D;"></i>
+          </div>
+          <span style="font-size:11px;font-weight:700;opacity:.6;letter-spacing:.8px;text-transform:uppercase;">Ausentes</span>
         </div>
-        <div>
-          <div style="font-size: 11px; font-weight: 600; color: var(--c-body); opacity: 0.55; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 5px;">
-            Ausentes
-          </div>
-          <div style="font-size: 40px; font-weight: 800; color: var(--c-secondary); line-height: 1; margin-bottom: 4px; letter-spacing: -1px;">
-            <?= $ausentes_hoy ?>
-          </div>
-          <div style="font-size: 13px; color: var(--c-body); opacity: 0.55;">
-            <?= $tarde_hoy > 0 ? "+ {$tarde_hoy} con tardanza" : "Sin tardanzas registradas" ?>
-          </div>
-        </div>
+        <div style="font-size:44px;font-weight:800;line-height:1;margin-bottom:6px;letter-spacing:-2px;"><?= $ausentes_hoy ?></div>
+        <div style="font-size:12px;opacity:.5;"><?= $tarde_hoy > 0 ? "+ {$tarde_hoy} con tardanza hoy" : "Sin tardanzas registradas" ?></div>
       </div>
 
     </div>
