@@ -747,6 +747,78 @@ $energia_equipo = 0;   $mot_class = '';   $mot_label = '';   $mot_icon  = '';
       .doc-row-cat, .doc-row-emp, .doc-row-date { display: none; }
     }
 
+    /* ===== EMPLOYEE CARDS VIEW ===== */
+    .emp-cards-section { display: none; flex-direction: column; gap: 16px; }
+    .emp-cards-section.visible { display: flex; }
+    .emp-cards-heading { font-size: 14px; color: #64748b; font-weight: 500; }
+    .emp-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .emp-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(1,33,51,0.07);
+      padding: 22px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      text-align: center;
+      transition: box-shadow .2s, transform .2s;
+    }
+    .emp-card:hover { box-shadow: 0 6px 22px rgba(1,33,51,0.13); transform: translateY(-2px); }
+    .emp-card-avatar-lg {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--c-teal, #007a96), #005f77);
+      color: #fff; font-size: 22px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      text-transform: uppercase; margin-bottom: 4px; flex-shrink: 0;
+    }
+    .emp-card-name { font-size: 15px; font-weight: 700; color: var(--c-primary, #012133); line-height: 1.3; }
+    .emp-card-role { font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .emp-card-doc-count {
+      font-size: 12px; color: var(--c-teal, #007a96); font-weight: 600;
+      background: #e0f4f8; border-radius: 20px; padding: 2px 10px; margin: 4px 0;
+    }
+    .emp-card-actions { display: flex; gap: 8px; margin-top: 6px; width: 100%; }
+    .emp-card-btn {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
+      padding: 8px 6px; border-radius: 10px; font-size: 12px; font-weight: 600;
+      cursor: pointer; border: none; font-family: inherit; transition: background .15s, transform .1s;
+    }
+    .emp-card-btn.secondary { background: #f1f5f9; color: #475569; }
+    .emp-card-btn.secondary:hover { background: #e2e8f0; }
+    .emp-card-btn.primary { background: var(--c-teal, #007a96); color: #fff; }
+    .emp-card-btn.primary:hover { background: #005f77; }
+
+    /* Employee breadcrumb (back navigation) */
+    .emp-breadcrumb { display: none; align-items: center; gap: 8px; padding: 0 0 14px; font-size: 13px; color: #64748b; }
+    .emp-breadcrumb.visible { display: flex; }
+    .emp-breadcrumb-back {
+      display: inline-flex; align-items: center; gap: 5px;
+      color: var(--c-teal, #007a96); font-weight: 600; cursor: pointer;
+      background: none; border: none; font-size: 13px; font-family: inherit; padding: 0;
+    }
+    .emp-breadcrumb-back:hover { text-decoration: underline; }
+
+    /* Modal employee context chip */
+    .modal-emp-context {
+      display: flex; align-items: center; gap: 12px;
+      background: #f0fbfd; border: 1.5px solid #c0e8f0; border-radius: 12px; padding: 10px 14px;
+    }
+    .modal-emp-context-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--c-teal, #007a96); color: #fff; font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      text-transform: uppercase; flex-shrink: 0;
+    }
+    .modal-emp-context-avatar.empresa { background: #e2e8f0; color: #475569; font-size: 18px; }
+    .modal-emp-context-info { display: flex; flex-direction: column; gap: 2px; }
+    .modal-emp-context-label { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+    .modal-emp-context-name { font-size: 14px; font-weight: 700; color: var(--c-primary, #012133); }
+
     /* Scrollbar style for main */
     .dm-main::-webkit-scrollbar { width: 6px; }
     .dm-main::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -863,13 +935,10 @@ $energia_equipo = 0;   $mot_class = '';   $mot_label = '';   $mot_icon  = '';
       <span class="dm-nav-badge gray" id="badge-empresa">0</span>
     </div>
 
-    <div class="dm-nav-item" id="nav-empleado" onclick="toggleEmpList()">
+    <div class="dm-nav-item" id="nav-empleado" onclick="showEmployeeCards()">
       <i class="ph ph-users-three"></i>
       <span class="nav-label">Por empleado</span>
-      <i class="ph ph-caret-down" id="emp-caret" style="font-size:13px;color:rgba(255,255,255,0.4);"></i>
-    </div>
-    <div class="dm-emp-list" id="dmEmpList">
-      <!-- Rendered by JS -->
+      <span class="dm-nav-badge gray" id="badge-empleados">0</span>
     </div>
 
     <div class="dm-nav-item" id="nav-nuevos" onclick="setSidebarFilter('nuevos', null)">
@@ -985,6 +1054,24 @@ $energia_equipo = 0;   $mot_class = '';   $mot_label = '';   $mot_icon  = '';
 
     <!-- DOCUMENT GRID/LIST -->
     <div class="dm-content">
+
+      <!-- Breadcrumb: shown when viewing a specific employee's docs -->
+      <div class="emp-breadcrumb" id="empBreadcrumb">
+        <button class="emp-breadcrumb-back" onclick="showEmployeeCards()">
+          <i class="ph ph-arrow-left"></i> Empleados
+        </button>
+        <span>·</span>
+        <span id="empBreadcrumbName" style="font-weight:700;color:var(--c-primary,#012133);"></span>
+      </div>
+
+      <!-- Employee cards: shown when "Por empleado" is selected -->
+      <div class="emp-cards-section" id="empCardsSection">
+        <p class="emp-cards-heading">Selecciona un empleado para ver sus documentos o subir uno nuevo.</p>
+        <div class="emp-cards-grid" id="empCardsGrid">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
       <div class="dm-grid" id="dmGrid">
         <!-- Rendered by JS -->
       </div>
@@ -1075,11 +1162,12 @@ $energia_equipo = 0;   $mot_class = '';   $mot_label = '';   $mot_icon  = '';
           <textarea class="form-textarea" id="fDescripcion" placeholder="Breve descripción (opcional)"></textarea>
         </div>
 
-        <div class="form-group">
-          <label>Empleado asignado <span style="color:#94a3b8;font-weight:400;">(opcional)</span></label>
-          <select class="form-select" id="fEmpleado">
-            <option value="">Sin asignar (documento de empresa)</option>
-          </select>
+        <!-- Destination context: set from employee card or current scope, not a dropdown -->
+        <div class="form-group" id="empContextGroup">
+          <label>Documento para</label>
+          <div class="modal-emp-context" id="empContextDisplay">
+            <!-- Populated by JS based on context -->
+          </div>
         </div>
 
         <!-- PDF file input -->
@@ -1135,9 +1223,10 @@ let currentView    = 'grid';
 let currentScope   = 'todos';
 let currentEmpId   = null;
 let searchTimer    = null;
-let uploadTipo     = null;
-let uploadStep     = 0;
-let empleadosCache = [];
+let uploadTipo        = null;
+let uploadStep        = 0;
+let empleadosCache    = [];
+let uploadForEmployee = null; // { id, nombre } when uploading for a specific employee
 
 /* ── Category config ── */
 const CAT_LABELS = {
@@ -1176,6 +1265,7 @@ function loadStats() {
       setText('badge-solicitudes',   s.solicitudes || 0);
       setText('badge-permisos',      s.permisos   || 0);
       setText('badge-vacaciones',    s.vacaciones  || 0);
+      setText('badge-empleados',     s.empleados  || 0);
       setText('stat-sol-pendientes', s.solicitudes_pendientes || 0);
       // Highlight solicitudes badge if there are pending ones
       const solBadge = document.getElementById('badge-solicitudes');
@@ -1189,7 +1279,7 @@ function loadStats() {
 /* ─────────────────────────────────────────
    EMPLOYEES
 ───────────────────────────────────────── */
-function loadEmpleados() {
+function loadEmpleados(callback) {
   fetch(BACKEND + '?action=listar_empleados')
     .then(r => r.json())
     .then(d => {
@@ -1198,44 +1288,96 @@ function loadEmpleados() {
         return;
       }
       empleadosCache = d.empleados || [];
-      renderEmpList(empleadosCache);
-      populateEmpSelect(empleadosCache);
+      // Update empleados badge in sidebar
+      setText('badge-empleados', empleadosCache.length || 0);
+      // If currently showing employee cards view, refresh it
+      const empSection = document.getElementById('empCardsSection');
+      if (empSection && empSection.classList.contains('visible')) {
+        renderEmpCards(empleadosCache);
+      }
+      if (callback) callback(empleadosCache);
     })
     .catch(err => {
       console.error('[Documentos] Error de red en listar_empleados:', err);
     });
 }
 
-function renderEmpList(emps) {
-  const el = document.getElementById('dmEmpList');
-  if (!emps.length) { el.innerHTML = '<div class="dm-emp-item" style="opacity:.5;cursor:default;">Sin empleados</div>'; return; }
-  el.innerHTML = emps.map(e => {
-    const initials = empInitials(e.nombre);
-    return `<div class="dm-emp-item" id="nav-emp-${e.id}" onclick="setSidebarFilter('empleado', ${e.id})">
-      <div class="dm-emp-avatar">${esc(initials)}</div>
-      <span class="dm-emp-name">${esc(e.nombre)}</span>
-      <span class="dm-emp-count">${e.doc_count || 0}</span>
+/* ─────────────────────────────────────────
+   EMPLOYEE CARDS VIEW
+───────────────────────────────────────── */
+function showEmployeeCards() {
+  currentScope = 'por_empleado';
+  currentEmpId = null;
+
+  // Sidebar active state
+  document.querySelectorAll('.dm-nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('nav-empleado')?.classList.add('active');
+
+  // Show employee cards, hide docs + breadcrumb
+  document.getElementById('empCardsSection').classList.add('visible');
+  document.getElementById('empBreadcrumb').classList.remove('visible');
+  document.getElementById('dmGrid').style.display = 'none';
+  document.getElementById('dmEmpty').style.display = 'none';
+
+  setToolbarTitle('Por empleado');
+  closeMobileSidebar();
+
+  // Render from cache immediately, then refresh
+  if (empleadosCache.length > 0) renderEmpCards(empleadosCache);
+  loadEmpleados();
+}
+
+function renderEmpCards(emps) {
+  const grid = document.getElementById('empCardsGrid');
+  if (!emps.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;padding:48px;text-align:center;color:#94a3b8;">
+      <i class="ph ph-users" style="font-size:44px;display:block;margin-bottom:12px;color:#cbd5e1;"></i>
+      <p style="font-size:14px;">No hay empleados registrados aún.</p>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = emps.map(e => {
+    const ini = empInitials(e.nombre);
+    const docLabel = e.doc_count == 1 ? '1 documento' : `${e.doc_count || 0} documentos`;
+    return `<div class="emp-card">
+      <div class="emp-card-avatar-lg">${esc(ini)}</div>
+      <div class="emp-card-name">${esc(e.nombre)}</div>
+      ${e.cargo ? `<div class="emp-card-role">${esc(e.cargo)}</div>` : ''}
+      <div class="emp-card-doc-count"><i class="ph ph-files" style="margin-right:4px;"></i>${esc(docLabel)}</div>
+      <div class="emp-card-actions">
+        <button class="emp-card-btn secondary" onclick="viewEmployeeDocs(${e.id}, ${JSON.stringify(e.nombre)})">
+          <i class="ph ph-folder-open"></i> Ver docs
+        </button>
+        <button class="emp-card-btn primary" onclick="openUploadForEmployee(${e.id}, ${JSON.stringify(e.nombre)})">
+          <i class="ph ph-upload-simple"></i> Subir
+        </button>
+      </div>
     </div>`;
   }).join('');
 }
 
-function populateEmpSelect(emps) {
-  const sel = document.getElementById('fEmpleado');
-  sel.innerHTML = '<option value="">Sin asignar (documento de empresa)</option>';
-  emps.forEach(e => {
-    const opt = document.createElement('option');
-    opt.value = e.id;
-    opt.textContent = e.nombre;
-    sel.appendChild(opt);
-  });
+function viewEmployeeDocs(empId, nombre) {
+  currentScope = 'empleado';
+  currentEmpId = empId;
+
+  // Show breadcrumb, hide employee cards, show doc grid
+  document.getElementById('empCardsSection').classList.remove('visible');
+  document.getElementById('empBreadcrumb').classList.add('visible');
+  setText('empBreadcrumbName', nombre);
+  document.getElementById('dmGrid').style.display = '';
+  document.getElementById('dmEmpty').style.display = 'none';
+
+  // Sidebar: keep "Por empleado" active
+  document.querySelectorAll('.dm-nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('nav-empleado')?.classList.add('active');
+
+  setToolbarTitle(nombre);
+  loadDocs();
 }
 
-function toggleEmpList() {
-  const list  = document.getElementById('dmEmpList');
-  const caret = document.getElementById('emp-caret');
-  const open  = list.classList.toggle('open');
-  caret.className = open ? 'ph ph-caret-up' : 'ph ph-caret-down';
-  caret.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.4);';
+function openUploadForEmployee(empId, nombre) {
+  uploadForEmployee = { id: empId, nombre: nombre };
+  openUploadModal();
 }
 
 /* ─────────────────────────────────────────
@@ -1264,14 +1406,14 @@ function buildSolicitudesFilters() {
 }
 
 function loadDocs() {
+  // Employee cards view: delegate to showEmployeeCards
+  if (currentScope === 'por_empleado') { showEmployeeCards(); return; }
   // Delegate to solicitudes loader for those scopes
-  if (SOLICITUDES_SCOPES.includes(currentScope)) {
-    loadSolicitudes();
-    return;
-  }
+  if (SOLICITUDES_SCOPES.includes(currentScope)) { loadSolicitudes(); return; }
 
   const grid  = document.getElementById('dmGrid');
   const empty = document.getElementById('dmEmpty');
+  grid.style.display = '';
   grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:#94a3b8;font-size:14px;"><i class="ph ph-circle-notch" style="font-size:24px;"></i><br>Cargando…</div>';
   empty.style.display = 'none';
 
@@ -1292,6 +1434,7 @@ function loadDocs() {
 function loadSolicitudes() {
   const grid  = document.getElementById('dmGrid');
   const empty = document.getElementById('dmEmpty');
+  grid.style.display = '';
   grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:#94a3b8;font-size:14px;"><i class="ph ph-circle-notch" style="font-size:24px;"></i><br>Cargando solicitudes…</div>';
   empty.style.display = 'none';
 
@@ -1517,38 +1660,31 @@ function setView(mode) {
    SIDEBAR FILTER
 ───────────────────────────────────────── */
 function setSidebarFilter(scope, empId) {
-  currentScope  = scope;
-  currentEmpId  = empId;
+  currentScope = scope;
+  currentEmpId = empId;
 
   /* Deactivate all nav items */
   document.querySelectorAll('.dm-nav-item').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.dm-emp-item').forEach(el => el.classList.remove('active'));
 
-  /* Activate correct item */
-  if (scope === 'empleado' && empId) {
-    document.getElementById(`nav-emp-${empId}`)?.classList.add('active');
-    const emp = empleadosCache.find(e => e.id == empId);
-    setToolbarTitle(emp ? emp.nombre : 'Por empleado');
-    /* Ensure list is open */
-    document.getElementById('dmEmpList').classList.add('open');
-    document.getElementById('emp-caret').className = 'ph ph-caret-up';
-    document.getElementById('emp-caret').style.cssText = 'font-size:13px;color:rgba(255,255,255,0.4);';
-  } else {
-    const navId = {
-      todos:'nav-todos', empresa:'nav-empresa', nuevos:'nav-nuevos',
-      archivados:'nav-archivados',
-      solicitudes:'nav-solicitudes', permisos:'nav-permisos', vacaciones:'nav-vacaciones-sol',
-    }[scope];
-    if (navId) document.getElementById(navId)?.classList.add('active');
-    const titles = {
-      todos:'Todos los documentos', empresa:'Documentos de empresa',
-      nuevos:'Documentos nuevos', archivados:'Archivados',
-      solicitudes:'Solicitudes de empleados', permisos:'Permisos', vacaciones:'Vacaciones',
-    };
-    setToolbarTitle(titles[scope] || 'Documentos');
-  }
+  /* Hide employee cards and breadcrumb, show docs grid */
+  document.getElementById('empCardsSection').classList.remove('visible');
+  document.getElementById('empBreadcrumb').classList.remove('visible');
+  document.getElementById('dmGrid').style.display = '';
 
-  /* Close mobile sidebar */
+  const navId = {
+    todos:'nav-todos', empresa:'nav-empresa', nuevos:'nav-nuevos',
+    archivados:'nav-archivados',
+    solicitudes:'nav-solicitudes', permisos:'nav-permisos', vacaciones:'nav-vacaciones-sol',
+  }[scope];
+  if (navId) document.getElementById(navId)?.classList.add('active');
+
+  const titles = {
+    todos:'Todos los documentos', empresa:'Documentos de empresa',
+    nuevos:'Documentos nuevos', archivados:'Archivados',
+    solicitudes:'Solicitudes de empleados', permisos:'Permisos', vacaciones:'Vacaciones',
+  };
+  setToolbarTitle(titles[scope] || 'Documentos');
+
   closeMobileSidebar();
   loadDocs();
 }
@@ -1643,14 +1779,18 @@ function deleteDoc(id, title) {
 function openUploadModal() {
   uploadStep = 0;
   uploadTipo = null;
-  // Refresh employee list every time the modal opens so the dropdown is always populated
-  loadEmpleados();
+  // If no employee was explicitly set via openUploadForEmployee, auto-set from context
+  if (!uploadForEmployee && currentScope === 'empleado' && currentEmpId) {
+    const emp = empleadosCache.find(e => e.id == currentEmpId);
+    if (emp) uploadForEmployee = { id: emp.id, nombre: emp.nombre };
+  }
   goToStep(0);
   document.getElementById('uploadModal').classList.add('open');
 }
 
 function closeUploadModal() {
   document.getElementById('uploadModal').classList.remove('open');
+  uploadForEmployee = null;
   /* Reset form */
   setTimeout(() => {
     document.getElementById('uploadForm').reset();
@@ -1677,6 +1817,24 @@ function goToStep(step) {
   if (step === 0) {
     footer.innerHTML = '';
   } else if (step === 1) {
+    /* Render employee context (who this document is for) */
+    const empDisplay = document.getElementById('empContextDisplay');
+    if (uploadForEmployee) {
+      const ini = empInitials(uploadForEmployee.nombre);
+      empDisplay.innerHTML = `
+        <div class="modal-emp-context-avatar">${esc(ini)}</div>
+        <div class="modal-emp-context-info">
+          <span class="modal-emp-context-label">Empleado</span>
+          <span class="modal-emp-context-name">${esc(uploadForEmployee.nombre)}</span>
+        </div>`;
+    } else {
+      empDisplay.innerHTML = `
+        <div class="modal-emp-context-avatar empresa"><i class="ph ph-buildings"></i></div>
+        <div class="modal-emp-context-info">
+          <span class="modal-emp-context-label">Destino</span>
+          <span class="modal-emp-context-name">Documento de empresa</span>
+        </div>`;
+    }
     footer.innerHTML = `
       <button class="btn-secondary" onclick="goToStep(0)"><i class="ph ph-arrow-left" style="margin-right:4px;"></i>Atrás</button>
       <button class="btn-primary" onclick="submitUpload()"><i class="ph ph-upload-simple"></i>Subir</button>`;
@@ -1688,8 +1846,6 @@ function goToStep(step) {
 
 function selectTipo(tipo) {
   uploadTipo = tipo;
-  // Ensure employee select is populated with current cache before showing step 1
-  populateEmpSelect(empleadosCache);
   /* Show/hide conditional fields */
   document.getElementById('fFileGroup').style.display = tipo === 'pdf'       ? '' : 'none';
   document.getElementById('fUrlGroup').style.display  = tipo !== 'pdf'       ? '' : 'none';
@@ -1711,8 +1867,7 @@ function onFileChange() {
 function submitUpload() {
   const titulo    = document.getElementById('fTitulo').value.trim();
   const categoria = document.getElementById('fCategoria').value;
-  const desc      = document.getElementById('fDescripcion').value.trim();
-  const empId     = document.getElementById('fEmpleado').value;
+  const desc = document.getElementById('fDescripcion').value.trim();
 
   if (!titulo)    { alert('El título es obligatorio.');    return; }
   if (!categoria) { alert('Selecciona una categoría.');    return; }
@@ -1723,7 +1878,8 @@ function submitUpload() {
   fd.append('categoria', categoria);
   fd.append('descripcion', desc);
   fd.append('tipo', uploadTipo);
-  if (empId) fd.append('empleado_id', empId);
+  // Employee comes from context (card selection or current scope), not a dropdown
+  if (uploadForEmployee) fd.append('empleado_id', uploadForEmployee.id);
 
   if (uploadTipo === 'pdf') {
     const file = document.getElementById('fFile').files[0];
@@ -1788,8 +1944,8 @@ function submitUpload() {
 ───────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   loadStats();
-  loadEmpleados();
   loadDocs();
+  loadEmpleados(); // pre-load employee cache in background for faster card rendering
 });
 
 /* Close modal on overlay click */
