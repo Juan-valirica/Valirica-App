@@ -90,8 +90,12 @@ $stEmp = $conn->prepare("
 ");
 if ($stEmp) {
     $stEmp->bind_param("ii", $user_id, $user_id);
-    $stEmp->execute();
-    $empleados_preload = stmt_get_result($stEmp)->fetch_all(MYSQLI_ASSOC) ?: [];
+    if ($stEmp->execute()) {
+        $res = stmt_get_result($stEmp);
+        if ($res !== false) {
+            $empleados_preload = $res->fetch_all(MYSQLI_ASSOC) ?: [];
+        }
+    }
     $stEmp->close();
 }
 
