@@ -70,6 +70,31 @@ if ($conn instanceof mysqli) {
 $promedio_general = 0; $aline_class = ''; $aline_label = ''; $aline_icon = '';
 $energia_equipo = 0;   $mot_class = '';   $mot_label = '';   $mot_icon  = '';
 
+/* ── Employee list (server-side pre-load, same pattern as a-desempeno-dashboard) ── */
+$empleados_preload = [];
+$stEmp = $conn->prepare("
+    SELECT e.id,
+           e.nombre_persona  AS nombre,
+           e.cargo,
+           e.area_trabajo,
+           COUNT(d.id)             AS doc_count,
+           SUM(d.estado = 'nuevo') AS docs_nuevos
+    FROM   equipo e
+    LEFT JOIN documentos d
+           ON d.empleado_id = e.id
+          AND d.empresa_id  = ?
+          AND d.estado     != 'archivado'
+    WHERE  e.usuario_id = ?
+    GROUP BY e.id, e.nombre_persona, e.cargo, e.area_trabajo
+    ORDER BY e.nombre_persona ASC
+");
+if ($stEmp) {
+    $stEmp->bind_param("ii", $user_id, $user_id);
+    $stEmp->execute();
+    $empleados_preload = stmt_get_result($stEmp)->fetch_all(MYSQLI_ASSOC) ?: [];
+    $stEmp->close();
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -1225,7 +1250,7 @@ let currentEmpId   = null;
 let searchTimer    = null;
 let uploadTipo        = null;
 let uploadStep        = 0;
-let empleadosCache    = [];
+let empleadosCache    = <?= json_encode($empleados_preload ?: []) ?>;
 let uploadForEmployee = null; // { id, nombre } when uploading for a specific employee
 
 /* ── Category config ── */
