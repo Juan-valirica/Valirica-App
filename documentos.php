@@ -1193,12 +1193,17 @@ function loadEmpleados() {
   fetch(BACKEND + '?action=listar_empleados')
     .then(r => r.json())
     .then(d => {
-      if (!d.ok) return;
+      if (!d.ok) {
+        console.error('[Documentos] listar_empleados error:', d.error || 'Sin detalle');
+        return;
+      }
       empleadosCache = d.empleados || [];
       renderEmpList(empleadosCache);
       populateEmpSelect(empleadosCache);
     })
-    .catch(() => {});
+    .catch(err => {
+      console.error('[Documentos] Error de red en listar_empleados:', err);
+    });
 }
 
 function renderEmpList(emps) {
@@ -1638,6 +1643,8 @@ function deleteDoc(id, title) {
 function openUploadModal() {
   uploadStep = 0;
   uploadTipo = null;
+  // Refresh employee list every time the modal opens so the dropdown is always populated
+  loadEmpleados();
   goToStep(0);
   document.getElementById('uploadModal').classList.add('open');
 }
@@ -1681,6 +1688,8 @@ function goToStep(step) {
 
 function selectTipo(tipo) {
   uploadTipo = tipo;
+  // Ensure employee select is populated with current cache before showing step 1
+  populateEmpSelect(empleadosCache);
   /* Show/hide conditional fields */
   document.getElementById('fFileGroup').style.display = tipo === 'pdf'       ? '' : 'none';
   document.getElementById('fUrlGroup').style.display  = tipo !== 'pdf'       ? '' : 'none';
