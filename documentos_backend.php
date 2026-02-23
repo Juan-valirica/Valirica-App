@@ -193,29 +193,55 @@ switch ($action) {
 
     /* ── Listar empleados con conteo de docs ── */
     case 'listar_empleados':
-        $st = $conn->prepare("
-            SELECT e.id,
-                   e.nombre_persona  AS nombre,
-                   e.cargo,
-                   e.area_trabajo,
-                   COUNT(d.id)             AS doc_count,
-                   SUM(d.estado = 'nuevo') AS docs_nuevos
-            FROM   equipo e
-            LEFT JOIN documentos d
-                   ON d.empleado_id = e.id
-                  AND d.empresa_id  = ?
-                  AND d.estado     != 'archivado'
-            WHERE  e.usuario_id = ?
-            GROUP BY e.id, e.nombre_persona, e.cargo, e.area_trabajo
-            ORDER BY e.nombre_persona ASC
-        ");
-        if (!$st) {
-            echo json_encode(['ok' => false, 'error' => 'Error al preparar consulta de empleados: ' . $conn->error]);
-            break;
+        // Verificar si la tabla documentos existe (mismo patrón que stats usa con permisos/vacaciones)
+        $tbl_docs = $conn->query("SHOW TABLES LIKE 'documentos'")->num_rows > 0;
+
+        if ($tbl_docs) {
+            // Con conteo de documentos
+            $sql_emp = "
+                SELECT e.id,
+                       e.nombre_persona  AS nombre,
+                       e.cargo,
+                       e.area_trabajo,
+                       COUNT(d.id)             AS doc_count,
+                       SUM(d.estado = 'nuevo') AS docs_nuevos
+                FROM   equipo e
+                LEFT JOIN documentos d
+                       ON d.empleado_id = e.id
+                      AND d.empresa_id  = ?
+                      AND d.estado     != 'archivado'
+                WHERE  e.usuario_id = ?
+                GROUP BY e.id, e.nombre_persona, e.cargo, e.area_trabajo
+                ORDER BY e.nombre_persona ASC
+            ";
+            $st = $conn->prepare($sql_emp);
+            if (!$st) {
+                echo json_encode(['ok' => false, 'error' => 'Error al preparar consulta: ' . $conn->error]);
+                break;
+            }
+            $st->bind_param("ii", $user_id, $user_id);
+        } else {
+            // Sin conteo (tabla documentos aún no existe)
+            $st = $conn->prepare("
+                SELECT e.id,
+                       e.nombre_persona AS nombre,
+                       e.cargo,
+                       e.area_trabajo,
+                       0 AS doc_count,
+                       0 AS docs_nuevos
+                FROM   equipo e
+                WHERE  e.usuario_id = ?
+                ORDER BY e.nombre_persona ASC
+            ");
+            if (!$st) {
+                echo json_encode(['ok' => false, 'error' => 'Error al preparar consulta: ' . $conn->error]);
+                break;
+            }
+            $st->bind_param("i", $user_id);
         }
-        $st->bind_param("ii", $user_id, $user_id);
+
         if (!$st->execute()) {
-            echo json_encode(['ok' => false, 'error' => 'Error al ejecutar consulta de empleados: ' . $st->error]);
+            echo json_encode(['ok' => false, 'error' => 'Error al ejecutar consulta: ' . $st->error]);
             break;
         }
         $res = stmt_get_result($st);
