@@ -21,37 +21,50 @@ $action  = $_GET['action'] ?? $_POST['action'] ?? '';
 
 /* ─────────────────────────────────────────────
    AUTO-MIGRATION: ensure table exists
+   Si el usuario de BD no tiene CREATE TABLE, no debe romper todos los AJAX.
    ───────────────────────────────────────────── */
-$conn->query("
-  CREATE TABLE IF NOT EXISTS documentos (
-    id             INT           AUTO_INCREMENT PRIMARY KEY,
-    empresa_id     INT           NOT NULL,
-    empleado_id    INT           DEFAULT NULL,
-    titulo         VARCHAR(255)  NOT NULL,
-    descripcion    TEXT,
-    tipo           ENUM('pdf','drive','microsoft') NOT NULL DEFAULT 'pdf',
-    url_documento  VARCHAR(2000),
-    nombre_archivo VARCHAR(500),
-    ruta_archivo   VARCHAR(1000),
-    categoria      VARCHAR(100)  NOT NULL DEFAULT 'general',
-    estado         ENUM('nuevo','leido','archivado') NOT NULL DEFAULT 'nuevo',
-    creado_por     INT,
-    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_empresa  (empresa_id),
-    INDEX idx_empleado (empleado_id),
-    INDEX idx_estado   (estado)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-");
+try {
+    $conn->query("
+      CREATE TABLE IF NOT EXISTS documentos (
+        id             INT           AUTO_INCREMENT PRIMARY KEY,
+        empresa_id     INT           NOT NULL,
+        empleado_id    INT           DEFAULT NULL,
+        titulo         VARCHAR(255)  NOT NULL,
+        descripcion    TEXT,
+        tipo           ENUM('pdf','drive','microsoft') NOT NULL DEFAULT 'pdf',
+        url_documento  VARCHAR(2000),
+        nombre_archivo VARCHAR(500),
+        ruta_archivo   VARCHAR(1000),
+        categoria      VARCHAR(100)  NOT NULL DEFAULT 'general',
+        estado         ENUM('nuevo','leido','archivado') NOT NULL DEFAULT 'nuevo',
+        creado_por     INT,
+        created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_empresa  (empresa_id),
+        INDEX idx_empleado (empleado_id),
+        INDEX idx_estado   (estado)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+} catch (\Throwable $e) {
+    // Loguear sin romper el flujo — las queries subsiguientes
+    // usan SHOW TABLES para verificar si la tabla existe.
+    error_log("documentos_backend.php: CREATE TABLE failed — " . $e->getMessage());
+}
 
 /* ─────────────────────────────────────────────
    HELPER: verify doc belongs to user's company
    ───────────────────────────────────────────── */
 function doc_belongs_to_user(mysqli $conn, int $doc_id, int $user_id): bool {
-    $st = $conn->prepare("SELECT id FROM documentos WHERE id = ? AND empresa_id = ? LIMIT 1");
-    $st->bind_param("ii", $doc_id, $user_id);
-    $st->execute();
-    return (bool)stmt_get_result($st)->fetch_assoc();
+    try {
+        $st = $conn->prepare("SELECT id FROM documentos WHERE id = ? AND empresa_id = ? LIMIT 1");
+        if (!$st) return false;
+        $st->bind_param("ii", $doc_id, $user_id);
+        $st->execute();
+        return (bool)stmt_get_result($st)->fetch_assoc();
+    } catch (\Throwable $e) {
+        error_log("doc_belongs_to_user error: " . $e->getMessage());
+        return false;
+    }
 }
 
 /* ─────────────────────────────────────────────
@@ -64,7 +77,11 @@ if (!is_dir($upload_base)) {
 
 /* ═══════════════════════════════════════════════════════════════
    ACTIONS
+   Envuelto en try/catch global: si el servidor tiene MySQLi en modo
+   excepción y alguna query falla, devolvemos JSON válido con ok:false
+   en lugar de un cuerpo vacío o texto PHP que rompe el parser JSON.
    ═══════════════════════════════════════════════════════════════ */
+try {
 switch ($action) {
 
     /* ── Listar documentos de empresa (con filtros) ── */
@@ -539,6 +556,10 @@ switch ($action) {
     default:
         echo json_encode(['ok' => false, 'error' => 'Acción desconocida']);
         break;
+}
+} catch (\Throwable $e) {
+    error_log("documentos_backend.php [$action] uncaught: " . $e->getMessage());
+    echo json_encode(['ok' => false, 'error' => 'Error interno', 'detail' => $e->getMessage()]);
 }
 
 $conn->close();
