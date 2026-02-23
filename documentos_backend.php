@@ -206,11 +206,18 @@ switch ($action) {
                   AND d.empresa_id  = ?
                   AND d.estado     != 'archivado'
             WHERE  e.usuario_id = ?
-            GROUP BY e.id
+            GROUP BY e.id, e.nombre_persona, e.cargo, e.area_trabajo
             ORDER BY e.nombre_persona ASC
         ");
+        if (!$st) {
+            echo json_encode(['ok' => false, 'error' => 'Error al preparar consulta de empleados: ' . $conn->error]);
+            break;
+        }
         $st->bind_param("ii", $user_id, $user_id);
-        $st->execute();
+        if (!$st->execute()) {
+            echo json_encode(['ok' => false, 'error' => 'Error al ejecutar consulta de empleados: ' . $st->error]);
+            break;
+        }
         $empleados = stmt_get_result($st)->fetch_all(MYSQLI_ASSOC);
         echo json_encode(['ok' => true, 'empleados' => $empleados]);
         break;
