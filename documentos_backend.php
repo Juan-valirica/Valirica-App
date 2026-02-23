@@ -218,7 +218,8 @@ switch ($action) {
             echo json_encode(['ok' => false, 'error' => 'Error al ejecutar consulta de empleados: ' . $st->error]);
             break;
         }
-        $empleados = stmt_get_result($st)->fetch_all(MYSQLI_ASSOC);
+        $res = stmt_get_result($st);
+        $empleados = ($res !== false) ? $res->fetch_all(MYSQLI_ASSOC) : [];
         echo json_encode(['ok' => true, 'empleados' => $empleados]);
         break;
 

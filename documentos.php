@@ -35,11 +35,23 @@ if (!function_exists('initials')) {
 }
 
 /* ── User data ── */
+$usuario = null;
 $st = $conn->prepare("SELECT empresa, logo, email, cultura_empresa_tipo FROM usuarios WHERE id = ? LIMIT 1");
-$st->bind_param("i", $user_id);
-$st->execute();
-$usuario = stmt_get_result($st)->fetch_assoc();
-$st->close();
+if ($st) {
+    $st->bind_param("i", $user_id);
+    $st->execute();
+    $res = stmt_get_result($st);
+    if ($res !== false) {
+        $usuario = $res->fetch_assoc();
+    }
+    $st->close();
+}
+if (!$usuario) {
+    // Session exists but user row is missing or DB issue — force re-login
+    session_destroy();
+    header('Location: login.php');
+    exit;
+}
 
 $empresa              = $usuario['empresa']              ?? '';
 $logo                 = $usuario['logo']                 ?? '';
@@ -50,6 +62,29 @@ $viewer_id            = $user_id;
 $viewer_empresa       = $empresa;
 $viewer_logo          = $logo;
 $viewer_cultura_tipo  = $cultura_empresa_tipo;
+
+/* ── Ensure documentos table exists before any query that references it ── */
+$conn->query("
+  CREATE TABLE IF NOT EXISTS documentos (
+    id             INT           AUTO_INCREMENT PRIMARY KEY,
+    empresa_id     INT           NOT NULL,
+    empleado_id    INT           DEFAULT NULL,
+    titulo         VARCHAR(255)  NOT NULL,
+    descripcion    TEXT,
+    tipo           ENUM('pdf','drive','microsoft') NOT NULL DEFAULT 'pdf',
+    url_documento  VARCHAR(2000),
+    nombre_archivo VARCHAR(500),
+    ruta_archivo   VARCHAR(1000),
+    categoria      VARCHAR(100)  NOT NULL DEFAULT 'general',
+    estado         ENUM('nuevo','leido','archivado') NOT NULL DEFAULT 'nuevo',
+    creado_por     INT,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_empresa  (empresa_id),
+    INDEX idx_empleado (empleado_id),
+    INDEX idx_estado   (estado)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+");
 
 /* ── Doc unread count (for header badge) ── */
 $docs_unread_count = 0;
