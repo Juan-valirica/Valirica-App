@@ -224,6 +224,7 @@ switch ($action) {
         $st = $conn->prepare("
             SELECT id,
                    nombre_persona AS nombre,
+                   COALESCE(apellido, '') AS apellido,
                    COALESCE(cargo, '') AS cargo
             FROM   equipo
             WHERE  usuario_id = ?
