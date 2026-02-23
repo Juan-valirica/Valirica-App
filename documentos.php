@@ -10,7 +10,7 @@ if (empty($_SESSION['user_id'])) {
 
 $user_id = (int)$_SESSION['user_id'];
 
-/* ── Helpers ── */
+/* ── Helpers (mismo patrón que a-desempeno.php) ── */
 if (!function_exists('h')) {
     function h($v) { return htmlspecialchars((string)($v ?? ''), ENT_QUOTES, 'UTF-8'); }
 }
@@ -34,105 +34,42 @@ if (!function_exists('initials')) {
     }
 }
 
-/* ── User data ── */
-$usuario = null;
-$st = $conn->prepare("SELECT empresa, logo, email, cultura_empresa_tipo FROM usuarios WHERE id = ? LIMIT 1");
-if ($st) {
-    $st->bind_param("i", $user_id);
-    $st->execute();
-    $res = stmt_get_result($st);
-    if ($res !== false) {
-        $usuario = $res->fetch_assoc();
-    }
-    $st->close();
-}
-if (!$usuario) {
-    // Session exists but user row is missing or DB issue — force re-login
-    session_destroy();
-    header('Location: login.php');
-    exit;
+/* ── User data (mismo patrón exacto que a-desempeno.php línea 131-135) ── */
+$u = [];
+try {
+    $stmt = $conn->prepare("SELECT empresa, logo, cultura_empresa_tipo FROM usuarios WHERE id = ? LIMIT 1");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $u = stmt_get_result($stmt)->fetch_assoc() ?: [];
+    $stmt->close();
+} catch (\Throwable $e) {
+    error_log("documentos.php: user query failed — " . $e->getMessage());
 }
 
-$empresa              = $usuario['empresa']              ?? '';
-$logo                 = $usuario['logo']                 ?? '';
-$email                = $usuario['email']                ?? '';
-$cultura_empresa_tipo = $usuario['cultura_empresa_tipo'] ?? '';
-$iniciales            = initials($empresa ?: $email);
+$empresa              = $u['empresa']              ?? '';
+$logo                 = $u['logo']                 ?? '';
+$cultura_empresa_tipo = $u['cultura_empresa_tipo'] ?? '';
+$iniciales            = initials($empresa);
 $viewer_id            = $user_id;
 $viewer_empresa       = $empresa;
 $viewer_logo          = $logo;
 $viewer_cultura_tipo  = $cultura_empresa_tipo;
 
-/* ── Ensure documentos table exists before any query that references it ── */
-$conn->query("
-  CREATE TABLE IF NOT EXISTS documentos (
-    id             INT           AUTO_INCREMENT PRIMARY KEY,
-    empresa_id     INT           NOT NULL,
-    empleado_id    INT           DEFAULT NULL,
-    titulo         VARCHAR(255)  NOT NULL,
-    descripcion    TEXT,
-    tipo           ENUM('pdf','drive','microsoft') NOT NULL DEFAULT 'pdf',
-    url_documento  VARCHAR(2000),
-    nombre_archivo VARCHAR(500),
-    ruta_archivo   VARCHAR(1000),
-    categoria      VARCHAR(100)  NOT NULL DEFAULT 'general',
-    estado         ENUM('nuevo','leido','archivado') NOT NULL DEFAULT 'nuevo',
-    creado_por     INT,
-    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_empresa  (empresa_id),
-    INDEX idx_empleado (empleado_id),
-    INDEX idx_estado   (estado)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-");
-
-/* ── Doc unread count (for header badge) ── */
+/* ── Variables requeridas por a-header-desktop-brand.php ── */
 $docs_unread_count = 0;
-$has_new_docs = false;
-if ($conn instanceof mysqli) {
-    $stD = $conn->prepare("SELECT COUNT(*) FROM documentos WHERE empresa_id = ? AND estado = 'nuevo'");
-    if ($stD) {
-        $stD->bind_param("i", $user_id);
-        $stD->execute();
-        $stD->bind_result($docs_unread_count);
-        $stD->fetch();
-        $stD->close();
-        $has_new_docs = $docs_unread_count > 0;
-    }
-}
+$has_new_docs      = false;
+$promedio_general  = 0; $aline_class = ''; $aline_label = ''; $aline_icon = '';
+$energia_equipo    = 0; $mot_class   = ''; $mot_label   = ''; $mot_icon   = '';
 
-/* ── KPI defaults needed by header ── */
-$promedio_general = 0; $aline_class = ''; $aline_label = ''; $aline_icon = '';
-$energia_equipo = 0;   $mot_class = '';   $mot_label = '';   $mot_icon  = '';
-
-/* ── Employee list (server-side pre-load, same pattern as a-desempeno-dashboard) ── */
+/*
+ * NOTA: Todas las queries contra la tabla `documentos` (CREATE TABLE,
+ * conteo de no-leídos, preload de empleados) se hacen exclusivamente
+ * vía AJAX al backend (documentos_backend.php), igual que a-desempeno.php
+ * no consulta documentos en PHP.  Esto elimina la fuente de blank-page:
+ * si la tabla no existe o el usuario no tiene CREATE privilege, el backend
+ * lo maneja con su propio try/catch y retorna JSON de error, no blank page.
+ */
 $empleados_preload = [];
-$stEmp = $conn->prepare("
-    SELECT e.id,
-           e.nombre_persona  AS nombre,
-           e.cargo,
-           e.area_trabajo,
-           COUNT(d.id)             AS doc_count,
-           SUM(d.estado = 'nuevo') AS docs_nuevos
-    FROM   equipo e
-    LEFT JOIN documentos d
-           ON d.empleado_id = e.id
-          AND d.empresa_id  = ?
-          AND d.estado     != 'archivado'
-    WHERE  e.usuario_id = ?
-    GROUP BY e.id, e.nombre_persona, e.cargo, e.area_trabajo
-    ORDER BY e.nombre_persona ASC
-");
-if ($stEmp) {
-    $stEmp->bind_param("ii", $user_id, $user_id);
-    if ($stEmp->execute()) {
-        $res = stmt_get_result($stEmp);
-        if ($res !== false) {
-            $empleados_preload = $res->fetch_all(MYSQLI_ASSOC) ?: [];
-        }
-    }
-    $stEmp->close();
-}
 
 ?>
 <!DOCTYPE html>
@@ -141,6 +78,8 @@ if ($stEmp) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Documentos &mdash; <?php echo h($empresa); ?></title>
+  <!-- Valírica Design System (igual que a-desempeno.php) -->
+  <link rel="stylesheet" href="valirica-design-system.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <style>
     /* ===== RESET / BASE ===== */
