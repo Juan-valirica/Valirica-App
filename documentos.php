@@ -62,14 +62,39 @@ $promedio_general  = 0; $aline_class = ''; $aline_label = ''; $aline_icon = '';
 $energia_equipo    = 0; $mot_class   = ''; $mot_label   = ''; $mot_icon   = '';
 
 /*
- * NOTA: Todas las queries contra la tabla `documentos` (CREATE TABLE,
- * conteo de no-leídos, preload de empleados) se hacen exclusivamente
- * vía AJAX al backend (documentos_backend.php), igual que a-desempeno.php
- * no consulta documentos en PHP.  Esto elimina la fuente de blank-page:
- * si la tabla no existe o el usuario no tiene CREATE privilege, el backend
- * lo maneja con su propio try/catch y retorna JSON de error, no blank page.
+ * Pre-carga de miembros del equipo en PHP (mismo patrón que a-analisis-equipos.php
+ * y db_get_personas() de a-desempeno-dashboard.php).
+ * Query simple contra `equipo` — sin JOINs complejos ni columnas opcionales.
+ * Esto inyecta el array en empleadosCache del JS para render instantáneo sin esperar AJAX.
+ * Los conteos de documentos se enriquecen luego vía loadEmpleados() en background.
  */
 $empleados_preload = [];
+try {
+    $stmt_emp = $conn->prepare("
+        SELECT id,
+               nombre_persona AS nombre,
+               COALESCE(cargo, '') AS cargo
+        FROM   equipo
+        WHERE  usuario_id = ?
+        ORDER BY nombre_persona ASC
+    ");
+    if ($stmt_emp) {
+        $stmt_emp->bind_param("i", $user_id);
+        $stmt_emp->execute();
+        $res_emp = stmt_get_result($stmt_emp);
+        if ($res_emp !== false) {
+            while ($row_emp = $res_emp->fetch_assoc()) {
+                $row_emp['doc_count']   = 0;
+                $row_emp['docs_nuevos'] = 0;
+                $empleados_preload[]    = $row_emp;
+            }
+        }
+        $stmt_emp->close();
+    }
+} catch (\Throwable $e) {
+    error_log("documentos.php: equipo preload failed — " . $e->getMessage());
+    $empleados_preload = [];
+}
 
 ?>
 <!DOCTYPE html>
@@ -1946,9 +1971,13 @@ function submitUpload() {
    INIT
 ───────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
+  // Inicializar badge de empleados con el preload server-side (render inmediato)
+  if (empleadosCache.length > 0) {
+    setText('badge-empleados', empleadosCache.length);
+  }
   loadStats();
   loadDocs();
-  loadEmpleados(); // pre-load employee cache in background for faster card rendering
+  loadEmpleados(); // refresca con conteos de docs y actualiza badge
 });
 
 /* Close modal on overlay click */

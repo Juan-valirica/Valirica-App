@@ -210,59 +210,92 @@ switch ($action) {
 
     /* ── Listar empleados con conteo de docs ── */
     case 'listar_empleados':
-        // Verificar si la tabla documentos existe (mismo patrón que stats usa con permisos/vacaciones)
-        $tbl_docs = $conn->query("SHOW TABLES LIKE 'documentos'")->num_rows > 0;
+        /*
+         * PATRÓN IDÉNTICO A a-analisis-equipos.php y db_get_personas() de a-desempeno-dashboard.php:
+         * 1) Query simple contra equipo (sin JOINs complejos) — garantiza que siempre devuelve filas.
+         * 2) Si la tabla documentos existe, se obtienen los conteos en una query separada
+         *    agrupada solo por empleado_id (mucho más segura que GROUP BY en un LEFT JOIN).
+         * 3) Se fusionan los conteos en PHP.
+         * Esto evita fallos por: columna area_trabajo inexistente, MySQL strict ONLY_FULL_GROUP_BY,
+         * SUM() devolviendo NULL en JOINs vacíos, o prepare() fallando silenciosamente.
+         */
 
-        if ($tbl_docs) {
-            // Con conteo de documentos
-            $sql_emp = "
-                SELECT e.id,
-                       e.nombre_persona  AS nombre,
-                       e.cargo,
-                       e.area_trabajo,
-                       COUNT(d.id)             AS doc_count,
-                       SUM(d.estado = 'nuevo') AS docs_nuevos
-                FROM   equipo e
-                LEFT JOIN documentos d
-                       ON d.empleado_id = e.id
-                      AND d.empresa_id  = ?
-                      AND d.estado     != 'archivado'
-                WHERE  e.usuario_id = ?
-                GROUP BY e.id, e.nombre_persona, e.cargo, e.area_trabajo
-                ORDER BY e.nombre_persona ASC
-            ";
-            $st = $conn->prepare($sql_emp);
-            if (!$st) {
-                echo json_encode(['ok' => false, 'error' => 'Error al preparar consulta: ' . $conn->error]);
-                break;
-            }
-            $st->bind_param("ii", $user_id, $user_id);
-        } else {
-            // Sin conteo (tabla documentos aún no existe)
-            $st = $conn->prepare("
-                SELECT e.id,
-                       e.nombre_persona AS nombre,
-                       e.cargo,
-                       e.area_trabajo,
-                       0 AS doc_count,
-                       0 AS docs_nuevos
-                FROM   equipo e
-                WHERE  e.usuario_id = ?
-                ORDER BY e.nombre_persona ASC
-            ");
-            if (!$st) {
-                echo json_encode(['ok' => false, 'error' => 'Error al preparar consulta: ' . $conn->error]);
-                break;
-            }
-            $st->bind_param("i", $user_id);
+        // ── Paso 1: traer miembros del equipo (igual que a-analisis-equipos.php) ──
+        $st = $conn->prepare("
+            SELECT id,
+                   nombre_persona AS nombre,
+                   COALESCE(cargo, '') AS cargo
+            FROM   equipo
+            WHERE  usuario_id = ?
+            ORDER BY nombre_persona ASC
+        ");
+        if (!$st) {
+            echo json_encode(['ok' => false, 'error' => 'Error al preparar consulta de equipo: ' . $conn->error]);
+            break;
         }
-
+        $st->bind_param("i", $user_id);
         if (!$st->execute()) {
-            echo json_encode(['ok' => false, 'error' => 'Error al ejecutar consulta: ' . $st->error]);
+            echo json_encode(['ok' => false, 'error' => 'Error al ejecutar consulta de equipo: ' . $st->error]);
             break;
         }
         $res = stmt_get_result($st);
         $empleados = ($res !== false) ? $res->fetch_all(MYSQLI_ASSOC) : [];
+        $st->close();
+
+        // Inicializar contadores en cero para todos
+        foreach ($empleados as &$emp) {
+            $emp['doc_count']   = 0;
+            $emp['docs_nuevos'] = 0;
+        }
+        unset($emp);
+
+        // ── Paso 2: obtener conteos de documentos si la tabla existe ──
+        if (!empty($empleados)) {
+            $tbl_docs = $conn->query("SHOW TABLES LIKE 'documentos'")->num_rows > 0;
+            if ($tbl_docs) {
+                $ids          = array_column($empleados, 'id');
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                // tipos: "i" para empresa_id + "i" × count($ids) para los IDs
+                $bind_types   = 'i' . str_repeat('i', count($ids));
+                $bind_params  = array_merge([$user_id], $ids);
+
+                $st2 = $conn->prepare("
+                    SELECT empleado_id,
+                           COUNT(*)            AS doc_count,
+                           SUM(estado='nuevo') AS docs_nuevos
+                    FROM   documentos
+                    WHERE  empresa_id   = ?
+                      AND  empleado_id  IN ($placeholders)
+                      AND  estado      != 'archivado'
+                    GROUP BY empleado_id
+                ");
+                if ($st2) {
+                    $st2->bind_param($bind_types, ...$bind_params);
+                    if ($st2->execute()) {
+                        $res2   = stmt_get_result($st2);
+                        $counts = [];
+                        if ($res2 !== false) {
+                            while ($crow = $res2->fetch_assoc()) {
+                                $counts[(int)$crow['empleado_id']] = [
+                                    'doc_count'   => (int)($crow['doc_count']   ?? 0),
+                                    'docs_nuevos' => (int)($crow['docs_nuevos'] ?? 0),
+                                ];
+                            }
+                        }
+                        // Fusionar conteos con la lista de empleados
+                        foreach ($empleados as &$emp) {
+                            if (isset($counts[(int)$emp['id']])) {
+                                $emp['doc_count']   = $counts[(int)$emp['id']]['doc_count'];
+                                $emp['docs_nuevos'] = $counts[(int)$emp['id']]['docs_nuevos'];
+                            }
+                        }
+                        unset($emp);
+                    }
+                    $st2->close();
+                }
+            }
+        }
+
         echo json_encode(['ok' => true, 'empleados' => $empleados]);
         break;
 
