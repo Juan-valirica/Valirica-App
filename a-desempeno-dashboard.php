@@ -119,7 +119,26 @@ if (isset($_GET['action']) && $_GET['action'] === 'descargar_historico_asistenci
                 ELSE 0
             END AS 'Tiempo Extra (min)',
             j.nombre AS 'Jornada Asignada',
-            COALESCE(a.notas, '') AS 'Observaciones'
+            CONCAT_WS(' | ',
+                NULLIF(COALESCE(a.notas, ''), ''),
+                (
+                    SELECT CONCAT('Vacaciones aprobadas (', DATE_FORMAT(v.fecha_inicio_programada, '%d/%m'), '-', DATE_FORMAT(v.fecha_fin_programada, '%d/%m'), ')')
+                    FROM vacaciones v
+                    WHERE v.persona_id = a.persona_id
+                      AND a.fecha BETWEEN v.fecha_inicio_programada AND v.fecha_fin_programada
+                      AND v.estado = 'aprobado'
+                    LIMIT 1
+                ),
+                (
+                    SELECT CONCAT('Permiso: ', tp.nombre)
+                    FROM permisos p
+                    INNER JOIN tipos_permisos tp ON p.tipo_permiso_id = tp.id
+                    WHERE p.persona_id = a.persona_id
+                      AND a.fecha BETWEEN p.fecha_inicio AND p.fecha_fin
+                      AND p.estado = 'aprobado'
+                    LIMIT 1
+                )
+            ) AS 'Observaciones'
         FROM asistencias a
         INNER JOIN equipo e ON a.persona_id = e.id
         INNER JOIN jornadas_trabajo j ON a.jornada_id = j.id
