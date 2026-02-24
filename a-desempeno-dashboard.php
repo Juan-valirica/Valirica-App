@@ -7919,18 +7919,11 @@ document.addEventListener('keydown', function(e) {
      TAB 4: PROYECTOS Y TAREAS
      ============================================ -->
 <div class="tab-content <?= $active_tab === 'projects' ? 'is-active' : '' ?>">
-  <section class="wrap" style="padding-top: var(--space-6); padding-bottom: var(--space-8);">
-    <header style="margin-bottom: var(--space-6);">
-      <h1 style="font-size: 28px; font-weight: 700; color: var(--c-secondary); margin: 0;">
-        Proyectos y Tareas
-      </h1>
-      <p style="color: var(--c-body); opacity: 0.7; margin-top: var(--space-2);">
-        Gestiona tus proyectos y haz seguimiento del progreso de las tareas del equipo
-      </p>
-    </header>
-
-    <?php include __DIR__ . '/proyectos_tareas_panel.php'; ?>
-  </section>
+  <iframe
+    src="kanban_proyectos.php?modo=empresa&embedded=1"
+    style="width:100%;height:80vh;min-height:500px;border:none;display:block;"
+    loading="lazy"
+  ></iframe>
 </div>
 
 <!-- ============================================

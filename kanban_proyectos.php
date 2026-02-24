@@ -13,40 +13,57 @@ date_default_timezone_set('Europe/Madrid');
 // Modo iframe embebido (oculta topbar, ajusta altura)
 $is_embedded = !empty($_GET['embedded']);
 
-// ── Auth: determinar empleado_id ──
-$empleado_id = (int)($_GET['id'] ?? 0);
-if ($empleado_id <= 0 && !empty($_SESSION['empleado_id'])) {
-    $empleado_id = (int)$_SESSION['empleado_id'];
-}
-if ($empleado_id <= 0) {
-    echo "<p style='padding:24px;color:#B00020;'>Falta el parámetro ?id del empleado.</p>";
-    exit;
-}
+// Modo empresa: muestra TODOS los proyectos y tareas de la empresa
+$modo_empresa = !empty($_GET['modo']) && $_GET['modo'] === 'empresa';
 
-// ── Auth: determinar user_id (empresa) ──
-$user_id = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
-if (empty($user_id)) {
-    $q = $conn->prepare("SELECT usuario_id FROM equipo WHERE id = ? LIMIT 1");
-    $q->bind_param("i", $empleado_id);
-    $q->execute();
-    $row = $q->get_result()->fetch_assoc();
-    $q->close();
-    $user_id = ($row && !empty($row['usuario_id'])) ? (int)$row['usuario_id'] : 0;
-}
+if ($modo_empresa) {
+    // Auth: user_id viene de sesión (ya autenticado en dashboard)
+    $user_id = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+    if (!$user_id) {
+        echo "<p style='padding:24px;color:#B00020;'>Acceso no autorizado.</p>";
+        exit;
+    }
+    $empleado_id     = 0;
+    $es_lider_area   = false;
+    $area_lider_id   = 0;
+    $area_lider_nombre = '';
+    $emp = ['nombre_persona' => '', 'cargo' => ''];
+} else {
+    // ── Auth: determinar empleado_id ──
+    $empleado_id = (int)($_GET['id'] ?? 0);
+    if ($empleado_id <= 0 && !empty($_SESSION['empleado_id'])) {
+        $empleado_id = (int)$_SESSION['empleado_id'];
+    }
+    if ($empleado_id <= 0) {
+        echo "<p style='padding:24px;color:#B00020;'>Falta el parámetro ?id del empleado.</p>";
+        exit;
+    }
 
-// ── Datos del empleado ──
-$stmt_emp = $conn->prepare("
-    SELECT e.id, e.nombre_persona, COALESCE(e.cargo,'—') AS cargo,
-           COALESCE(e.area_trabajo,'—') AS area
-    FROM equipo e WHERE e.id = ? AND e.usuario_id = ? LIMIT 1
-");
-$stmt_emp->bind_param("ii", $empleado_id, $user_id);
-$stmt_emp->execute();
-$emp = $stmt_emp->get_result()->fetch_assoc();
-$stmt_emp->close();
-if (!$emp) {
-    echo "<p style='padding:24px;color:#B00020;'>Empleado no encontrado.</p>";
-    exit;
+    // ── Auth: determinar user_id (empresa) ──
+    $user_id = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+    if (empty($user_id)) {
+        $q = $conn->prepare("SELECT usuario_id FROM equipo WHERE id = ? LIMIT 1");
+        $q->bind_param("i", $empleado_id);
+        $q->execute();
+        $row = $q->get_result()->fetch_assoc();
+        $q->close();
+        $user_id = ($row && !empty($row['usuario_id'])) ? (int)$row['usuario_id'] : 0;
+    }
+
+    // ── Datos del empleado ──
+    $stmt_emp = $conn->prepare("
+        SELECT e.id, e.nombre_persona, COALESCE(e.cargo,'—') AS cargo,
+               COALESCE(e.area_trabajo,'—') AS area
+        FROM equipo e WHERE e.id = ? AND e.usuario_id = ? LIMIT 1
+    ");
+    $stmt_emp->bind_param("ii", $empleado_id, $user_id);
+    $stmt_emp->execute();
+    $emp = $stmt_emp->get_result()->fetch_assoc();
+    $stmt_emp->close();
+    if (!$emp) {
+        echo "<p style='padding:24px;color:#B00020;'>Empleado no encontrado.</p>";
+        exit;
+    }
 }
 
 // ── Datos de empresa ──
@@ -66,30 +83,31 @@ try {
     }
 } catch (Exception $e) { /* silenciar */ }
 
-// ── Determinar si es líder de área ──
-$es_lider_area = false;
-$area_lider_id = 0;
-$area_lider_nombre = '';
-try {
-    $stmt_al = $conn->prepare("SELECT area_trabajo_id FROM equipo WHERE id = ? LIMIT 1");
-    $stmt_al->bind_param("i", $empleado_id);
-    $stmt_al->execute();
-    $r_al = $stmt_al->get_result()->fetch_assoc();
-    $stmt_al->close();
-    if ($r_al && !empty($r_al['area_trabajo_id'])) {
-        $area_lider_id = (int)$r_al['area_trabajo_id'];
-        // Obtener nombre del área
-        $stmt_an = $conn->prepare("SELECT nombre_area FROM areas_trabajo WHERE id = ? AND usuario_id = ? LIMIT 1");
-        $stmt_an->bind_param("ii", $area_lider_id, $user_id);
-        $stmt_an->execute();
-        $r_an = $stmt_an->get_result()->fetch_assoc();
-        $stmt_an->close();
-        if ($r_an) {
-            $es_lider_area = true;
-            $area_lider_nombre = $r_an['nombre_area'];
+// ── Determinar si es líder de área (solo modo empleado) ──
+if (!$modo_empresa) {
+    $es_lider_area = false;
+    $area_lider_id = 0;
+    $area_lider_nombre = '';
+    try {
+        $stmt_al = $conn->prepare("SELECT area_trabajo_id FROM equipo WHERE id = ? LIMIT 1");
+        $stmt_al->bind_param("i", $empleado_id);
+        $stmt_al->execute();
+        $r_al = $stmt_al->get_result()->fetch_assoc();
+        $stmt_al->close();
+        if ($r_al && !empty($r_al['area_trabajo_id'])) {
+            $area_lider_id = (int)$r_al['area_trabajo_id'];
+            $stmt_an = $conn->prepare("SELECT nombre_area FROM areas_trabajo WHERE id = ? AND usuario_id = ? LIMIT 1");
+            $stmt_an->bind_param("ii", $area_lider_id, $user_id);
+            $stmt_an->execute();
+            $r_an = $stmt_an->get_result()->fetch_assoc();
+            $stmt_an->close();
+            if ($r_an) {
+                $es_lider_area = true;
+                $area_lider_nombre = $r_an['nombre_area'];
+            }
         }
-    }
-} catch (Exception $e) { /* column may not exist yet */ }
+    } catch (Exception $e) { /* column may not exist yet */ }
+}
 
 $conn->close();
 ?>
@@ -892,6 +910,7 @@ $conn->close();
   const ES_LIDER_AREA = <?php echo $es_lider_area ? 'true' : 'false'; ?>;
   const AREA_LIDER_ID = <?php echo (int)$area_lider_id; ?>;
   const AREA_LIDER_NOMBRE = <?php echo json_encode($area_lider_nombre); ?>;
+  const MODO_EMPRESA = <?php echo $modo_empresa ? 'true' : 'false'; ?>;
   const BACKEND = 'proyectos_tareas_backend.php';
 
   const COLUMN_CONFIG = {
@@ -937,29 +956,31 @@ $conn->close();
   async function loadAllData() {
     showSkeletons();
     try {
-      const promises = [
-        fetchJSON(`${BACKEND}?action=obtener_mis_proyectos&empleado_id=${EMPLEADO_ID}&usuario_id=${USER_ID}`),
-        fetchJSON(`${BACKEND}?action=obtener_tareas_empleado&responsable_id=${EMPLEADO_ID}&usuario_id=${USER_ID}`)
-      ];
-      if (ES_LIDER_AREA && AREA_LIDER_ID > 0) {
-        promises.push(fetchJSON(`${BACKEND}?action=obtener_tareas_area&area_id=${AREA_LIDER_ID}&usuario_id=${USER_ID}`));
-      }
+      if (MODO_EMPRESA) {
+        const data = await fetchJSON(`${BACKEND}?action=obtener_todos_proyectos&usuario_id=${USER_ID}`);
+        if (data.ok && data.proyectos) allProjects = data.proyectos;
+        myTasks   = [];
+        areaTasks = [];
+      } else {
+        const promises = [
+          fetchJSON(`${BACKEND}?action=obtener_mis_proyectos&empleado_id=${EMPLEADO_ID}&usuario_id=${USER_ID}`),
+          fetchJSON(`${BACKEND}?action=obtener_tareas_empleado&responsable_id=${EMPLEADO_ID}&usuario_id=${USER_ID}`)
+        ];
+        if (ES_LIDER_AREA && AREA_LIDER_ID > 0) {
+          promises.push(fetchJSON(`${BACKEND}?action=obtener_tareas_area&area_id=${AREA_LIDER_ID}&usuario_id=${USER_ID}`));
+        }
 
-      const results = await Promise.all(promises);
+        const results = await Promise.all(promises);
 
-      // Projects
-      if (results[0].ok && results[0].proyectos) {
-        allProjects = results[0].proyectos;
-      }
-
-      // My tasks
-      if (results[1].ok && results[1].tareas) {
-        myTasks = results[1].tareas.filter(t => t.estado !== 'cancelada');
-      }
-
-      // Area tasks
-      if (results[2] && results[2].ok && results[2].tareas) {
-        areaTasks = results[2].tareas;
+        if (results[0].ok && results[0].proyectos) {
+          allProjects = results[0].proyectos;
+        }
+        if (results[1].ok && results[1].tareas) {
+          myTasks = results[1].tareas.filter(t => t.estado !== 'cancelada');
+        }
+        if (results[2] && results[2].ok && results[2].tareas) {
+          areaTasks = results[2].tareas;
+        }
       }
 
       renderBoard();
@@ -979,9 +1000,11 @@ $conn->close();
 
   function showSkeletons() {
     const board = document.getElementById('kb-board');
-    const cols = ES_LIDER_AREA
-      ? ['mis_tareas','mi_area','planificacion','en_progreso','pausado','completado','cancelado']
-      : ['mis_tareas','planificacion','en_progreso','pausado','completado','cancelado'];
+    const cols = MODO_EMPRESA
+      ? ['planificacion','en_progreso','pausado','completado','cancelado']
+      : (ES_LIDER_AREA
+          ? ['mis_tareas','mi_area','planificacion','en_progreso','pausado','completado','cancelado']
+          : ['mis_tareas','planificacion','en_progreso','pausado','completado','cancelado']);
     board.innerHTML = cols.map(key => {
       const cfg = COLUMN_CONFIG[key];
       const collapsed = cfg.collapsed ? ' collapsed' : '';
@@ -1010,15 +1033,15 @@ $conn->close();
     const board = document.getElementById('kb-board');
     const cols = [];
 
-    // 1) MIS TAREAS
-    cols.push(renderSpecialColumn('mis_tareas', myTasks));
-
-    // 2) MI ÁREA (if leader)
-    if (ES_LIDER_AREA) {
-      cols.push(renderSpecialColumn('mi_area', areaTasks));
+    // 1) MIS TAREAS (solo modo empleado)
+    if (!MODO_EMPRESA) {
+      cols.push(renderSpecialColumn('mis_tareas', myTasks));
+      if (ES_LIDER_AREA) {
+        cols.push(renderSpecialColumn('mi_area', areaTasks));
+      }
     }
 
-    // 3) Project state columns
+    // 2) Project state columns
     const projectsByState = {};
     ['planificacion','en_progreso','pausado','completado','cancelado'].forEach(s => {
       projectsByState[s] = [];
@@ -1101,7 +1124,7 @@ $conn->close();
   }
 
   function renderProjectCard(proy, index) {
-    const esLider = parseInt(proy.lider_id) === EMPLEADO_ID;
+    const esLider = MODO_EMPRESA ? true : (parseInt(proy.lider_id) === EMPLEADO_ID);
     const porcentaje = parseInt(proy.porcentaje_completado) || 0;
     let progressClass = 'low';
     if (porcentaje >= 100) progressClass = 'complete';
@@ -1139,7 +1162,7 @@ $conn->close();
             <span>${formatDate(proy.fecha_fin_estimada)}</span>
             <span class="sep"></span>
             <span>${proy.total_tareas || 0} tareas</span>
-            ${myCount > 0 ? `<span style="background:var(--kb-accent);color:#fff;font-size:9px;padding:1px 6px;border-radius:8px;font-weight:700;">${myCount} mia${myCount > 1 ? 's' : ''}</span>` : ''}
+            ${(!MODO_EMPRESA && myCount > 0) ? `<span style="background:var(--kb-accent);color:#fff;font-size:9px;padding:1px 6px;border-radius:8px;font-weight:700;">${myCount} mia${myCount > 1 ? 's' : ''}</span>` : ''}
           </div>
           <div class="kb-progress">
             <div class="kb-progress-track">
@@ -1266,13 +1289,25 @@ $conn->close();
       allProjects.filter(p => p.estado === 'en_progreso').length;
     document.getElementById('stat-completed').textContent =
       allProjects.filter(p => p.estado === 'completado').length;
-    document.getElementById('stat-tasks-pending').textContent =
-      myTasks.filter(t => t.estado === 'pendiente').length;
-    document.getElementById('stat-overdue').textContent =
-      myTasks.filter(t => {
-        if (!t.deadline || t.estado === 'completada' || t.estado === 'cancelada') return false;
-        return new Date(t.deadline) < new Date(new Date().toDateString());
-      }).length;
+
+    if (MODO_EMPRESA) {
+      // En modo empresa: stats calculadas desde los datos de proyectos
+      const totalPendientes = allProjects.reduce((acc, p) => {
+        const tareas = p.todas_tareas || [];
+        return acc + tareas.filter(t => t.estado === 'pendiente').length;
+      }, 0);
+      const totalVencidas = allProjects.reduce((acc, p) => acc + (parseInt(p.tareas_vencidas) || 0), 0);
+      document.getElementById('stat-tasks-pending').textContent = totalPendientes;
+      document.getElementById('stat-overdue').textContent = totalVencidas;
+    } else {
+      document.getElementById('stat-tasks-pending').textContent =
+        myTasks.filter(t => t.estado === 'pendiente').length;
+      document.getElementById('stat-overdue').textContent =
+        myTasks.filter(t => {
+          if (!t.deadline || t.estado === 'completada' || t.estado === 'cancelada') return false;
+          return new Date(t.deadline) < new Date(new Date().toDateString());
+        }).length;
+    }
   }
 
   /* ═════════════════════════════════════════════

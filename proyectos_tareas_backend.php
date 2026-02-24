@@ -924,6 +924,91 @@ try {
             ]);
             break;
 
+        // Vista empresa: todos los proyectos con todas las tareas embebidas
+        case 'obtener_todos_proyectos':
+            $sql = "
+                SELECT DISTINCT
+                    p.id,
+                    p.titulo,
+                    p.descripcion,
+                    p.lider_id,
+                    e.nombre_persona as lider_nombre,
+                    p.fecha_inicio,
+                    p.fecha_fin_estimada,
+                    p.estado,
+                    p.prioridad,
+                    COUNT(t.id) as total_tareas,
+                    SUM(CASE WHEN t.estado = 'completada' THEN 1 ELSE 0 END) as tareas_completadas,
+                    CASE
+                        WHEN COUNT(t.id) = 0 THEN 0
+                        ELSE ROUND((SUM(CASE WHEN t.estado = 'completada' THEN 1 ELSE 0 END) / COUNT(t.id)) * 100, 0)
+                    END as porcentaje_completado
+                FROM proyectos p
+                LEFT JOIN equipo e ON p.lider_id = e.id
+                LEFT JOIN tareas t ON p.id = t.proyecto_id AND t.estado != 'cancelada'
+                WHERE p.usuario_id = ?
+                GROUP BY p.id, p.titulo, p.descripcion, p.lider_id, e.nombre_persona,
+                         p.fecha_inicio, p.fecha_fin_estimada, p.estado, p.prioridad
+                ORDER BY
+                    FIELD(p.estado, 'en_progreso', 'planificacion', 'pausado', 'completado', 'cancelado'),
+                    FIELD(p.prioridad, 'critica', 'alta', 'media', 'baja'),
+                    p.fecha_fin_estimada ASC
+            ";
+
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $result = stmt_get_result($stmt);
+
+            $proyectos = [];
+            while ($row = $result->fetch_assoc()) {
+                $stmt_tareas = $conn->prepare("
+                    SELECT
+                        t.id,
+                        t.titulo,
+                        t.estado,
+                        t.deadline,
+                        t.prioridad,
+                        t.responsable_id,
+                        COALESCE(e.nombre_persona, 'Sin asignar') as responsable_nombre,
+                        COALESCE(e.area_trabajo, '—') as responsable_area,
+                        DATEDIFF(t.deadline, CURDATE()) as dias_restantes
+                    FROM tareas t
+                    LEFT JOIN equipo e ON t.responsable_id = e.id
+                    WHERE t.proyecto_id = ? AND t.estado != 'cancelada'
+                    ORDER BY
+                        FIELD(t.estado, 'en_progreso', 'pendiente', 'completada'),
+                        t.deadline ASC
+                ");
+                $stmt_tareas->bind_param("i", $row['id']);
+                $stmt_tareas->execute();
+                $res_tareas = stmt_get_result($stmt_tareas);
+
+                $todas_tareas = [];
+                while ($tarea = $res_tareas->fetch_assoc()) {
+                    $tarea['es_mi_tarea'] = false;
+                    $dias = $tarea['dias_restantes'];
+                    if ($dias !== null && $tarea['estado'] !== 'completada') {
+                        if ($dias < 0)       $tarea['indicador_deadline'] = 'vencida';
+                        elseif ($dias === 0) $tarea['indicador_deadline'] = 'vence_hoy';
+                        elseif ($dias <= 3)  $tarea['indicador_deadline'] = 'proxima';
+                        else                 $tarea['indicador_deadline'] = 'normal';
+                    } else {
+                        $tarea['indicador_deadline'] = 'normal';
+                    }
+                    $todas_tareas[] = $tarea;
+                }
+                $stmt_tareas->close();
+
+                $row['todas_tareas'] = $todas_tareas;
+                $row['mis_tareas']   = [];
+                $proyectos[] = $row;
+            }
+            $stmt->close();
+
+            echo json_encode(['ok' => true, 'proyectos' => $proyectos]);
+            break;
+
         // Obtener proyectos activos para el selector
         case 'obtener_proyectos_activos':
             $sql = "
