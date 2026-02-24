@@ -62,14 +62,40 @@ $promedio_general  = 0; $aline_class = ''; $aline_label = ''; $aline_icon = '';
 $energia_equipo    = 0; $mot_class   = ''; $mot_label   = ''; $mot_icon   = '';
 
 /*
- * NOTA: Todas las queries contra la tabla `documentos` (CREATE TABLE,
- * conteo de no-leídos, preload de empleados) se hacen exclusivamente
- * vía AJAX al backend (documentos_backend.php), igual que a-desempeno.php
- * no consulta documentos en PHP.  Esto elimina la fuente de blank-page:
- * si la tabla no existe o el usuario no tiene CREATE privilege, el backend
- * lo maneja con su propio try/catch y retorna JSON de error, no blank page.
+ * Pre-carga de miembros del equipo en PHP (mismo patrón que a-analisis-equipos.php
+ * y db_get_personas() de a-desempeno-dashboard.php).
+ * Query simple contra `equipo` — sin JOINs complejos ni columnas opcionales.
+ * Esto inyecta el array en empleadosCache del JS para render instantáneo sin esperar AJAX.
+ * Los conteos de documentos se enriquecen luego vía loadEmpleados() en background.
  */
 $empleados_preload = [];
+try {
+    $stmt_emp = $conn->prepare("
+        SELECT id,
+               nombre_persona AS nombre,
+               COALESCE(apellido, '') AS apellido,
+               COALESCE(cargo, '') AS cargo
+        FROM   equipo
+        WHERE  usuario_id = ?
+        ORDER BY nombre_persona ASC
+    ");
+    if ($stmt_emp) {
+        $stmt_emp->bind_param("i", $user_id);
+        $stmt_emp->execute();
+        $res_emp = stmt_get_result($stmt_emp);
+        if ($res_emp !== false) {
+            while ($row_emp = $res_emp->fetch_assoc()) {
+                $row_emp['doc_count']   = 0;
+                $row_emp['docs_nuevos'] = 0;
+                $empleados_preload[]    = $row_emp;
+            }
+        }
+        $stmt_emp->close();
+    }
+} catch (\Throwable $e) {
+    error_log("documentos.php: equipo preload failed — " . $e->getMessage());
+    $empleados_preload = [];
+}
 
 ?>
 <!DOCTYPE html>
@@ -1340,18 +1366,19 @@ function renderEmpCards(emps) {
     return;
   }
   grid.innerHTML = emps.map(e => {
-    const ini = empInitials(e.nombre);
+    const fullName = capitalizeWords((e.nombre + (e.apellido ? ' ' + e.apellido : '')).trim());
+    const ini = empInitials(fullName);
     const docLabel = e.doc_count == 1 ? '1 documento' : `${e.doc_count || 0} documentos`;
     return `<div class="emp-card">
       <div class="emp-card-avatar-lg">${esc(ini)}</div>
-      <div class="emp-card-name">${esc(e.nombre)}</div>
+      <div class="emp-card-name">${esc(fullName)}</div>
       ${e.cargo ? `<div class="emp-card-role">${esc(e.cargo)}</div>` : ''}
       <div class="emp-card-doc-count"><i class="ph ph-files" style="margin-right:4px;"></i>${esc(docLabel)}</div>
       <div class="emp-card-actions">
-        <button class="emp-card-btn secondary" onclick="viewEmployeeDocs(${e.id}, ${JSON.stringify(e.nombre)})">
+        <button class="emp-card-btn secondary" onclick="viewEmployeeDocs(${e.id}, ${esc(JSON.stringify(fullName))})">
           <i class="ph ph-folder-open"></i> Ver docs
         </button>
-        <button class="emp-card-btn primary" onclick="openUploadForEmployee(${e.id}, ${JSON.stringify(e.nombre)})">
+        <button class="emp-card-btn primary" onclick="openUploadForEmployee(${e.id}, ${esc(JSON.stringify(fullName))})">
           <i class="ph ph-upload-simple"></i> Subir
         </button>
       </div>
@@ -1413,6 +1440,8 @@ function loadDocs() {
   if (currentScope === 'por_empleado') { showEmployeeCards(); return; }
   // Delegate to solicitudes loader for those scopes
   if (SOLICITUDES_SCOPES.includes(currentScope)) { loadSolicitudes(); return; }
+  // Employee detail view: combine docs + solicitudes for that employee
+  if (currentScope === 'empleado' && currentEmpId) { loadEmployeeAllDocs(); return; }
 
   const grid  = document.getElementById('dmGrid');
   const empty = document.getElementById('dmEmpty');
@@ -1453,6 +1482,35 @@ function loadSolicitudes() {
       ).join('');
     })
     .catch(() => { grid.innerHTML = ''; showEmpty(); });
+}
+
+/* ─────────────────────────────────────────
+   EMPLOYEE DETAIL — docs + permisos + vacaciones
+───────────────────────────────────────── */
+async function loadEmployeeAllDocs() {
+  const grid  = document.getElementById('dmGrid');
+  const empty = document.getElementById('dmEmpty');
+  grid.style.display = '';
+  grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:#94a3b8;font-size:14px;"><i class="ph ph-circle-notch" style="font-size:24px;"></i><br>Cargando…</div>';
+  empty.style.display = 'none';
+  try {
+    const [docsRes, solRes] = await Promise.all([
+      fetch(BACKEND + '?action=listar&scope=empleado&empleado_id=' + currentEmpId).then(r => r.json()),
+      fetch(BACKEND + '?action=listar_solicitudes&subtipo=todos&empleado_id=' + currentEmpId).then(r => r.json()),
+    ]);
+    const docs = docsRes.ok ? (docsRes.documentos  || []) : [];
+    const sols = solRes.ok  ? (solRes.solicitudes   || []) : [];
+    const all  = [...docs, ...sols].sort((a, b) =>
+      (b.created_at || '').localeCompare(a.created_at || ''));
+    if (!all.length) { grid.innerHTML = ''; showEmpty(); return; }
+    grid.className = currentView === 'list' ? 'dm-grid list-mode' : 'dm-grid';
+    grid.innerHTML = all.map(doc =>
+      currentView === 'list' ? renderDocRow(doc) : renderDocCard(doc)
+    ).join('');
+  } catch (_e) {
+    grid.innerHTML = '';
+    showEmpty();
+  }
 }
 
 function showEmpty() {
@@ -1613,6 +1671,11 @@ function relativeDate(dateStr) {
   if (days  < 30) return `hace ${days} día${days > 1 ? 's' : ''}`;
   const months = Math.floor(days / 30);
   return `hace ${months} mes${months > 1 ? 'es' : ''}`;
+}
+
+function capitalizeWords(str) {
+  if (!str) return '';
+  return str.trim().split(/\s+/).map(w => w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : '').join(' ');
 }
 
 function empInitials(name) {
@@ -1946,9 +2009,13 @@ function submitUpload() {
    INIT
 ───────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
+  // Inicializar badge de empleados con el preload server-side (render inmediato)
+  if (empleadosCache.length > 0) {
+    setText('badge-empleados', empleadosCache.length);
+  }
   loadStats();
   loadDocs();
-  loadEmpleados(); // pre-load employee cache in background for faster card rendering
+  loadEmpleados(); // refresca con conteos de docs y actualiza badge
 });
 
 /* Close modal on overlay click */
