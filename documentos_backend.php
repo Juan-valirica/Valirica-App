@@ -444,11 +444,13 @@ switch ($action) {
                 break;
             }
 
-            $file    = $_FILES['archivo'];
-            $mime    = mime_content_type($file['tmp_name']);
-            $allowed = ['application/pdf'];
+            $file = $_FILES['archivo'];
 
-            if (!in_array($mime, $allowed, true)) {
+            // Verificar que es PDF sin depender de la extensión fileinfo
+            $fh     = fopen($file['tmp_name'], 'rb');
+            $header = fread($fh, 4);
+            fclose($fh);
+            if ($header !== '%PDF') {
                 echo json_encode(['ok' => false, 'error' => 'Solo se permiten archivos PDF']);
                 break;
             }
