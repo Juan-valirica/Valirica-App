@@ -1375,10 +1375,10 @@ function renderEmpCards(emps) {
       ${e.cargo ? `<div class="emp-card-role">${esc(e.cargo)}</div>` : ''}
       <div class="emp-card-doc-count"><i class="ph ph-files" style="margin-right:4px;"></i>${esc(docLabel)}</div>
       <div class="emp-card-actions">
-        <button class="emp-card-btn secondary" onclick="viewEmployeeDocs(${e.id}, ${JSON.stringify(fullName)})">
+        <button class="emp-card-btn secondary" onclick="viewEmployeeDocs(${e.id}, ${esc(JSON.stringify(fullName))})">
           <i class="ph ph-folder-open"></i> Ver docs
         </button>
-        <button class="emp-card-btn primary" onclick="openUploadForEmployee(${e.id}, ${JSON.stringify(fullName)})">
+        <button class="emp-card-btn primary" onclick="openUploadForEmployee(${e.id}, ${esc(JSON.stringify(fullName))})">
           <i class="ph ph-upload-simple"></i> Subir
         </button>
       </div>
