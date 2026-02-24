@@ -925,8 +925,7 @@ try {
             break;
 
         // Vista empresa: todos los proyectos con todas las tareas embebidas
-        case 'obtener_todos_proyectos':
-            $sql = "
+        case 'obtener_todos_proyectos':            $sql = "
                 SELECT DISTINCT
                     p.id,
                     p.titulo,
@@ -1007,6 +1006,121 @@ try {
             $stmt->close();
 
             echo json_encode(['ok' => true, 'proyectos' => $proyectos]);
+            break;
+
+        // Stats de tareas completadas por período (para gráfico empresa)
+        case 'obtener_stats_tareas_completadas':
+            $res = [];
+
+            // Por día — últimos 30 días
+            $stmt = $conn->prepare("
+                SELECT DATE(t.fecha_finalizacion_real) as fecha, COUNT(*) as total
+                FROM tareas t
+                INNER JOIN proyectos p ON t.proyecto_id = p.id
+                WHERE p.usuario_id = ?
+                  AND t.estado = 'completada'
+                  AND t.fecha_finalizacion_real >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                GROUP BY DATE(t.fecha_finalizacion_real)
+                ORDER BY fecha ASC
+            ");
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $r = stmt_get_result($stmt);
+            $dias = [];
+            while ($row = $r->fetch_assoc()) $dias[] = $row;
+            $stmt->close();
+            $res['dia'] = $dias;
+
+            // Por semana — últimas 12 semanas
+            $stmt = $conn->prepare("
+                SELECT YEARWEEK(t.fecha_finalizacion_real, 1) as semana_key,
+                       MIN(DATE(t.fecha_finalizacion_real)) as fecha,
+                       COUNT(*) as total
+                FROM tareas t
+                INNER JOIN proyectos p ON t.proyecto_id = p.id
+                WHERE p.usuario_id = ?
+                  AND t.estado = 'completada'
+                  AND t.fecha_finalizacion_real >= DATE_SUB(CURDATE(), INTERVAL 12 WEEK)
+                GROUP BY YEARWEEK(t.fecha_finalizacion_real, 1)
+                ORDER BY semana_key ASC
+            ");
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $r = stmt_get_result($stmt);
+            $semanas = [];
+            while ($row = $r->fetch_assoc()) $semanas[] = $row;
+            $stmt->close();
+            $res['semana'] = $semanas;
+
+            // Por mes — últimos 12 meses
+            $stmt = $conn->prepare("
+                SELECT DATE_FORMAT(t.fecha_finalizacion_real, '%Y-%m') as fecha,
+                       COUNT(*) as total
+                FROM tareas t
+                INNER JOIN proyectos p ON t.proyecto_id = p.id
+                WHERE p.usuario_id = ?
+                  AND t.estado = 'completada'
+                  AND t.fecha_finalizacion_real >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+                GROUP BY DATE_FORMAT(t.fecha_finalizacion_real, '%Y-%m')
+                ORDER BY fecha ASC
+            ");
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $r = stmt_get_result($stmt);
+            $meses = [];
+            while ($row = $r->fetch_assoc()) $meses[] = $row;
+            $stmt->close();
+            $res['mes'] = $meses;
+
+            // Por año — histórico completo
+            $stmt = $conn->prepare("
+                SELECT YEAR(t.fecha_finalizacion_real) as fecha, COUNT(*) as total
+                FROM tareas t
+                INNER JOIN proyectos p ON t.proyecto_id = p.id
+                WHERE p.usuario_id = ?
+                  AND t.estado = 'completada'
+                  AND t.fecha_finalizacion_real IS NOT NULL
+                GROUP BY YEAR(t.fecha_finalizacion_real)
+                ORDER BY fecha ASC
+            ");
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $r = stmt_get_result($stmt);
+            $anios = [];
+            while ($row = $r->fetch_assoc()) $anios[] = $row;
+            $stmt->close();
+            $res['anio'] = $anios;
+
+            echo json_encode(['ok' => true, 'data' => $res]);
+            break;
+
+        // Top performers — empleados que más/menos tareas completaron en los últimos 7 días
+        case 'obtener_top_performers':
+            $stmt = $conn->prepare("
+                SELECT
+                    e.id,
+                    e.nombre_persona,
+                    COALESCE(e.cargo, '—') as cargo,
+                    COALESCE(e.area_trabajo, '—') as area,
+                    COUNT(t.id) as tareas_completadas
+                FROM equipo e
+                INNER JOIN tareas t ON t.responsable_id = e.id
+                INNER JOIN proyectos p ON t.proyecto_id = p.id
+                WHERE p.usuario_id = ?
+                  AND e.usuario_id = ?
+                  AND t.estado = 'completada'
+                  AND t.fecha_finalizacion_real >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                GROUP BY e.id, e.nombre_persona, e.cargo, e.area
+                ORDER BY tareas_completadas DESC
+                LIMIT 10
+            ");
+            $stmt->bind_param("ii", $user_id, $user_id);
+            $stmt->execute();
+            $performers = [];
+            while ($row = stmt_get_result($stmt)->fetch_assoc()) $performers[] = $row;
+            $stmt->close();
+
+            echo json_encode(['ok' => true, 'performers' => $performers]);
             break;
 
         // Obtener proyectos activos para el selector

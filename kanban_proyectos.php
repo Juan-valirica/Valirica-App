@@ -261,6 +261,249 @@ $conn->close();
       flex-shrink: 0;
     }
 
+    /* ─── Empresa Dashboard (chart + performers) ─── */
+    .kb-empresa-dash {
+      display: flex;
+      gap: 14px;
+      padding: 14px 16px 0;
+      flex-shrink: 0;
+    }
+
+    /* Chart card — dark, financial-style */
+    .kb-dash-chart-card {
+      flex: 1 1 0;
+      min-width: 0;
+      background: var(--kb-primary);
+      border-radius: var(--kb-radius);
+      padding: 18px 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kb-dash-chart-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 55%;
+      height: 100%;
+      background: radial-gradient(ellipse at 90% 10%, rgba(24,70,86,0.7) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .kb-dash-chart-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .kb-dash-metric-num {
+      font-size: 40px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+      transition: all 0.3s ease;
+    }
+    .kb-dash-metric-label {
+      font-size: 10px;
+      color: rgba(255,255,255,0.45);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 3px;
+    }
+    .kb-dash-metric-sublabel {
+      font-size: 10px;
+      color: rgba(255,255,255,0.3);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .kb-period-tabs {
+      display: flex;
+      background: rgba(255,255,255,0.07);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 2px;
+      flex-shrink: 0;
+      align-self: flex-start;
+    }
+    .kb-period-tab {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.45);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+    .kb-period-tab.active {
+      background: var(--kb-accent);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(239,127,27,0.4);
+    }
+    .kb-period-tab:hover:not(.active) {
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.8);
+    }
+    #kb-chart-svg-wrap {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      min-height: 120px;
+    }
+    .kb-dash-chart-empty {
+      color: rgba(255,255,255,0.25);
+      text-align: center;
+      padding: 32px 20px;
+      font-size: 12px;
+    }
+
+    /* Performers card — clean white */
+    .kb-dash-performers-card {
+      flex: 0 0 300px;
+      background: #fff;
+      border-radius: var(--kb-radius);
+      border: 1px solid #e8eaed;
+      box-shadow: var(--kb-shadow-card);
+      padding: 16px 14px 10px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .kb-dash-perf-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      flex-shrink: 0;
+    }
+    .kb-dash-perf-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--kb-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .kb-dash-perf-badge {
+      font-size: 10px;
+      color: #6b7280;
+      font-weight: 600;
+      background: #f3f4f6;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .kb-performers-section-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: #c4c9d4;
+      padding: 6px 6px 2px;
+    }
+    .kb-performers-divider {
+      height: 1px;
+      background: #f3f4f6;
+      margin: 4px 0;
+    }
+    .kb-performers-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      overflow-y: auto;
+    }
+    .kb-performers-list::-webkit-scrollbar { width: 3px; }
+    .kb-performers-list::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
+    .kb-performer-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 6px;
+      border-radius: 8px;
+      transition: background 0.12s ease;
+    }
+    .kb-performer-row:hover { background: #f9fafb; }
+    .kb-performer-rank {
+      font-size: 13px;
+      min-width: 22px;
+      text-align: center;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .kb-rank-num {
+      font-size: 10px;
+      font-weight: 800;
+      color: #d1d5db;
+    }
+    .kb-performer-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .kb-performer-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .kb-performer-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #111827;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .kb-performer-role {
+      font-size: 10px;
+      color: #9ca3af;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .kb-performer-bar-wrap {
+      flex: 0 0 44px;
+      height: 3px;
+      background: #f3f4f6;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .kb-performer-bar {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+    }
+    .kb-performer-count {
+      font-size: 13px;
+      font-weight: 800;
+      min-width: 20px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .kb-performers-empty {
+      text-align: center;
+      padding: 20px;
+      color: #9ca3af;
+      font-size: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .kb-empresa-dash { flex-direction: column; }
+      .kb-dash-performers-card { flex: none; max-height: 260px; }
+    }
+
     /* ─── Kanban Board ─── */
     .kb-board {
       flex: 1;
@@ -905,6 +1148,44 @@ $conn->close();
     </div>
   </div>
 
+<?php if ($modo_empresa): ?>
+  <!-- ── Empresa Dashboard: Chart + Top Performers ── -->
+  <div class="kb-empresa-dash" id="kb-empresa-dash">
+
+    <!-- Panel izquierdo: gráfico financiero de tareas completadas -->
+    <div class="kb-dash-chart-card">
+      <div class="kb-dash-chart-header">
+        <div>
+          <div class="kb-dash-metric-num" id="dash-total">—</div>
+          <div class="kb-dash-metric-label">Tareas completadas</div>
+          <div class="kb-dash-metric-sublabel" id="dash-period-label">Últimas 12 semanas</div>
+        </div>
+        <div class="kb-period-tabs">
+          <button class="kb-period-tab" data-period="dia">30 días</button>
+          <button class="kb-period-tab active" data-period="semana">12 sem</button>
+          <button class="kb-period-tab" data-period="mes">12 meses</button>
+          <button class="kb-period-tab" data-period="anio">Por año</button>
+        </div>
+      </div>
+      <div id="kb-chart-svg-wrap">
+        <!-- Chart SVG renderizado por JS -->
+      </div>
+    </div>
+
+    <!-- Panel derecho: top performers últimos 7 días -->
+    <div class="kb-dash-performers-card">
+      <div class="kb-dash-perf-header">
+        <span class="kb-dash-perf-title">Top Ejecutores</span>
+        <span class="kb-dash-perf-badge">Últimos 7 días</span>
+      </div>
+      <div id="kb-performers-list" class="kb-performers-list">
+        <!-- Renderizado por JS -->
+      </div>
+    </div>
+
+  </div>
+<?php endif; ?>
+
   <!-- ── Kanban Board ── -->
   <div class="kb-board" id="kb-board">
     <!-- Columns rendered by JS -->
@@ -999,6 +1280,7 @@ $conn->close();
 
       renderBoard();
       updateStats();
+      if (MODO_EMPRESA) loadDashboardData();
     } catch (err) {
       console.error('Error loading data:', err);
       document.getElementById('kb-board').innerHTML = `
@@ -1323,6 +1605,308 @@ $conn->close();
         }).length;
     }
   }
+
+  /* ═════════════════════════════════════════════
+     EMPRESA DASHBOARD: CHART + PERFORMERS
+     ═════════════════════════════════════════════ */
+
+  let dashData = null;
+  let currentPeriod = 'semana';
+
+  const PERIOD_LABELS = {
+    dia:    'Últimos 30 días',
+    semana: 'Últimas 12 semanas',
+    mes:    'Últimos 12 meses',
+    anio:   'Histórico por año'
+  };
+
+  async function loadDashboardData() {
+    try {
+      const [statsRes, perfRes] = await Promise.all([
+        fetchJSON(`${BACKEND}?action=obtener_stats_tareas_completadas&usuario_id=${USER_ID}`),
+        fetchJSON(`${BACKEND}?action=obtener_top_performers&usuario_id=${USER_ID}`)
+      ]);
+      if (statsRes.ok) { dashData = statsRes.data; renderChart(currentPeriod); }
+      if (perfRes.ok)  renderPerformers(perfRes.performers);
+    } catch (e) {
+      console.warn('Dashboard data error:', e);
+    }
+  }
+
+  window.switchPeriod = function(period) {
+    currentPeriod = period;
+    document.querySelectorAll('.kb-period-tab').forEach(b => {
+      b.classList.toggle('active', b.dataset.period === period);
+    });
+    renderChart(period);
+  };
+
+  function renderChart(period) {
+    const wrap = document.getElementById('kb-chart-svg-wrap');
+    const totalEl = document.getElementById('dash-total');
+    const subEl   = document.getElementById('dash-period-label');
+    if (!wrap) return;
+    if (subEl) subEl.textContent = PERIOD_LABELS[period] || '';
+
+    const raw = (dashData && dashData[period]) ? dashData[period] : [];
+    if (!raw.length) {
+      if (totalEl) totalEl.textContent = '0';
+      wrap.innerHTML = `<div class="kb-dash-chart-empty">Sin datos para este período</div>`;
+      return;
+    }
+
+    const filled = period === 'dia' ? fillDailyGaps(raw) : raw;
+    const total  = filled.reduce((a, d) => a + parseInt(d.total || 0), 0);
+    if (totalEl) animateNumber(totalEl, total);
+
+    const W   = (wrap.clientWidth || 560);
+    const H   = 150;
+    const PAD = { top: 18, right: 14, bottom: 30, left: 34 };
+    const cW  = W - PAD.left - PAD.right;
+    const cH  = H - PAD.top  - PAD.bottom;
+    const maxV = Math.max(...filled.map(d => parseInt(d.total || 0)), 1);
+
+    const pts = filled.map((d, i) => ({
+      x: PAD.left + (filled.length === 1 ? cW / 2 : (i / (filled.length - 1)) * cW),
+      y: PAD.top  + cH - (parseInt(d.total || 0) / maxV) * cH,
+      v: parseInt(d.total || 0),
+      f: d.fecha || ''
+    }));
+
+    const linePath = catmullRomPath(pts);
+    const firstPt  = pts[0], lastPt = pts[pts.length - 1];
+    const areaPath = linePath
+      + ` L ${lastPt.x.toFixed(1)} ${(PAD.top + cH).toFixed(1)}`
+      + ` L ${firstPt.x.toFixed(1)} ${(PAD.top + cH).toFixed(1)} Z`;
+
+    // Grid lines (3 levels)
+    const gridLines = [0.33, 0.66, 1].map(f => {
+      const y   = PAD.top + cH - f * cH;
+      const val = Math.round(f * maxV);
+      return `<line x1="${PAD.left}" y1="${y.toFixed(1)}" x2="${(W - PAD.right).toFixed(1)}" y2="${y.toFixed(1)}"
+                stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="3 4"/>
+              <text x="${(PAD.left - 5).toFixed(1)}" y="${(y + 3.5).toFixed(1)}"
+                text-anchor="end" fill="rgba(255,255,255,0.25)" font-size="8" font-family="inherit">${val}</text>`;
+    }).join('');
+
+    // X-axis labels (max 7)
+    const step = Math.max(1, Math.ceil(filled.length / 7));
+    const xLabels = filled.map((d, i) => {
+      if (i % step !== 0 && i !== filled.length - 1) return '';
+      const x = PAD.left + (filled.length === 1 ? cW / 2 : (i / (filled.length - 1)) * cW);
+      return `<text x="${x.toFixed(1)}" y="${(H - 8).toFixed(1)}"
+        text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="8.5" font-family="inherit">
+        ${esc(fmtChartLabel(d.fecha || '', period))}</text>`;
+    }).join('');
+
+    // Dots for each data point with value > 0
+    const dots = pts.map(p =>
+      p.v > 0
+        ? `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2.5"
+             fill="#EF7F1B" stroke="rgba(1,33,51,0.8)" stroke-width="1.5"/>`
+        : ''
+    ).join('');
+
+    // Current-value vertical indicator line at last non-zero point
+    const activePts = pts.filter(p => p.v > 0);
+    const lastActive = activePts[activePts.length - 1];
+    const cursorLine = lastActive
+      ? `<line x1="${lastActive.x.toFixed(1)}" y1="${PAD.top}" x2="${lastActive.x.toFixed(1)}" y2="${(PAD.top + cH).toFixed(1)}"
+           stroke="rgba(239,127,27,0.2)" stroke-width="1" stroke-dasharray="3 3"/>`
+      : '';
+
+    const uid = 'kbl' + Date.now().toString(36);
+    wrap.innerHTML = `
+      <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible">
+        <defs>
+          <linearGradient id="kbAreaG_${uid}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="#EF7F1B" stop-opacity="0.4"/>
+            <stop offset="100%" stop-color="#EF7F1B" stop-opacity="0"/>
+          </linearGradient>
+          <filter id="kbGlow_${uid}" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- Baseline -->
+        <line x1="${PAD.left}" y1="${(PAD.top + cH).toFixed(1)}"
+              x2="${(W - PAD.right).toFixed(1)}" y2="${(PAD.top + cH).toFixed(1)}"
+              stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+        <!-- Grid -->
+        ${gridLines}
+        <!-- Current-value line -->
+        ${cursorLine}
+        <!-- Area fill -->
+        <path d="${areaPath}" fill="url(#kbAreaG_${uid})"/>
+        <!-- Line -->
+        <path id="${uid}" d="${linePath}" fill="none"
+              stroke="#EF7F1B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              filter="url(#kbGlow_${uid})"/>
+        <!-- Dots -->
+        ${dots}
+        <!-- X labels -->
+        ${xLabels}
+      </svg>`;
+
+    // Animate line draw
+    const lineEl = document.getElementById(uid);
+    if (lineEl) {
+      try {
+        const len = lineEl.getTotalLength();
+        lineEl.style.strokeDasharray  = len;
+        lineEl.style.strokeDashoffset = len;
+        lineEl.style.transition = 'stroke-dashoffset 0.9s cubic-bezier(0.4,0,0.2,1)';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          lineEl.style.strokeDashoffset = '0';
+        }));
+      } catch (_) {}
+    }
+  }
+
+  function catmullRomPath(pts) {
+    if (!pts.length) return '';
+    if (pts.length === 1) return `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
+    let d = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(i - 1, 0)];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[Math.min(i + 2, pts.length - 1)];
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+      d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+    }
+    return d;
+  }
+
+  function fillDailyGaps(raw) {
+    const map = {};
+    raw.forEach(d => { map[d.fecha] = parseInt(d.total || 0); });
+    const result = [];
+    const end = new Date();
+    const start = new Date(); start.setDate(start.getDate() - 29);
+    for (let cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)) {
+      const key = cur.toISOString().slice(0, 10);
+      result.push({ fecha: key, total: map[key] || 0 });
+    }
+    return result;
+  }
+
+  function fmtChartLabel(dateStr, period) {
+    if (!dateStr) return '';
+    const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    if (period === 'dia') {
+      const d = new Date(dateStr + 'T00:00:00');
+      return `${d.getDate()}/${d.getMonth() + 1}`;
+    }
+    if (period === 'semana') {
+      const d = new Date(dateStr + 'T00:00:00');
+      const wn = Math.ceil(((d - new Date(d.getFullYear(), 0, 1)) / 86400000 + 1) / 7);
+      return `S${wn}`;
+    }
+    if (period === 'mes') {
+      const parts = String(dateStr).split('-');
+      return MONTHS[(parseInt(parts[1] || 1) - 1)] || dateStr;
+    }
+    return String(dateStr); // anio
+  }
+
+  function animateNumber(el, target) {
+    const start = parseInt(el.textContent) || 0;
+    const dur = 600;
+    const t0 = performance.now();
+    const tick = (now) => {
+      const progress = Math.min((now - t0) / dur, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(start + (target - start) * ease);
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  function renderPerformers(performers) {
+    const container = document.getElementById('kb-performers-list');
+    if (!container) return;
+    if (!performers || !performers.length) {
+      container.innerHTML = `<div class="kb-performers-empty">Sin actividad en los últimos 7 días</div>`;
+      return;
+    }
+
+    const maxCount = parseInt(performers[0].tareas_completadas || 1);
+    const RANK_ICONS = ['🥇','🥈','🥉'];
+    const TOP_COLORS = ['#EF7F1B','#3b82f6','#10b981','#8b5cf6','#06b6d4','#f59e0b','#ec4899'];
+    const topList  = performers.slice(0, Math.min(7, performers.length));
+    const lowList  = performers.length > 7 ? performers.slice(-Math.min(3, performers.length - 7)) : [];
+
+    let html = `<div class="kb-performers-section-label">Más activos</div>`;
+
+    topList.forEach((p, i) => {
+      const initials = getInitials(p.nombre_persona);
+      const barPct   = Math.round((parseInt(p.tareas_completadas) / maxCount) * 100);
+      const barColor = TOP_COLORS[i] || '#94a3b8';
+      const avatarBg = i === 0 ? 'var(--kb-accent)' : i === 1 ? 'var(--kb-secondary)' : '#6b7280';
+      const rankHtml = i < 3
+        ? `<span title="Top ${i+1}">${RANK_ICONS[i]}</span>`
+        : `<span class="kb-rank-num">#${i+1}</span>`;
+      const role = (p.cargo && p.cargo !== '—') ? p.cargo : (p.area && p.area !== '—' ? p.area : '');
+      html += `
+        <div class="kb-performer-row">
+          <div class="kb-performer-rank">${rankHtml}</div>
+          <div class="kb-performer-avatar" style="background:${avatarBg}">${esc(initials)}</div>
+          <div class="kb-performer-info">
+            <div class="kb-performer-name">${esc(p.nombre_persona)}</div>
+            ${role ? `<div class="kb-performer-role">${esc(role)}</div>` : ''}
+          </div>
+          <div class="kb-performer-bar-wrap">
+            <div class="kb-performer-bar" style="width:0%;background:${barColor}"
+                 data-target="${barPct}"></div>
+          </div>
+          <div class="kb-performer-count" style="color:${barColor}">${p.tareas_completadas}</div>
+        </div>`;
+    });
+
+    if (lowList.length) {
+      html += `<div class="kb-performers-divider"></div>
+               <div class="kb-performers-section-label">Menos activos</div>`;
+      lowList.forEach((p, i) => {
+        const initials = getInitials(p.nombre_persona);
+        const barPct   = Math.round((parseInt(p.tareas_completadas) / maxCount) * 100);
+        const rank     = performers.length - lowList.length + i + 1;
+        const role = (p.cargo && p.cargo !== '—') ? p.cargo : (p.area && p.area !== '—' ? p.area : '');
+        html += `
+          <div class="kb-performer-row">
+            <div class="kb-performer-rank"><span class="kb-rank-num">#${rank}</span></div>
+            <div class="kb-performer-avatar" style="background:#c4c9d4">${esc(initials)}</div>
+            <div class="kb-performer-info">
+              <div class="kb-performer-name" style="color:#6b7280">${esc(p.nombre_persona)}</div>
+              ${role ? `<div class="kb-performer-role">${esc(role)}</div>` : ''}
+            </div>
+            <div class="kb-performer-bar-wrap">
+              <div class="kb-performer-bar" style="width:0%;background:#d1d5db"
+                   data-target="${barPct}"></div>
+            </div>
+            <div class="kb-performer-count" style="color:#9ca3af">${p.tareas_completadas}</div>
+          </div>`;
+      });
+    }
+
+    container.innerHTML = html;
+
+    // Animate bars after paint
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      container.querySelectorAll('.kb-performer-bar[data-target]').forEach(bar => {
+        bar.style.width = bar.dataset.target + '%';
+      });
+    }));
+  }
+
+  // Period tab click delegation
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.kb-period-tab');
+    if (btn) window.switchPeriod(btn.dataset.period);
+  });
 
   /* ═════════════════════════════════════════════
      INTERACTIONS
