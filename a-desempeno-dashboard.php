@@ -95,28 +95,29 @@ if (isset($_GET['action']) && $_GET['action'] === 'descargar_historico_asistenci
                 ELSE '--:--'
             END AS 'Hora de Salida',
             CASE
-                WHEN a.estado = 'ausente' THEN '0h 0m'
+                WHEN a.estado = 'ausente' THEN 0.00
                 WHEN a.hora_entrada IS NOT NULL AND a.hora_salida IS NOT NULL THEN
-                    CONCAT(
-                        FLOOR(TIMESTAMPDIFF(MINUTE, a.hora_entrada, a.hora_salida) / 60), 'h ',
-                        MOD(TIMESTAMPDIFF(MINUTE, a.hora_entrada, a.hora_salida), 60), 'm'
-                    )
-                ELSE 'Pendiente'
+                    ROUND(TIMESTAMPDIFF(MINUTE, a.hora_entrada, a.hora_salida) / 60.0, 2)
+                ELSE NULL
             END AS 'Total Horas Trabajadas',
             a.estado AS 'Estado',
             CASE
-                WHEN a.estado = 'ausente' THEN 'No presentado'
-                WHEN a.estado = 'presente' AND a.minutos_tarde_entrada > 0 THEN CONCAT(a.minutos_tarde_entrada, ' min de retraso')
-                WHEN a.estado = 'tarde' AND a.minutos_tarde_entrada > 0 THEN CONCAT(a.minutos_tarde_entrada, ' min de retraso')
-                ELSE 'A tiempo'
-            END AS 'Puntualidad Entrada',
+                WHEN a.estado = 'ausente' THEN NULL
+                WHEN a.hora_entrada IS NULL THEN NULL
+                ELSE GREATEST(a.minutos_tarde_entrada, 0)
+            END AS 'Retraso Entrada (min)',
             CASE
-                WHEN a.estado = 'ausente' THEN 'No presentado'
-                WHEN a.hora_salida IS NULL THEN 'Pendiente'
-                WHEN a.minutos_tarde_salida > 0 THEN CONCAT('Salió ', a.minutos_tarde_salida, ' min antes')
-                WHEN a.minutos_tarde_salida < 0 THEN CONCAT('Tiempo extra: ', ABS(a.minutos_tarde_salida), ' min')
-                ELSE 'A tiempo'
-            END AS 'Puntualidad Salida',
+                WHEN a.estado = 'ausente' THEN NULL
+                WHEN a.hora_salida IS NULL THEN NULL
+                WHEN a.minutos_tarde_salida > 0 THEN a.minutos_tarde_salida
+                ELSE 0
+            END AS 'Salida Anticipada (min)',
+            CASE
+                WHEN a.estado = 'ausente' THEN NULL
+                WHEN a.hora_salida IS NULL THEN NULL
+                WHEN a.minutos_tarde_salida < 0 THEN ABS(a.minutos_tarde_salida)
+                ELSE 0
+            END AS 'Tiempo Extra (min)',
             j.nombre AS 'Jornada Asignada',
             COALESCE(a.notas, '') AS 'Observaciones'
         FROM asistencias a
@@ -164,7 +165,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'descargar_historico_asistenci
             fputcsv($output, array_values($row), ';');
         }
     } else {
-        fputcsv($output, ['Nombre del Trabajador', 'Puesto de Trabajo', 'Fecha', 'Día de la Semana', 'Hora de Entrada', 'Hora de Salida', 'Total Horas Trabajadas', 'Estado', 'Puntualidad', 'Jornada Asignada', 'Observaciones'], ';');
+        fputcsv($output, ['Nombre del Trabajador', 'Puesto de Trabajo', 'Fecha', 'Día de la Semana', 'Hora de Entrada', 'Hora de Salida', 'Total Horas Trabajadas', 'Estado', 'Retraso Entrada (min)', 'Salida Anticipada (min)', 'Tiempo Extra (min)', 'Jornada Asignada', 'Observaciones'], ';');
         fputcsv($output, ['No hay registros para el período seleccionado'], ';');
     }
 
