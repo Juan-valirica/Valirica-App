@@ -7918,13 +7918,39 @@ document.addEventListener('keydown', function(e) {
 <!-- ============================================
      TAB 4: PROYECTOS Y TAREAS
      ============================================ -->
-<div class="tab-content <?= $active_tab === 'projects' ? 'is-active' : '' ?>">
+<div class="tab-content <?= $active_tab === 'projects' ? 'is-active' : '' ?>" style="padding:0;">
   <iframe
+    id="kanban-empresa-iframe"
     src="kanban_proyectos.php?modo=empresa&embedded=1"
-    style="width:100%;height:80vh;min-height:500px;border:none;display:block;"
+    style="width:100%;height:600px;min-height:500px;border:none;display:block;transition:height 0.2s ease;"
     loading="lazy"
+    onload="autoResizeKanbanIframe(this)"
   ></iframe>
 </div>
+<script>
+function autoResizeKanbanIframe(iframe) {
+  try {
+    var resize = function() {
+      var h = iframe.contentWindow.document.documentElement.scrollHeight
+           || iframe.contentWindow.document.body.scrollHeight;
+      if (h > 400) iframe.style.height = (h + 24) + 'px';
+    };
+    resize();
+    // Re-evaluar cuando el Kanban termine de cargar datos (espera máx 4s)
+    var checks = 0;
+    var interval = setInterval(function() {
+      resize();
+      checks++;
+      if (checks >= 8) clearInterval(interval);
+    }, 500);
+    // También observar cambios de tamaño dentro del iframe
+    if (iframe.contentWindow.ResizeObserver) {
+      var ro = new iframe.contentWindow.ResizeObserver(resize);
+      ro.observe(iframe.contentWindow.document.body);
+    }
+  } catch(e) {}
+}
+</script>
 
 <!-- ============================================
      TAB 5: EQUIPO — Gestión de áreas de trabajo

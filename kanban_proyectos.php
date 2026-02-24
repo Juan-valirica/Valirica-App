@@ -154,8 +154,7 @@ $conn->close();
     .kb-shell {
       display: flex;
       flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
+      min-height: 100vh;
     }
 
     /* ─── Top Bar ─── */
@@ -266,14 +265,15 @@ $conn->close();
     .kb-board {
       flex: 1;
       display: flex;
+      align-items: flex-start;
       gap: var(--kb-column-gap);
       padding: 16px;
       overflow-x: auto;
-      overflow-y: hidden;
+      overflow-y: auto;
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
     }
-    .kb-board::-webkit-scrollbar { height: 8px; }
+    .kb-board::-webkit-scrollbar { height: 8px; width: 6px; }
     .kb-board::-webkit-scrollbar-track { background: transparent; }
     .kb-board::-webkit-scrollbar-thumb {
       background: #cbd5e1;
@@ -289,8 +289,9 @@ $conn->close();
       background: #f8f9fb;
       border-radius: var(--kb-radius);
       border: 1px solid #e8eaed;
-      max-height: 100%;
+      /* No max-height: las tarjetas dictan la altura, el board hace scroll */
       transition: var(--kb-transition);
+      align-self: flex-start; /* clave: cada columna crece según su contenido */
     }
     .kb-column.special {
       background: #fefcfa;
@@ -327,41 +328,52 @@ $conn->close();
       border-radius: 10px;
     }
     .kb-column-body {
-      flex: 1;
-      overflow-y: auto;
       padding: 8px 10px 12px;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
-    .kb-column-body::-webkit-scrollbar { width: 4px; }
-    .kb-column-body::-webkit-scrollbar-thumb {
-      background: #d1d5db;
-      border-radius: 2px;
-    }
 
     /* ─── Collapsed Column (Cancelado) ─── */
     .kb-column.collapsed {
-      flex: 0 0 48px;
-      max-width: 48px;
+      flex: 0 0 44px;
+      max-width: 44px;
+      min-height: 120px;
       cursor: pointer;
       align-items: center;
-      justify-content: center;
       background: #f3f4f6;
+      align-self: stretch; /* columna colapsada ocupa altura de la fila */
     }
     .kb-column.collapsed .kb-column-header {
       writing-mode: vertical-rl;
       text-orientation: mixed;
       transform: rotate(180deg);
-      padding: 16px 8px;
+      padding: 20px 0;
       border: none;
-      flex: 1;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
       justify-content: center;
+      gap: 8px;
+    }
+    .kb-column.collapsed .kb-column-color {
+      width: 8px; height: 8px;
     }
     .kb-column.collapsed .kb-column-body { display: none; }
-    .kb-column.collapsed .kb-column-count { display: none; }
+    .kb-column.collapsed .kb-column-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      writing-mode: horizontal-tb;
+      transform: none;
+      font-size: 10px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+    }
     .kb-column.collapsed:hover {
-      background: #ebedf0;
+      background: #e5e7eb;
     }
 
     /* ─── Project Card ─── */
@@ -372,6 +384,7 @@ $conn->close();
       box-shadow: var(--kb-shadow-card);
       transition: box-shadow var(--kb-transition), transform var(--kb-transition);
       overflow: hidden;
+      flex-shrink: 0; /* nunca comprimir: la columna crece, no la tarjeta */
       animation: kb-fadeSlide 0.3s ease both;
     }
     .kb-project-card:hover {
@@ -616,6 +629,7 @@ $conn->close();
       box-shadow: var(--kb-shadow-card);
       padding: 10px 12px;
       cursor: pointer;
+      flex-shrink: 0; /* nunca comprimir */
       transition: var(--kb-transition);
       animation: kb-fadeSlide 0.3s ease both;
     }
