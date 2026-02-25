@@ -68,6 +68,34 @@ $vars = [
 $contenido = file_get_contents($file_path);
 $contenido = str_replace(array_keys($vars), array_values($vars), $contenido);
 
+// Para docs de política: buscar el registro en documentos para este usuario
+$policy_docs   = ['cookies', 'privacidad', 'terminos'];
+$is_policy_doc = in_array($doc, $policy_docs, true);
+$doc_registro_id    = null;
+$doc_registro_estado = null;
+if ($is_policy_doc) {
+    try {
+        $st_doc = $conn->prepare("
+            SELECT id, estado FROM documentos
+            WHERE empresa_id = ? AND url_documento = ?
+            LIMIT 1
+        ");
+        if ($st_doc) {
+            $url_buscar = 'ver_legal.php?doc=' . $doc;
+            $st_doc->bind_param("is", $user_id, $url_buscar);
+            $st_doc->execute();
+            $row_doc = stmt_get_result($st_doc)->fetch_assoc();
+            if ($row_doc) {
+                $doc_registro_id    = (int)$row_doc['id'];
+                $doc_registro_estado = $row_doc['estado'];
+            }
+            $st_doc->close();
+        }
+    } catch (\Throwable $e) {
+        error_log("ver_legal.php: doc lookup failed — " . $e->getMessage());
+    }
+}
+
 $titulo_doc = match($doc) {
     'contrato-colombia' => 'Contrato de Servicios – Colombia',
     'contrato-espana'   => 'Contrato de Servicios – España',
@@ -126,6 +154,43 @@ $titulo_doc = match($doc) {
       font-size: 13px;
       color: #7a7977;
     }
+    .accept-banner {
+      margin-top: 32px;
+      padding: 20px 24px;
+      border-radius: 12px;
+      border: 1.5px solid #bbf7d0;
+      background: #f0fdf4;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .accept-banner.already-accepted {
+      border-color: #86efac;
+      background: #dcfce7;
+    }
+    .accept-banner-text { flex: 1; min-width: 0; }
+    .accept-banner-text strong { display: block; color: #15803d; font-size: 15px; margin-bottom: 4px; }
+    .accept-banner-text span   { color: #166534; font-size: 13px; }
+    .btn-accept {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #16a34a;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .btn-accept:hover:not(:disabled) { background: #15803d; }
+    .btn-accept:disabled { background: #86efac; cursor: default; }
+    .accept-check-icon { font-size: 28px; color: #16a34a; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -141,6 +206,66 @@ $titulo_doc = match($doc) {
     <div class="doc-content">
       <?= $contenido ?>
     </div>
+
+    <?php if ($is_policy_doc && $doc_registro_id): ?>
+    <?php $ya_aceptado = ($doc_registro_estado === 'aceptado'); ?>
+    <div class="accept-banner <?= $ya_aceptado ? 'already-accepted' : '' ?>" id="acceptBanner">
+      <div class="accept-check-icon">
+        <?= $ya_aceptado ? '✅' : '📋' ?>
+      </div>
+      <div class="accept-banner-text">
+        <?php if ($ya_aceptado): ?>
+          <strong>Documento aceptado</strong>
+          <span>Has aceptado este documento. Gracias por revisarlo.</span>
+        <?php else: ?>
+          <strong>Acepta este documento</strong>
+          <span>Al aceptar confirmas que has leído y entendido el contenido de este documento.</span>
+        <?php endif; ?>
+      </div>
+      <?php if (!$ya_aceptado): ?>
+      <button class="btn-accept" id="btnAccept" onclick="aceptarDocumento(<?= $doc_registro_id ?>)">
+        ✓ Aceptar documento
+      </button>
+      <?php endif; ?>
+    </div>
+
+    <script>
+    function aceptarDocumento(docId) {
+      const btn = document.getElementById('btnAccept');
+      if (!btn) return;
+      if (!confirm('¿Confirmas que has leído y aceptas este documento?')) return;
+      btn.disabled = true;
+      btn.textContent = 'Aceptando…';
+      const fd = new FormData();
+      fd.append('action', 'marcar_aceptado');
+      fd.append('id', docId);
+      fetch('documentos_backend.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => {
+          if (d.ok) {
+            const banner = document.getElementById('acceptBanner');
+            banner.classList.add('already-accepted');
+            banner.innerHTML = `
+              <div class="accept-check-icon">✅</div>
+              <div class="accept-banner-text">
+                <strong>Documento aceptado</strong>
+                <span>Has aceptado este documento. Gracias por revisarlo.</span>
+              </div>`;
+          } else {
+            btn.disabled = false;
+            btn.textContent = '✓ Aceptar documento';
+            alert(d.error || 'Error al aceptar el documento. Intenta de nuevo.');
+          }
+        })
+        .catch(() => {
+          btn.disabled = false;
+          btn.textContent = '✓ Aceptar documento';
+          alert('Error de conexión. Intenta de nuevo.');
+        });
+    }
+    </script>
+    <?php endif; ?>
+
   </div>
 </body>
 </html>

@@ -53,7 +53,7 @@ function seed_legal_docs_for_user(mysqli $conn, int $empresa_id): array {
                 nombre_archivo VARCHAR(500),
                 ruta_archivo   VARCHAR(1000),
                 categoria      VARCHAR(100)  NOT NULL DEFAULT 'general',
-                estado         ENUM('nuevo','leido','archivado') NOT NULL DEFAULT 'nuevo',
+                estado         ENUM('nuevo','leido','archivado','aceptado') NOT NULL DEFAULT 'nuevo',
                 creado_por     INT,
                 created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
