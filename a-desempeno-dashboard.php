@@ -95,30 +95,50 @@ if (isset($_GET['action']) && $_GET['action'] === 'descargar_historico_asistenci
                 ELSE '--:--'
             END AS 'Hora de Salida',
             CASE
-                WHEN a.estado = 'ausente' THEN '0h 0m'
+                WHEN a.estado = 'ausente' THEN 0.00
                 WHEN a.hora_entrada IS NOT NULL AND a.hora_salida IS NOT NULL THEN
-                    CONCAT(
-                        FLOOR(TIMESTAMPDIFF(MINUTE, a.hora_entrada, a.hora_salida) / 60), 'h ',
-                        MOD(TIMESTAMPDIFF(MINUTE, a.hora_entrada, a.hora_salida), 60), 'm'
-                    )
-                ELSE 'Pendiente'
+                    ROUND(TIMESTAMPDIFF(MINUTE, a.hora_entrada, a.hora_salida) / 60.0, 2)
+                ELSE NULL
             END AS 'Total Horas Trabajadas',
             a.estado AS 'Estado',
             CASE
-                WHEN a.estado = 'ausente' THEN 'No presentado'
-                WHEN a.estado = 'presente' AND a.minutos_tarde_entrada > 0 THEN CONCAT(a.minutos_tarde_entrada, ' min de retraso')
-                WHEN a.estado = 'tarde' AND a.minutos_tarde_entrada > 0 THEN CONCAT(a.minutos_tarde_entrada, ' min de retraso')
-                ELSE 'A tiempo'
-            END AS 'Puntualidad Entrada',
+                WHEN a.estado = 'ausente' THEN NULL
+                WHEN a.hora_entrada IS NULL THEN NULL
+                ELSE GREATEST(a.minutos_tarde_entrada, 0)
+            END AS 'Retraso Entrada (min)',
             CASE
-                WHEN a.estado = 'ausente' THEN 'No presentado'
-                WHEN a.hora_salida IS NULL THEN 'Pendiente'
-                WHEN a.minutos_tarde_salida > 0 THEN CONCAT('Salió ', a.minutos_tarde_salida, ' min antes')
-                WHEN a.minutos_tarde_salida < 0 THEN CONCAT('Tiempo extra: ', ABS(a.minutos_tarde_salida), ' min')
-                ELSE 'A tiempo'
-            END AS 'Puntualidad Salida',
+                WHEN a.estado = 'ausente' THEN NULL
+                WHEN a.hora_salida IS NULL THEN NULL
+                WHEN a.minutos_tarde_salida > 0 THEN a.minutos_tarde_salida
+                ELSE 0
+            END AS 'Salida Anticipada (min)',
+            CASE
+                WHEN a.estado = 'ausente' THEN NULL
+                WHEN a.hora_salida IS NULL THEN NULL
+                WHEN a.minutos_tarde_salida < 0 THEN ABS(a.minutos_tarde_salida)
+                ELSE 0
+            END AS 'Tiempo Extra (min)',
             j.nombre AS 'Jornada Asignada',
-            COALESCE(a.notas, '') AS 'Observaciones'
+            CONCAT_WS(' | ',
+                NULLIF(COALESCE(a.notas, ''), ''),
+                (
+                    SELECT CONCAT('Vacaciones aprobadas (', DATE_FORMAT(v.fecha_inicio_programada, '%d/%m'), '-', DATE_FORMAT(v.fecha_fin_programada, '%d/%m'), ')')
+                    FROM vacaciones v
+                    WHERE v.persona_id = a.persona_id
+                      AND a.fecha BETWEEN v.fecha_inicio_programada AND v.fecha_fin_programada
+                      AND v.estado = 'aprobado'
+                    LIMIT 1
+                ),
+                (
+                    SELECT CONCAT('Permiso: ', tp.nombre)
+                    FROM permisos p
+                    INNER JOIN tipos_permisos tp ON p.tipo_permiso_id = tp.id
+                    WHERE p.persona_id = a.persona_id
+                      AND a.fecha BETWEEN p.fecha_inicio AND p.fecha_fin
+                      AND p.estado = 'aprobado'
+                    LIMIT 1
+                )
+            ) AS 'Observaciones'
         FROM asistencias a
         INNER JOIN equipo e ON a.persona_id = e.id
         INNER JOIN jornadas_trabajo j ON a.jornada_id = j.id
@@ -164,7 +184,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'descargar_historico_asistenci
             fputcsv($output, array_values($row), ';');
         }
     } else {
-        fputcsv($output, ['Nombre del Trabajador', 'Puesto de Trabajo', 'Fecha', 'Día de la Semana', 'Hora de Entrada', 'Hora de Salida', 'Total Horas Trabajadas', 'Estado', 'Puntualidad', 'Jornada Asignada', 'Observaciones'], ';');
+        fputcsv($output, ['Nombre del Trabajador', 'Puesto de Trabajo', 'Fecha', 'Día de la Semana', 'Hora de Entrada', 'Hora de Salida', 'Total Horas Trabajadas', 'Estado', 'Retraso Entrada (min)', 'Salida Anticipada (min)', 'Tiempo Extra (min)', 'Jornada Asignada', 'Observaciones'], ';');
         fputcsv($output, ['No hay registros para el período seleccionado'], ';');
     }
 
@@ -7898,20 +7918,39 @@ document.addEventListener('keydown', function(e) {
 <!-- ============================================
      TAB 4: PROYECTOS Y TAREAS
      ============================================ -->
-<div class="tab-content <?= $active_tab === 'projects' ? 'is-active' : '' ?>">
-  <section class="wrap" style="padding-top: var(--space-6); padding-bottom: var(--space-8);">
-    <header style="margin-bottom: var(--space-6);">
-      <h1 style="font-size: 28px; font-weight: 700; color: var(--c-secondary); margin: 0;">
-        Proyectos y Tareas
-      </h1>
-      <p style="color: var(--c-body); opacity: 0.7; margin-top: var(--space-2);">
-        Gestiona tus proyectos y haz seguimiento del progreso de las tareas del equipo
-      </p>
-    </header>
-
-    <?php include __DIR__ . '/proyectos_tareas_panel.php'; ?>
-  </section>
+<div class="tab-content <?= $active_tab === 'projects' ? 'is-active' : '' ?>" style="padding:0;">
+  <iframe
+    id="kanban-empresa-iframe"
+    src="kanban_proyectos.php?modo=empresa&embedded=1"
+    style="width:100%;height:600px;min-height:500px;border:none;display:block;transition:height 0.2s ease;"
+    loading="lazy"
+    onload="autoResizeKanbanIframe(this)"
+  ></iframe>
 </div>
+<script>
+function autoResizeKanbanIframe(iframe) {
+  try {
+    var resize = function() {
+      var h = iframe.contentWindow.document.documentElement.scrollHeight
+           || iframe.contentWindow.document.body.scrollHeight;
+      if (h > 400) iframe.style.height = (h + 24) + 'px';
+    };
+    resize();
+    // Re-evaluar cuando el Kanban termine de cargar datos (espera máx 4s)
+    var checks = 0;
+    var interval = setInterval(function() {
+      resize();
+      checks++;
+      if (checks >= 8) clearInterval(interval);
+    }, 500);
+    // También observar cambios de tamaño dentro del iframe
+    if (iframe.contentWindow.ResizeObserver) {
+      var ro = new iframe.contentWindow.ResizeObserver(resize);
+      ro.observe(iframe.contentWindow.document.body);
+    }
+  } catch(e) {}
+}
+</script>
 
 <!-- ============================================
      TAB 5: EQUIPO — Gestión de áreas de trabajo
