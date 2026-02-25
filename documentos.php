@@ -1,6 +1,7 @@
 <?php
 session_start();
 require 'config.php';
+require_once 'legal_seed_helper.php';
 
 /* ── Auth ── */
 if (empty($_SESSION['user_id'])) {
@@ -9,6 +10,13 @@ if (empty($_SESSION['user_id'])) {
 }
 
 $user_id = (int)$_SESSION['user_id'];
+
+/* ── Auto-siembra de documentos legales (idempotente) ── */
+try {
+    seed_legal_docs_for_user($conn, $user_id);
+} catch (\Throwable $e) {
+    error_log("documentos.php: seed_legal_docs_for_user failed — " . $e->getMessage());
+}
 
 /* ── Helpers (mismo patrón que a-desempeno.php) ── */
 if (!function_exists('h')) {
