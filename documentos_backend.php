@@ -73,6 +73,26 @@ try {
     error_log("documentos_backend.php: ALTER TABLE (aceptado) failed — " . $e->getMessage());
 }
 
+/* ── MIGRATION: columnas de auditoría de aceptación ── */
+try {
+    $chk_col = $conn->query("
+        SELECT COLUMN_NAME FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME   = 'documentos'
+          AND COLUMN_NAME  = 'fecha_aceptacion'
+        LIMIT 1
+    ");
+    if ($chk_col && !$chk_col->fetch_assoc()) {
+        $conn->query("
+            ALTER TABLE documentos
+              ADD COLUMN fecha_aceptacion TIMESTAMP NULL  DEFAULT NULL AFTER estado,
+              ADD COLUMN ip_aceptacion    VARCHAR(45) NULL DEFAULT NULL AFTER fecha_aceptacion
+        ");
+    }
+} catch (\Throwable $e) {
+    error_log("documentos_backend.php: ALTER TABLE (audit cols) failed — " . $e->getMessage());
+}
+
 /* ─────────────────────────────────────────────
    HELPER: verify doc belongs to user's company
    ───────────────────────────────────────────── */
@@ -540,21 +560,37 @@ switch ($action) {
         echo json_encode(['ok' => true]);
         break;
 
-    /* ── Marcar como aceptado (solo docs legales de política) ── */
+    /* ── Marcar como aceptado — cumplimiento LSSI-CE (ES) y Ley 527/1999 (CO) ── */
     case 'marcar_aceptado':
         $doc_id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
         if (!$doc_id || !doc_belongs_to_user($conn, $doc_id, $user_id)) {
             echo json_encode(['ok' => false, 'error' => 'No autorizado']);
             break;
         }
-        $st = $conn->prepare("UPDATE documentos SET estado = 'aceptado' WHERE id = ? AND categoria IN ('politica','contrato')");
-        $st->bind_param("i", $doc_id);
+        // Capturar IP real del cliente (compatible con proxies / load balancers)
+        $raw_ip    = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['HTTP_CLIENT_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
+        $client_ip = trim(explode(',', $raw_ip)[0]);
+        $client_ip = substr($client_ip, 0, 45); // max VARCHAR(45)
+
+        $st = $conn->prepare("
+            UPDATE documentos
+               SET estado           = 'aceptado',
+                   fecha_aceptacion = NOW(),
+                   ip_aceptacion    = ?
+             WHERE id = ?
+               AND categoria IN ('politica','contrato')
+        ");
+        $st->bind_param("si", $client_ip, $doc_id);
         $st->execute();
         if ($st->affected_rows === 0) {
             echo json_encode(['ok' => false, 'error' => 'Solo se pueden aceptar documentos de política o contrato']);
             break;
         }
-        echo json_encode(['ok' => true]);
+        echo json_encode([
+            'ok'    => true,
+            'fecha' => date('d/m/Y H:i:s'),
+            'ip'    => $client_ip,
+        ]);
         break;
 
     /* ── Archivar / Desarchivar ── */
