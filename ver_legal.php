@@ -28,10 +28,16 @@ if (!is_file($file_path)) {
     exit('Documento no encontrado.');
 }
 
+// ── Fechas de versión de las políticas (actualizar al publicar nueva versión) ──
+const FECHA_PRIVACIDAD = '25/02/2026';
+const FECHA_TERMINOS   = '25/02/2026';
+const FECHA_COOKIES    = '25/02/2026';
+
 // Obtener datos de la empresa para sustitución de variables
 try {
     $stmt = $conn->prepare("
         SELECT u.empresa, u.nombre, u.apellido, u.email, u.fecha_registro,
+               u.numero_fiscal,
                ci.ubicacion
         FROM   usuarios u
         LEFT JOIN cultura_ideal ci ON ci.usuario_id = u.id
@@ -49,6 +55,9 @@ try {
 // Sustitución de variables del contrato
 $es_colombia = str_contains(strtolower($doc), 'colombia');
 
+$numero_fiscal = htmlspecialchars($ud['numero_fiscal'] ?? '', ENT_QUOTES, 'UTF-8');
+$fiscal_display = $numero_fiscal ?: '–';
+
 $vars = [
     '{{EMPRESA_CLIENTE}}'             => htmlspecialchars($ud['empresa']  ?? '', ENT_QUOTES, 'UTF-8'),
     '{{REPRESENTANTE}}'               => htmlspecialchars(trim(($ud['nombre'] ?? '') . ' ' . ($ud['apellido'] ?? '')), ENT_QUOTES, 'UTF-8'),
@@ -60,9 +69,12 @@ $vars = [
     '{{FECHA_ACEPTACION}}'            => date('d/m/Y'),
     '{{PERIODO_PRUEBA}}'              => '15 días',
     '{{TIPO_PLAN}}'                   => 'Mensual',
-    '{{NIT_CLIENTE}}'                 => '–',
-    '{{CIF_CLIENTE}}'                 => '–',
+    '{{NIT_CLIENTE}}'                 => $fiscal_display,
+    '{{CIF_CLIENTE}}'                 => $fiscal_display,
     '{{PRECIO_PLAN}}'                 => $es_colombia ? '$20.000 COP + IVA/empleado/mes' : '€6/empleado/mes',
+    '{{FECHA_PRIVACIDAD}}'            => FECHA_PRIVACIDAD,
+    '{{FECHA_TERMINOS}}'              => FECHA_TERMINOS,
+    '{{FECHA_COOKIES}}'               => FECHA_COOKIES,
 ];
 
 $contenido = file_get_contents($file_path);
@@ -224,6 +236,34 @@ $titulo_doc = match($doc) {
     .caf-legal-basis ul { padding-left: 20px; margin-top: 4px; }
     .caf-legal-basis li { margin-bottom: 4px; }
 
+    .caf-fiscal-wrap {
+      background: #fefce8;
+      border: 1.5px solid #fde047;
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .caf-fiscal-wrap.filled { background: #f0fdf4; border-color: #86efac; }
+    .caf-fiscal-label { font-size: 14px; font-weight: 700; color: #78350f; display: flex; align-items: center; gap: 8px; }
+    .caf-fiscal-label.filled { color: #15803d; }
+    .caf-fiscal-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #fde047;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      color: #1e293b;
+      background: #fff;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .caf-fiscal-input:focus { border-color: #012133; }
+    .caf-fiscal-hint { font-size: 12px; color: #92400e; }
+    .caf-fiscal-value { font-size: 15px; font-weight: 700; color: #166534; }
+
     .caf-record {
       background: #fffbeb;
       border: 1px solid #fde68a;
@@ -381,6 +421,33 @@ $titulo_doc = match($doc) {
           </ul>
         </div>
 
+        <!-- Número fiscal (CIF / NIT) — requerido antes de firmar -->
+        <?php $label_fiscal = $es_colombia ? 'NIT' : 'CIF'; ?>
+        <?php if ($numero_fiscal): ?>
+        <div class="caf-fiscal-wrap filled">
+          <div class="caf-fiscal-label filled">
+            ✅ <?= $label_fiscal ?> registrado
+          </div>
+          <div class="caf-fiscal-value"><?= $numero_fiscal ?></div>
+        </div>
+        <?php else: ?>
+        <div class="caf-fiscal-wrap" id="fiscalWrap">
+          <div class="caf-fiscal-label">
+            ⚠️ Ingresa tu <?= $label_fiscal ?> antes de firmar
+          </div>
+          <input type="text"
+                 id="inputFiscal"
+                 class="caf-fiscal-input"
+                 placeholder="Ej: <?= $es_colombia ? 'B90123456-7' : 'A12345678' ?>"
+                 maxlength="30"
+                 oninput="toggleContractBtn()"
+                 autocomplete="off">
+          <span class="caf-fiscal-hint">
+            Este número quedará registrado en el contrato y en tu perfil de empresa.
+          </span>
+        </div>
+        <?php endif; ?>
+
         <!-- Datos que quedarán registrados -->
         <div class="caf-record">
           <strong>Se registrará con su aceptación:</strong>
@@ -399,6 +466,10 @@ $titulo_doc = match($doc) {
           <div class="caf-record-row">
             <span class="caf-record-label">Representante:</span>
             <span><?= htmlspecialchars(trim(($ud['nombre'] ?? '') . ' ' . ($ud['apellido'] ?? '')), ENT_QUOTES, 'UTF-8') ?></span>
+          </div>
+          <div class="caf-record-row">
+            <span class="caf-record-label"><?= $label_fiscal ?>:</span>
+            <span id="fiscalDisplay"><?= $numero_fiscal ?: '<em style="color:#94a3b8">pendiente de ingreso</em>' ?></span>
           </div>
         </div>
 
@@ -420,7 +491,7 @@ $titulo_doc = match($doc) {
             ✍ Firmar y aceptar contrato
           </button>
           <span class="caf-hint">
-            Esta acción no se puede deshacer. Marca la casilla para habilitar el botón.
+            Esta acción no se puede deshacer. Completa todos los campos y marca la casilla para habilitar el botón.
           </span>
         </div>
         <?php endif; ?>
@@ -455,20 +526,39 @@ $titulo_doc = match($doc) {
     /* ── Contrato ── */
     function toggleContractBtn() {
       const btn = document.getElementById('btnContrato');
-      if (btn) btn.disabled = !document.getElementById('chkContrato').checked;
+      if (!btn) return;
+      const chk       = document.getElementById('chkContrato');
+      const inputFiscal = document.getElementById('inputFiscal');
+      // Si hay input fiscal visible, exigir que tenga valor
+      const fiscalOk  = !inputFiscal || inputFiscal.value.trim().length >= 3;
+      // Actualizar el display en tiempo real mientras escribe
+      if (inputFiscal) {
+        const display = document.getElementById('fiscalDisplay');
+        if (display) display.innerHTML = inputFiscal.value.trim() || '<em style="color:#94a3b8">pendiente de ingreso</em>';
+      }
+      btn.disabled = !(chk && chk.checked && fiscalOk);
     }
 
     function firmarContrato(docId) {
-      const btn = document.getElementById('btnContrato');
-      const chk = document.getElementById('chkContrato');
+      const btn         = document.getElementById('btnContrato');
+      const chk         = document.getElementById('chkContrato');
+      const inputFiscal = document.getElementById('inputFiscal');
       if (!chk || !chk.checked) return;
+      const fiscalVal = inputFiscal ? inputFiscal.value.trim() : '';
+      if (inputFiscal && fiscalVal.length < 3) {
+        inputFiscal.focus();
+        alert('Ingresa el número fiscal (CIF / NIT) antes de firmar.');
+        return;
+      }
       if (!confirm('¿Confirmas que has leído íntegramente el contrato y aceptas todos sus términos?\n\nEsta acción quedará registrada con tu IP y la fecha/hora actual.')) return;
       btn.disabled = true;
-      chk.disabled = true;
+      if (chk) chk.disabled = true;
+      if (inputFiscal) inputFiscal.disabled = true;
       btn.textContent = 'Registrando firma…';
       const fd = new FormData();
       fd.append('action', 'marcar_aceptado');
       fd.append('id', docId);
+      if (fiscalVal) fd.append('numero_fiscal', fiscalVal);
       fetch('documentos_backend.php', { method: 'POST', body: fd })
         .then(r => r.json())
         .then(d => {
@@ -483,18 +573,21 @@ $titulo_doc = match($doc) {
                 <div class="caf-receipt-title">✅ Contrato aceptado</div>
                 <div class="caf-receipt-row"><strong>Fecha y hora:</strong> ${d.fecha}</div>
                 <div class="caf-receipt-row"><strong>IP de origen:</strong> ${d.ip || '–'}</div>
+                ${fiscalVal ? `<div class="caf-receipt-row"><strong>Número fiscal:</strong> ${fiscalVal}</div>` : ''}
                 <div class="caf-receipt-row"><strong>Referencia:</strong> DOC-${docId}-<?= $user_id ?></div>
               </div>`;
           } else {
             btn.disabled = false;
-            chk.disabled = false;
+            if (chk) chk.disabled = false;
+            if (inputFiscal) inputFiscal.disabled = false;
             btn.textContent = '✍ Firmar y aceptar contrato';
             alert(d.error || 'Error al registrar la firma. Intenta de nuevo.');
           }
         })
         .catch(() => {
           btn.disabled = false;
-          chk.disabled = false;
+          if (chk) chk.disabled = false;
+          if (inputFiscal) inputFiscal.disabled = false;
           btn.textContent = '✍ Firmar y aceptar contrato';
           alert('Error de conexión. Intenta de nuevo.');
         });

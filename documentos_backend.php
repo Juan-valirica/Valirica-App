@@ -93,6 +93,25 @@ try {
     error_log("documentos_backend.php: ALTER TABLE (audit cols) failed — " . $e->getMessage());
 }
 
+/* ── MIGRATION: numero_fiscal en usuarios ── */
+try {
+    $chk_fiscal = $conn->query("
+        SELECT COLUMN_NAME FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME   = 'usuarios'
+          AND COLUMN_NAME  = 'numero_fiscal'
+        LIMIT 1
+    ");
+    if ($chk_fiscal && !$chk_fiscal->fetch_assoc()) {
+        $conn->query("
+            ALTER TABLE usuarios
+              ADD COLUMN numero_fiscal VARCHAR(30) NULL DEFAULT NULL
+        ");
+    }
+} catch (\Throwable $e) {
+    error_log("documentos_backend.php: ALTER TABLE usuarios (numero_fiscal) failed — " . $e->getMessage());
+}
+
 /* ─────────────────────────────────────────────
    HELPER: verify doc belongs to user's company
    ───────────────────────────────────────────── */
@@ -567,6 +586,19 @@ switch ($action) {
             echo json_encode(['ok' => false, 'error' => 'No autorizado']);
             break;
         }
+
+        // Guardar numero_fiscal en usuarios si viene y aún no está guardado
+        $numero_fiscal_input = trim($_POST['numero_fiscal'] ?? '');
+        if ($numero_fiscal_input !== '') {
+            $numero_fiscal_clean = substr($numero_fiscal_input, 0, 30);
+            $stf = $conn->prepare("UPDATE usuarios SET numero_fiscal = ? WHERE id = ? AND (numero_fiscal IS NULL OR numero_fiscal = '')");
+            if ($stf) {
+                $stf->bind_param("si", $numero_fiscal_clean, $user_id);
+                $stf->execute();
+                $stf->close();
+            }
+        }
+
         // Capturar IP real del cliente (compatible con proxies / load balancers)
         $raw_ip    = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['HTTP_CLIENT_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
         $client_ip = trim(explode(',', $raw_ip)[0]);
