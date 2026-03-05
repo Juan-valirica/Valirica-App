@@ -41,6 +41,7 @@
 <div style="border-left:4px solid #000;padding-left:15px;margin-bottom:20px;">
 <p><strong>Inicio:</strong> {{FECHA_REGISTRO}}</p>
 <p><strong>Periodo de prueba:</strong> {{PERIODO_PRUEBA}}</p>
+<p><strong>Inicio versión paga:</strong> {{FECHA_INICIO_PAGO}}</p>
 <p><strong>Duración:</strong> 12 meses con renovación automática.</p>
 </div>
 <div style="background:#fff3cd;padding:15px;border-radius:6px;border:1px solid #ffeeba;">
