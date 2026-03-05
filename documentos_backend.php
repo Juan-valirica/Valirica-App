@@ -36,7 +36,7 @@ try {
         nombre_archivo VARCHAR(500),
         ruta_archivo   VARCHAR(1000),
         categoria      VARCHAR(100)  NOT NULL DEFAULT 'general',
-        estado         ENUM('nuevo','leido','archivado') NOT NULL DEFAULT 'nuevo',
+        estado         ENUM('nuevo','leido','archivado','aceptado') NOT NULL DEFAULT 'nuevo',
         creado_por     INT,
         created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -49,6 +49,67 @@ try {
     // Loguear sin romper el flujo — las queries subsiguientes
     // usan SHOW TABLES para verificar si la tabla existe.
     error_log("documentos_backend.php: CREATE TABLE failed — " . $e->getMessage());
+}
+
+/* ── MIGRATION: añadir 'aceptado' al ENUM si aún no existe ── */
+try {
+    $col = $conn->query("
+        SELECT COLUMN_TYPE FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME   = 'documentos'
+          AND COLUMN_NAME  = 'estado'
+        LIMIT 1
+    ");
+    if ($col && $row_col = $col->fetch_assoc()) {
+        if (strpos($row_col['COLUMN_TYPE'], 'aceptado') === false) {
+            $conn->query("
+                ALTER TABLE documentos
+                MODIFY COLUMN estado
+                ENUM('nuevo','leido','archivado','aceptado') NOT NULL DEFAULT 'nuevo'
+            ");
+        }
+    }
+} catch (\Throwable $e) {
+    error_log("documentos_backend.php: ALTER TABLE (aceptado) failed — " . $e->getMessage());
+}
+
+/* ── MIGRATION: columnas de auditoría de aceptación ── */
+try {
+    $chk_col = $conn->query("
+        SELECT COLUMN_NAME FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME   = 'documentos'
+          AND COLUMN_NAME  = 'fecha_aceptacion'
+        LIMIT 1
+    ");
+    if ($chk_col && !$chk_col->fetch_assoc()) {
+        $conn->query("
+            ALTER TABLE documentos
+              ADD COLUMN fecha_aceptacion TIMESTAMP NULL  DEFAULT NULL AFTER estado,
+              ADD COLUMN ip_aceptacion    VARCHAR(45) NULL DEFAULT NULL AFTER fecha_aceptacion
+        ");
+    }
+} catch (\Throwable $e) {
+    error_log("documentos_backend.php: ALTER TABLE (audit cols) failed — " . $e->getMessage());
+}
+
+/* ── MIGRATION: numero_fiscal en usuarios ── */
+try {
+    $chk_fiscal = $conn->query("
+        SELECT COLUMN_NAME FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME   = 'usuarios'
+          AND COLUMN_NAME  = 'numero_fiscal'
+        LIMIT 1
+    ");
+    if ($chk_fiscal && !$chk_fiscal->fetch_assoc()) {
+        $conn->query("
+            ALTER TABLE usuarios
+              ADD COLUMN numero_fiscal VARCHAR(30) NULL DEFAULT NULL
+        ");
+    }
+} catch (\Throwable $e) {
+    error_log("documentos_backend.php: ALTER TABLE usuarios (numero_fiscal) failed — " . $e->getMessage());
 }
 
 /* ─────────────────────────────────────────────
@@ -167,6 +228,7 @@ switch ($action) {
               COUNT(*)                                                    AS total,
               SUM(estado = 'nuevo')                                       AS nuevos,
               SUM(estado = 'archivado')                                   AS archivados,
+              SUM(estado = 'aceptado')                                    AS aceptados,
               SUM(tipo = 'pdf')                                           AS pdfs,
               SUM(tipo IN ('drive','microsoft'))                          AS links,
               SUM(empleado_id IS NULL  AND estado != 'archivado')        AS empresa,
@@ -515,6 +577,52 @@ switch ($action) {
         $st->bind_param("i", $doc_id);
         $st->execute();
         echo json_encode(['ok' => true]);
+        break;
+
+    /* ── Marcar como aceptado — cumplimiento LSSI-CE (ES) y Ley 527/1999 (CO) ── */
+    case 'marcar_aceptado':
+        $doc_id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
+        if (!$doc_id || !doc_belongs_to_user($conn, $doc_id, $user_id)) {
+            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+            break;
+        }
+
+        // Guardar numero_fiscal en usuarios si viene y aún no está guardado
+        $numero_fiscal_input = trim($_POST['numero_fiscal'] ?? '');
+        if ($numero_fiscal_input !== '') {
+            $numero_fiscal_clean = substr($numero_fiscal_input, 0, 30);
+            $stf = $conn->prepare("UPDATE usuarios SET numero_fiscal = ? WHERE id = ? AND (numero_fiscal IS NULL OR numero_fiscal = '')");
+            if ($stf) {
+                $stf->bind_param("si", $numero_fiscal_clean, $user_id);
+                $stf->execute();
+                $stf->close();
+            }
+        }
+
+        // Capturar IP real del cliente (compatible con proxies / load balancers)
+        $raw_ip    = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['HTTP_CLIENT_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
+        $client_ip = trim(explode(',', $raw_ip)[0]);
+        $client_ip = substr($client_ip, 0, 45); // max VARCHAR(45)
+
+        $st = $conn->prepare("
+            UPDATE documentos
+               SET estado           = 'aceptado',
+                   fecha_aceptacion = NOW(),
+                   ip_aceptacion    = ?
+             WHERE id = ?
+               AND categoria IN ('politica','contrato')
+        ");
+        $st->bind_param("si", $client_ip, $doc_id);
+        $st->execute();
+        if ($st->affected_rows === 0) {
+            echo json_encode(['ok' => false, 'error' => 'Solo se pueden aceptar documentos de política o contrato']);
+            break;
+        }
+        echo json_encode([
+            'ok'    => true,
+            'fecha' => date('d/m/Y H:i:s'),
+            'ip'    => $client_ip,
+        ]);
         break;
 
     /* ── Archivar / Desarchivar ── */

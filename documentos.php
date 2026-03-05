@@ -415,9 +415,10 @@ try {
       text-transform: uppercase;
       letter-spacing: .05em;
     }
-    .badge-nuevo   { background: #FFF3E0; color: #E65100; }
-    .badge-leido   { background: #f1f5f9; color: #64748b; }
+    .badge-nuevo     { background: #FFF3E0; color: #E65100; }
+    .badge-leido     { background: #f1f5f9; color: #64748b; }
     .badge-archivado { background: #e2e8f0; color: #475569; }
+    .badge-aceptado  { background: #dcfce7; color: #166534; }
 
     /* Category badges */
     .cat-badge { font-size: 11px; font-weight: 600; border-radius: 20px; padding: 2px 9px; white-space: nowrap; }
@@ -520,8 +521,9 @@ try {
       transition: background .15s, color .15s;
     }
     .doc-action-btn:hover { background: #f1f5f9; color: var(--c-primary, #012133); }
-    .doc-action-btn.danger:hover { background: #fee2e2; color: #dc2626; }
-    .doc-action-btn.view:hover { background: #e0f4f8; color: var(--c-teal, #007a96); }
+    .doc-action-btn.danger:hover  { background: #fee2e2; color: #dc2626; }
+    .doc-action-btn.view:hover    { background: #e0f4f8; color: var(--c-teal, #007a96); }
+    .doc-action-btn.accept:hover  { background: #dcfce7; color: #166534; }
 
     /* ===== LIST VIEW ===== */
     .doc-row {
@@ -1557,7 +1559,11 @@ function renderDocCard(doc) {
         <i class="ph ph-arrow-square-out"></i>
       </a>`;
   } else {
+    const acceptBtn = (isLegalPolicyDoc(doc) && doc.estado !== 'aceptado')
+      ? `<button class="doc-action-btn accept" onclick='acceptDoc(${doc.id})' title="Aceptar documento"><i class="ph ph-check-circle"></i></button>`
+      : '';
     actions = `
+      ${acceptBtn}
       <button class="doc-action-btn view" onclick='viewDoc(${jsonDoc(doc)})' title="Ver documento">
         <i class="ph ph-arrow-square-out"></i>
       </button>
@@ -1601,7 +1607,11 @@ function renderDocRow(doc) {
       ${hasFile ? `<button class="doc-action-btn view" onclick='viewDoc(${jsonDoc(doc)})' title="Ver adjunto"><i class="ph ph-file-pdf"></i></button>` : ''}
       <a href="permisos_vacaciones_empleador_panel.php" class="doc-action-btn view" title="Panel solicitudes" style="text-decoration:none;display:flex;align-items:center;justify-content:center;"><i class="ph ph-arrow-square-out"></i></a>`;
   } else {
+    const rowAcceptBtn = (isLegalPolicyDoc(doc) && doc.estado !== 'aceptado')
+      ? `<button class="doc-action-btn accept" onclick='acceptDoc(${doc.id})' title="Aceptar documento"><i class="ph ph-check-circle"></i></button>`
+      : '';
     rowActions = `
+      ${rowAcceptBtn}
       <button class="doc-action-btn view" onclick='viewDoc(${jsonDoc(doc)})' title="Ver"><i class="ph ph-arrow-square-out"></i></button>
       <button class="doc-action-btn" onclick='archiveDoc(${doc.id}, ${doc.estado === "archivado" ? 1 : 0})' title="${doc.estado === 'archivado' ? 'Desarchivar' : 'Archivar'}"><i class="ph ph-${doc.estado === 'archivado' ? 'arrow-counter-clockwise' : 'archive'}"></i></button>
       <button class="doc-action-btn danger" onclick='deleteDoc(${doc.id}, ${JSON.stringify(doc.titulo)})' title="Eliminar"><i class="ph ph-trash"></i></button>`;
@@ -1649,12 +1659,21 @@ function catBadgeHtml(cat) {
 
 function statBadgeHtml(estado) {
   const map = {
-    nuevo:     ['badge-nuevo',    'Nuevo'],
-    leido:     ['badge-leido',    'Leído'],
-    archivado: ['badge-archivado','Archivado'],
+    nuevo:     ['badge-nuevo',     'Nuevo'],
+    leido:     ['badge-leido',     'Leído'],
+    archivado: ['badge-archivado', 'Archivado'],
+    aceptado:  ['badge-aceptado',  'Aceptado'],
   };
   const [cls, label] = map[estado] || ['badge-leido','Leído'];
   return `<span class="badge ${cls}">${label}</span>`;
+}
+
+/* Devuelve true para los 3 docs legales que requieren aceptación explícita */
+function isLegalPolicyDoc(doc) {
+  const url = doc.url_documento || '';
+  return url.includes('ver_legal.php?doc=cookies') ||
+         url.includes('ver_legal.php?doc=privacidad') ||
+         url.includes('ver_legal.php?doc=terminos');
 }
 
 function solicitudStatBadgeHtml(estado) {
@@ -1817,6 +1836,20 @@ function markRead(id) {
   fetch(BACKEND, { method: 'POST', body: fd })
     .then(() => loadStats())
     .catch(() => {});
+}
+
+function acceptDoc(id) {
+  if (!confirm('¿Confirmas que has leído y aceptas este documento?')) return;
+  const fd = new FormData();
+  fd.append('action', 'marcar_aceptado');
+  fd.append('id', id);
+  fetch(BACKEND, { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(d => {
+      if (d.ok) { loadDocs(); loadStats(); }
+      else alert(d.error || 'Error al aceptar el documento.');
+    })
+    .catch(() => alert('Error de conexión.'));
 }
 
 function archiveDoc(id, isArchived) {

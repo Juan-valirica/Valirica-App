@@ -1,193 +1,155 @@
 <h1>CONTRATO DE PRESTACIÓN DE SERVICIOS SaaS – VALÍRICA (ESPAÑA)</h1>
-
-<p><strong>Versión:</strong> 1.1</p>
-<p><strong>Fecha de registro en plataforma:</strong> {{FECHA_REGISTRO}}</p>
-<p><strong>Fecha de aceptación contractual:</strong> {{FECHA_ACEPTACION}}</p>
-
+<p><strong>Versión:</strong> 1.2</p>
+<p><strong>Fecha de registro:</strong> {{FECHA_REGISTRO}}</p>
+<p><strong>Fecha de aceptación:</strong> {{FECHA_ACEPTACION}}</p>
 <hr>
-
-<h2>🔎 RESUMEN EJECUTIVO</h2>
-
-<p>
-Valírica es una plataforma tecnológica que permite a tu empresa analizar,
-medir y alinear su cultura organizacional, clima laboral y desempeño.
-</p>
-
+<section>
+<h2><i class="fa-solid fa-file-contract"></i> Resumen Ejecutivo</h2>
+<div style="border:1px solid #e0e0e0;padding:20px;border-radius:8px;background:#fafafa;">
+<p>Valírica es una plataforma tecnológica que permite analizar y alinear cultura organizacional, clima laboral y desempeño, con soporte normativo en talento humano.</p>
 <ul>
-<li>El contrato inicia desde el momento del registro en la plataforma: <strong>{{FECHA_REGISTRO}}</strong>.</li>
-<li>Periodo de prueba acordado: <strong>{{PERIODO_PRUEBA}}</strong>.</li>
-<li>Al finalizar el periodo de prueba se activa automáticamente el plan contratado.</li>
-<li>Precio por empleado activo: <strong>{{PRECIO_PLAN}}</strong>.</li>
-<li>Los datos pertenecen a tu empresa.</li>
+<li><i class="fa-solid fa-play"></i> Inicio: {{FECHA_REGISTRO}}</li>
+<li><i class="fa-solid fa-hourglass-half"></i> Periodo de prueba: {{PERIODO_PRUEBA}}</li>
+<li><i class="fa-solid fa-rotate"></i> Renovación automática anual</li>
+<li><i class="fa-solid fa-users"></i> Precio por empleado activo: {{PRECIO_PLAN}}</li>
+<li><i class="fa-solid fa-database"></i> Los datos pertenecen al Cliente</li>
 </ul>
-
+</div>
+</section>
 <hr>
-
-<h2>1. IDENTIFICACIÓN DEL PROVEEDOR</h2>
-
-<p>
-Marca comercial: <strong>Valírica</strong><br>
-Operador y facturador: <strong>WAKU SAS</strong><br>
-NIT: 900781581-2<br>
-Domicilio: Carrera 56A #148-35, Colombia<br>
-Correo: vale@valirica.com
-</p>
-
-<p>
-Propietario del software: Juan Camilo Calderón<br>
-NIE: Z1665039M
-</p>
-
+<section>
+<h2><i class="fa-solid fa-building"></i> 1. Identificación del Proveedor</h2>
+<p><strong>Marca:</strong> Valírica</p>
+<p><strong>Operador:</strong> WAKU SAS</p>
+<p><strong>NIT:</strong> 900781581-2</p>
+<p><strong>Domicilio:</strong> Carrera 56A #148-35, Colombia</p>
+<p><strong>Correo:</strong> vale@valirica.com</p>
+<p><strong>Propietario del software:</strong> Juan Camilo Calderón (NIE: Z1665039M)</p>
+</section>
 <hr>
-
-<h2>2. IDENTIFICACIÓN DEL CLIENTE</h2>
-
-<p>
-Empresa: {{EMPRESA_CLIENTE}}<br>
-CIF: {{CIF_CLIENTE}}<br>
-Representante: {{REPRESENTANTE}}<br>
-Correo principal: {{EMAIL_CLIENTE}}
-</p>
-
-<p>
-Correo de facturación adicional:
-<strong>{{EMAIL_FACTURACION_ADICIONAL}}</strong>
-</p>
-
+<section>
+<h2><i class="fa-solid fa-id-card"></i> 2. Identificación del Cliente</h2>
+<p><strong>Empresa:</strong> {{EMPRESA_CLIENTE}}</p>
+<p><strong>CIF:</strong> {{CIF_CLIENTE}}</p>
+<p><strong>Representante:</strong> {{REPRESENTANTE}}</p>
+<p><strong>Email principal:</strong> {{EMAIL_CLIENTE}}</p>
+<p><strong>Email facturación:</strong> {{EMAIL_FACTURACION_ADICIONAL}}</p>
+</section>
 <hr>
-
-<h2>3. INICIO Y DURACIÓN</h2>
-
-<p>
-El contrato entra en vigor desde la fecha de registro en la plataforma,
-independientemente de la fecha de aceptación formal.
-</p>
-
-<p>
-Fecha de inicio: <strong>{{FECHA_REGISTRO}}</strong>
-</p>
-
-<p>
-Periodo de prueba: <strong>{{PERIODO_PRUEBA}}</strong>
-</p>
-
-<p>
-Si no existe uso activo durante el periodo de prueba,
-podrá aplicarse una penalización equivalente al valor mensual de tres empleados activos.
-</p>
-
+<section>
+<h2><i class="fa-solid fa-timeline"></i> 3. Inicio y Duración</h2>
+<div style="border-left:4px solid #000;padding-left:15px;margin-bottom:20px;">
+<p><strong>Inicio:</strong> {{FECHA_REGISTRO}}</p>
+<p><strong>Prueba:</strong> {{PERIODO_PRUEBA}}</p>
+<p><strong>Duración:</strong> Anual con renovación automática.</p>
+</div>
+<div style="background:#fff3cd;padding:15px;border-radius:6px;border:1px solid #ffeeba;">
+<p><i class="fa-solid fa-triangle-exclamation"></i> Cancelación con mínimo 30 días de antelación.</p>
+</div>
+</section>
 <hr>
-
-<h2>4. PLAN Y PRECIO</h2>
-
-<p>
-Plan contratado: <strong>{{TIPO_PLAN}}</strong>
-</p>
-
-<p>
-Precio por empleado activo: <strong>{{PRECIO_PLAN}}</strong> (IVA no incluido).
-</p>
-
-<p>
-Facturación anticipada.
-</p>
-
-<p>
-Renovación automática salvo cancelación con 30 días de antelación.
-</p>
-
-<p>
-El precio podrá actualizarse anualmente conforme al IPC u otras variables económicas.
-</p>
-
+<section>
+<h2><i class="fa-solid fa-euro-sign"></i> 4. Plan y Precio</h2>
+<p><strong>Plan contratado:</strong> {{TIPO_PLAN}}</p>
+<p><strong>Precio por empleado activo:</strong> {{PRECIO_PLAN}} (IVA no incluido)</p>
+<p>Facturación anticipada.</p>
+<div style="background:#e7f3ff;padding:15px;border-radius:6px;border:1px solid #b3d7ff;">
+<p><i class="fa-solid fa-chart-line"></i> El precio podrá actualizarse anualmente conforme al IPC (notificación previa 30 días).</p>
+</div>
+</section>
 <hr>
-
-<h2>5. ALMACENAMIENTO</h2>
-
-<p>
-Incluye 200 MB por empleado activo.
-</p>
-
-<p>
-Bloques adicionales disponibles bajo tarifa vigente.
-</p>
-
-<p>
-Tras cancelación, los datos se conservarán durante 3 meses y posteriormente serán eliminados.
-</p>
-
+<section>
+<h2><i class="fa-solid fa-arrows-rotate"></i> 5. Modificaciones Contractuales</h2>
+<p>Valírica podrá modificar funcionalidades, condiciones o precios por razones legales u operativas.</p>
+<div style="background:#fff3cd;padding:15px;border-radius:6px;border:1px solid #ffeeba;">
+<p><i class="fa-solid fa-envelope"></i> Las modificaciones serán notificadas con 30 días de antelación.</p>
+<p><i class="fa-solid fa-door-open"></i> El Cliente podrá resolver el contrato antes de su entrada en vigor si no acepta cambios sustanciales.</p>
+</div>
+</section>
 <hr>
-
-<h2>6. TRATAMIENTO DE DATOS</h2>
-
-<p>
-El Cliente actúa como Responsable del Tratamiento.
-</p>
-
-<p>
-WAKU SAS actúa como Encargado del Tratamiento.
-</p>
-
-<p>
-Cumplimiento del Reglamento (UE) 2016/679 (RGPD).
-</p>
-
-<p>
-Valírica no comparte datos empresariales ni personales con terceros.
-</p>
-
-<p>
-Se podrán utilizar datos agregados y anonimizados para análisis globales.
-</p>
-
+<section>
+<h2><i class="fa-solid fa-ban"></i> 6. Terminación</h2>
+<ul>
+<li>Preaviso voluntario (30 días)</li>
+<li>Incumplimiento grave</li>
+<li>Impago superior a 30 días</li>
+<li>Uso indebido</li>
+</ul>
+<div style="background:#f8d7da;padding:15px;border-radius:6px;border:1px solid #f5c6cb;">
+<p><i class="fa-solid fa-database"></i> Los datos se conservarán 3 meses tras cancelación y luego serán eliminados definitivamente.</p>
+</div>
+</section>
 <hr>
-
-<h2>7. FINALIDAD DEL PERFILAMIENTO</h2>
-
-<p>
-El objetivo es mejorar alineación organizacional.
-</p>
-
-<p>
-No constituye evaluación psicológica clínica ni fundamento único para despidos.
-</p>
-
+<section>
+<h2><i class="fa-solid fa-shield-halved"></i> 7. Protección de Datos (RGPD)</h2>
+<h3>Roles</h3>
+<p>Cliente: Responsable del Tratamiento</p>
+<p>WAKU SAS: Encargado del Tratamiento</p>
+<h3>Base jurídica</h3>
+<p>Artículo 6.1.b RGPD — Ejecución contractual</p>
+<h3>Transferencia internacional</h3>
+<p>Los datos pueden transferirse a Colombia bajo:</p>
+<ul>
+<li>Cláusulas Contractuales Tipo (Art. 46 RGPD)</li>
+<li>Garantías técnicas y organizativas adecuadas</li>
+</ul>
+<h3>Derechos del interesado</h3>
+<ul>
+<li>Acceso</li>
+<li>Rectificación</li>
+<li>Supresión</li>
+<li>Limitación</li>
+<li>Portabilidad</li>
+<li>Oposición</li>
+</ul>
+<p>Ejercicio de derechos: vale@valirica.com</p>
+</section>
 <hr>
-
-<h2>8. PROPIEDAD INTELECTUAL</h2>
-
-<p>
-Prohibida ingeniería inversa.
-</p>
-
-<p>
-Se permiten sublicencias autorizadas siempre que se acepte este contrato.
-</p>
-
+<section>
+<h2><i class="fa-solid fa-brain"></i> 8. Perfilamiento</h2>
+<p>La finalidad del análisis es organizacional y estratégica.</p>
+<div style="background:#fff3cd;padding:15px;border-radius:6px;border:1px solid #ffeeba;">
+<p><i class="fa-solid fa-circle-info"></i> No constituye evaluación psicológica clínica ni fundamento único para despidos.</p>
+</div>
+</section>
 <hr>
-
-<h2>9. RESPONSABILIDAD</h2>
-
-<p>
-Limitada al importe pagado en los últimos 12 meses.
-</p>
-
-<p>
-No aplica en caso de dolo o negligencia grave.
-</p>
-
+<section>
+<h2><i class="fa-solid fa-copyright"></i> 9. Propiedad Intelectual</h2>
+<p>El software es propiedad exclusiva de su titular.</p>
+<ul>
+<li>Prohibida ingeniería inversa</li>
+<li>Prohibida reproducción no autorizada</li>
+<li>Permitidas sublicencias internas bajo aceptación contractual</li>
+</ul>
+</section>
 <hr>
-
-<h2>10. LEY APLICABLE</h2>
-
-<p>
-Legislación española. Tribunales de Madrid.
-</p>
-
+<section>
+<h2><i class="fa-solid fa-scale-balanced"></i> 10. Responsabilidad</h2>
+<p>Responsabilidad limitada al importe pagado en los últimos 12 meses.</p>
+<p>No aplicable en caso de dolo o negligencia grave.</p>
+</section>
 <hr>
-
-<h2>11. ACEPTACIÓN</h2>
-
-<p>
-La aceptación electrónica tiene plena validez jurídica.
-</p>
+<section>
+<h2><i class="fa-solid fa-rotate-left"></i> 11. Derecho de Desistimiento</h2>
+<p>No aplicable cuando el Cliente actúe como empresario o profesional.</p>
+<p>En caso de consumidor, podrá ejercer desistimiento en 14 días naturales salvo inicio de prestación con consentimiento expreso (art. 102 y 103 TRLGDCU).</p>
+</section>
+<hr>
+<section>
+<h2><i class="fa-solid fa-signature"></i> 12. Aceptación Electrónica</h2>
+<p>La aceptación mediante registro y marcación de casilla constituye consentimiento válido conforme a:</p>
+<ul>
+<li>Ley 34/2002 (LSSI-CE), arts. 23–29</li>
+<li>Reglamento (UE) 910/2014 (eIDAS)</li>
+<li>Código Civil español</li>
+</ul>
+<div style="background:#e7f3ff;padding:15px;border-radius:6px;border:1px solid #b3d7ff;">
+<p><i class="fa-solid fa-lock"></i> La prueba de aceptación quedará almacenada electrónicamente.</p>
+</div>
+</section>
+<hr>
+<section>
+<h2><i class="fa-solid fa-gavel"></i> 13. Ley Aplicable</h2>
+<p>Legislación española.</p>
+<p>Jurisdicción: Tribunales de Madrid.</p>
+</section>
