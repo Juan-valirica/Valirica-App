@@ -38,6 +38,7 @@ try {
     $stmt = $conn->prepare("
         SELECT u.empresa, u.nombre, u.apellido, u.email, u.fecha_registro,
                u.numero_fiscal,
+               u.dias_prueba,
                ci.ubicacion
         FROM   usuarios u
         LEFT JOIN cultura_ideal ci ON ci.usuario_id = u.id
@@ -58,16 +59,24 @@ $es_colombia = str_contains(strtolower($doc), 'colombia');
 $numero_fiscal = htmlspecialchars($ud['numero_fiscal'] ?? '', ENT_QUOTES, 'UTF-8');
 $fiscal_display = $numero_fiscal ?: '–';
 
+// Periodo de prueba: usa valor personalizado del usuario o default 30 días
+$dias_prueba = isset($ud['dias_prueba']) && $ud['dias_prueba'] !== null
+    ? (int)$ud['dias_prueba']
+    : 30;
+
+// Fecha de inicio de versión paga = fecha_registro + dias_prueba
+$fecha_registro_ts  = !empty($ud['fecha_registro']) ? strtotime($ud['fecha_registro']) : time();
+$fecha_inicio_pago  = date('d/m/Y', strtotime("+{$dias_prueba} days", $fecha_registro_ts));
+
 $vars = [
     '{{EMPRESA_CLIENTE}}'             => htmlspecialchars($ud['empresa']  ?? '', ENT_QUOTES, 'UTF-8'),
     '{{REPRESENTANTE}}'               => htmlspecialchars(trim(($ud['nombre'] ?? '') . ' ' . ($ud['apellido'] ?? '')), ENT_QUOTES, 'UTF-8'),
     '{{EMAIL_CLIENTE}}'               => htmlspecialchars($ud['email'] ?? '', ENT_QUOTES, 'UTF-8'),
     '{{EMAIL_FACTURACION_ADICIONAL}}' => htmlspecialchars($ud['email'] ?? '', ENT_QUOTES, 'UTF-8'),
-    '{{FECHA_REGISTRO}}'              => !empty($ud['fecha_registro'])
-                                             ? date('d/m/Y', strtotime($ud['fecha_registro']))
-                                             : date('d/m/Y'),
+    '{{FECHA_REGISTRO}}'              => date('d/m/Y', $fecha_registro_ts),
     '{{FECHA_ACEPTACION}}'            => date('d/m/Y'),
-    '{{PERIODO_PRUEBA}}'              => '15 días',
+    '{{PERIODO_PRUEBA}}'              => $dias_prueba . ' días',
+    '{{FECHA_INICIO_PAGO}}'           => $fecha_inicio_pago,
     '{{TIPO_PLAN}}'                   => 'Mensual',
     '{{NIT_CLIENTE}}'                 => $fiscal_display,
     '{{CIF_CLIENTE}}'                 => $fiscal_display,

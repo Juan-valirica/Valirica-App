@@ -112,6 +112,26 @@ try {
     error_log("documentos_backend.php: ALTER TABLE usuarios (numero_fiscal) failed — " . $e->getMessage());
 }
 
+/* ── MIGRATION: dias_prueba en usuarios (override del periodo de prueba por cliente) ── */
+try {
+    $chk_dias = $conn->query("
+        SELECT COLUMN_NAME FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME   = 'usuarios'
+          AND COLUMN_NAME  = 'dias_prueba'
+        LIMIT 1
+    ");
+    if ($chk_dias && !$chk_dias->fetch_assoc()) {
+        $conn->query("
+            ALTER TABLE usuarios
+              ADD COLUMN dias_prueba INT NULL DEFAULT NULL
+              COMMENT 'Días de prueba gratuita. NULL = usar default (30 días).'
+        ");
+    }
+} catch (\Throwable $e) {
+    error_log("documentos_backend.php: ALTER TABLE usuarios (dias_prueba) failed — " . $e->getMessage());
+}
+
 /* ─────────────────────────────────────────────
    HELPER: verify doc belongs to user's company
    ───────────────────────────────────────────── */
