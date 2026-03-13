@@ -1,0 +1,54 @@
+User-agent: *
+Allow: /
+Allow: /blog
+Allow: /blog/
+Allow: /blog?*
+
+# Bloquear páginas privadas de la app
+Disallow: /login.php
+Disallow: /login_equipo.php
+Disallow: /registro.php
+Disallow: /dashboard_empleado.php
+Disallow: /dashboard_equipo.php
+Disallow: /a-*.php
+Disallow: /ajax_*.php
+Disallow: /guardar_*.php
+Disallow: /formularios/
+Disallow: /blog-admin.php
+Disallow: /blog-migration.php
+Disallow: /verificar-*.php
+Disallow: /migration_*.php
+Disallow: /seed_*.php
+Disallow: /UPGRADE_*.php
+
+# Bots de IA — acceso completo al blog
+User-agent: GPTBot
+Allow: /blog
+Allow: /blog/
+
+User-agent: ChatGPT-User
+Allow: /blog
+Allow: /blog/
+
+User-agent: Google-Extended
+Allow: /blog
+Allow: /blog/
+
+User-agent: PerplexityBot
+Allow: /blog
+Allow: /blog/
+
+User-agent: Claude-Web
+Allow: /blog
+Allow: /blog/
+
+User-agent: anthropic-ai
+Allow: /blog
+Allow: /blog/
+
+User-agent: cohere-ai
+Allow: /blog
+Allow: /blog/
+
+# Sitemap
+Sitemap: https://valirica.com/sitemap.xml
