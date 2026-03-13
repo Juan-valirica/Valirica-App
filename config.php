@@ -166,8 +166,8 @@ if (!defined('APP_SIGN_KEY')) {
 // ------------------------------
 define('SES_SMTP_HOST',     'email-smtp.eu-west-1.amazonaws.com');
 define('SES_SMTP_PORT',     587);
-define('SES_SMTP_USER',     'REEMPLAZAR_CON_SMTP_USER');
-define('SES_SMTP_PASS',     'REEMPLAZAR_CON_SMTP_PASSWORD');
+define('SES_SMTP_USER',     'AKIA3VPONSMINKJDDOQB');
+define('SES_SMTP_PASS',     'BIDx1mDdaZJAZYK9S/jXD3Evfj8TpXdDoIlHQCmqRRtf');
 define('SES_FROM_EMAIL',    'no-reply@valirica.com');
 define('SES_FROM_NAME',     'Valírica');
 define('SES_REPLY_TO',      'hola@valirica.com');
