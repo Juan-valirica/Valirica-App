@@ -1683,9 +1683,9 @@ $motiv_bottom_val = round($values_sorted[$motiv_bottom_key] ?? 0);
 .rf-role { font-weight: 400; font-size:12px; color: #6a6a6a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .rf-battery { display: flex; align-items: center; }
-.rf-battery svg { height: 20px; width: auto; }
-.rf-battery-lg svg { height: 22px; }
-@media (max-width: 768px){ .rf-battery-lg svg { height: 20px; } }
+.rf-battery svg { height: 10px; width: auto; }
+.rf-battery-lg svg { height: 10px; }
+@media (max-width: 768px){ .rf-battery-lg svg { height: 10px; } }
 
 .rf-chip {
   display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; line-height: 1; font-size: 12px;
