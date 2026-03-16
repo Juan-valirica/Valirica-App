@@ -624,16 +624,16 @@ $energia_equipo = (int) round(0.6 * $porcentaje_pink + 0.4 * $maslow_pct);
 
 // === Icono + etiqueta para Motivación Colectiva (batería) ===
 if ($energia_equipo <= 25) {
-    $energia_icon = '/uploads/Battery-low.png';
+    $energia_icon = battery_svg_html($energia_equipo);
     $energia_status = 'Baja';
 } elseif ($energia_equipo <= 50) {
-    $energia_icon = '/uploads/Battery-mid.png';
+    // (energia_icon set above)
     $energia_status = 'Media';
 } elseif ($energia_equipo <= 75) {
-    $energia_icon = '/uploads/Battery-high.png';
+    // (energia_icon set above)
     $energia_status = 'Alta';
 } else {
-    $energia_icon = '/uploads/Battery-full.png';
+    // (energia_icon set above)
     $energia_status = 'Óptima';
 }
 
@@ -854,11 +854,22 @@ $texto_dimension_menor = $dimensiones_texto[$nombre_dimension];
 
 
 // === Preparación de íconos batería (reutiliza los tuyos) ===
-function battery_icon_for_pct($pct){
-    if ($pct <= 25)  return '/uploads/Battery-low.png';
-    if ($pct <= 50)  return '/uploads/Battery-mid.png';
-    if ($pct <= 75)  return '/uploads/Battery-high.png';
-    return '/uploads/Battery-full.png';
+function battery_svg_html($pct, $height = 12){
+    $pct = max(0, min(100, (float)$pct));
+    if ($pct <= 25) {
+        $fill_w = 3.75; $color = '#E53935'; $label = 'Baja';
+    } elseif ($pct <= 50) {
+        $fill_w = 7.5;  $color = '#F57C00'; $label = 'Media';
+    } elseif ($pct <= 75) {
+        $fill_w = 11.25; $color = '#43A047'; $label = 'Alta';
+    } else {
+        $fill_w = 15;   $color = '#00C853'; $label = 'Óptima';
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 8" height="' . $height . '" aria-label="Energía ' . $label . '" role="img" style="vertical-align:middle;display:inline-block;flex-shrink:0">'
+        . '<rect x="0.4" y="0.4" width="16.2" height="7.2" rx="1.6" stroke="' . $color . '" stroke-width="0.8" fill="none" opacity="0.28"/>'
+        . '<rect x="17" y="2.2" width="2.2" height="3.6" rx="0.6" fill="' . $color . '" opacity="0.4"/>'
+        . '<rect x="1.5" y="1.5" width="' . $fill_w . '" height="5" rx="1" fill="' . $color . '"/>'
+        . '</svg>';
 }
 
 // === Estilo cultural ideal para aprendizaje ===
@@ -961,7 +972,7 @@ while ($row = $res_rf->fetch_assoc()) {
     $maslow_energy_map = ['fisiologica'=>0,'seguridad'=>25,'afiliacion'=>50,'reconocimiento'=>75,'autorrealizacion'=>100];
     $maslow_pct = $maslow_energy_map[$maslow_dom] ?? 0;
     $energia_pct = (int) round(0.6 * $pink_pct + 0.4 * $maslow_pct);
-    $battery_icon = battery_icon_for_pct($energia_pct);
+    $battery_icon = battery_svg_html($energia_pct);
 
 
     // === Combinación ponderada (0..100) con pesos igualados en los 3 pilares
@@ -1637,7 +1648,7 @@ $motiv_bottom_val = round($values_sorted[$motiv_bottom_key] ?? 0);
 .kpi .kpi-label { font-size: 12px; line-height: 1.1; opacity: 0.85; letter-spacing: 0.2px; }
 .kpi .kpi-value { font-size: 18px; line-height: 1.1; font-weight: 700; color: var(--c-accent); }
 .kpi-battery { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
-.kpi-battery img { width: 28px; height: 14px; image-rendering: -webkit-optimize-contrast; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25)); }
+.kpi-battery svg { width: 28px; height: 14px; }
 .kpi-battery .kpi-badge { font-size: 12px; padding: 4px 8px; border-radius: 9999px; background: rgba(255,255,255,0.12); color: var(--c-soft); border: 1px solid rgba(255,255,255,0.18); line-height: 1; }
 
 @media (max-width: 768px){
@@ -1671,9 +1682,7 @@ $motiv_bottom_val = round($values_sorted[$motiv_bottom_key] ?? 0);
 .rf-name { font-weight: 700; color: var(--c-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rf-role { font-weight: 400; font-size:12px; color: #6a6a6a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.rf-battery { height: 20px; width: auto; display: block; image-rendering: -webkit-optimize-contrast; }
-.rf-battery-lg { height: 20px; }
-@media (max-width: 768px){ .rf-battery-lg { height: 20px; } }
+/* .rf-battery — definido en valirica-design-system.css */
 
 .rf-chip {
   display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; line-height: 1; font-size: 12px;
@@ -2002,7 +2011,7 @@ $motiv_bottom_val = round($values_sorted[$motiv_bottom_key] ?? 0);
 
   <!-- Columna DERECHA: batería (más grande) + botón -->
   <div class="rf-right">
-    <img src="<?php echo htmlspecialchars($r['battery_icon']); ?>" alt="Energía" class="rf-battery rf-battery-lg" />
+    <span class="rf-battery rf-battery-lg"><?php echo $r['battery_icon']; ?></span>
     <a class="rf-btn" href="dashboard_empleado.php?id=<?php echo (int)$r['id']; ?>">Ver perfil</a>
   </div>
 </li>
