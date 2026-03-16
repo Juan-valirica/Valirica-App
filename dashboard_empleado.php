@@ -48,27 +48,21 @@ function initials($name){
   $b = isset($parts[1][0]) ? mb_strtoupper(mb_substr($parts[1],0,1)) : '';
   return $a.$b;
 }
-function battery_svg_html($pct, $height = 16){
+function battery_svg_html($pct, $height = 10){
   $pct = max(0, min(100, (float)$pct));
   if ($pct <= 25) {
-    $bars = 1; $color = '#E53935'; $label = 'Baja';
+    $fill_w = 3.75; $color = '#E53935'; $label = 'Baja';
   } elseif ($pct <= 50) {
-    $bars = 2; $color = '#F57C00'; $label = 'Media';
+    $fill_w = 7.5;  $color = '#F57C00'; $label = 'Media';
   } elseif ($pct <= 75) {
-    $bars = 3; $color = '#43A047'; $label = 'Alta';
+    $fill_w = 11.25; $color = '#43A047'; $label = 'Alta';
   } else {
-    $bars = 4; $color = '#00C853'; $label = 'Optima';
+    $fill_w = 15;   $color = '#00C853'; $label = 'Óptima';
   }
-  $positions = [2, 7.5, 13, 18.5];
-  $bar_svg = '';
-  for ($i = 0; $i < $bars; $i++) {
-    $x = $positions[$i];
-    $bar_svg .= '<rect x="' . $x . '" y="3" width="4" height="8" rx="1" fill="' . $color . '"/>';
-  }
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 14" height="' . $height . '" aria-label="Energía ' . $label . '" role="img" style="vertical-align:middle;display:inline-block;flex-shrink:0">'
-    . '<rect x="0.7" y="0.7" width="23.6" height="12.6" rx="2.5" stroke="' . $color . '" stroke-width="1.4" fill="none"/>'
-    . '<rect x="24.8" y="4" width="2.5" height="6" rx="1" fill="' . $color . '"/>'
-    . $bar_svg
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 8" height="' . $height . '" aria-label="Energía ' . $label . '" role="img" style="vertical-align:middle;display:inline-block;flex-shrink:0">'
+    . '<rect x="0.4" y="0.4" width="16.2" height="7.2" rx="1.6" stroke="' . $color . '" stroke-width="0.8" fill="none" opacity="0.28"/>'
+    . '<rect x="17" y="2.2" width="2.2" height="3.6" rx="0.6" fill="' . $color . '" opacity="0.4"/>'
+    . '<rect x="1.5" y="1.5" width="' . $fill_w . '" height="5" rx="1" fill="' . $color . '"/>'
     . '</svg>';
 }
 
