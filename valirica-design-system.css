@@ -1810,5 +1810,13 @@ select {
 
 
 /* ============================================
+   BATTERY ICON — Indicador de motivación/energía
+   ============================================ */
+.rf-battery { display: flex; align-items: center; }
+.rf-battery svg { height: 10px; width: auto; }
+@media (max-width: 768px) { .rf-battery svg { height: 10px; } }
+
+
+/* ============================================
    FIN DEL DESIGN SYSTEM
    ============================================ */
