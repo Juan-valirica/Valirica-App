@@ -158,3 +158,17 @@ if (!defined('APP_SIGN_KEY')) {
         'coloca_aqui_una_clave_secreta_larga_y_unica_de_64_+_caracteres'
     );
 }
+
+// ------------------------------
+// Amazon SES — configuración SMTP
+// Reemplaza SMTP_USER y SMTP_PASS con tus credenciales de SES.
+// No compartas ni subas estas credenciales a repositorios públicos.
+// ------------------------------
+define('SES_SMTP_HOST',     'email-smtp.eu-west-1.amazonaws.com');
+define('SES_SMTP_PORT',     587);
+define('SES_SMTP_USER',     'AKIA3VPONSMINKJDDOQB');
+define('SES_SMTP_PASS',     'BIDx1mDdaZJAZYK9S/jXD3Evfj8TpXdDoIlHQCmqRRtf');
+define('SES_FROM_EMAIL',    'no-reply@valirica.com');
+define('SES_FROM_NAME',     'Valírica');
+define('SES_REPLY_TO',      'hola@valirica.com');
+define('SES_CONFIG_SET',    'valirica-default'); // Configuration Set creado en SES

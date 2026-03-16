@@ -1,6 +1,8 @@
 <?php
 session_start();
 require 'config.php';
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/mailer/Mailer.php';
 
 
 // === INVITE: leer token (soporta GET y POST para no perderlo) ===
@@ -117,6 +119,9 @@ if ($inviteData) {
         $_SESSION['user_name'] = $nombre;
         $_SESSION['user_apellido'] = $apellido;
         $_SESSION['empresa'] = $empresa;
+
+        // Enviar email de bienvenida vía Amazon SES (no bloquea el registro si falla)
+        Mailer::sendBienvenida($nombre, $email);
 
 header("Location: cultura_ideal.php?usuario_id=" . $_SESSION['user_id']);
         exit;

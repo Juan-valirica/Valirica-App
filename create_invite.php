@@ -1,6 +1,8 @@
 <?php
 session_start();
 require 'config.php';
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/mailer/Mailer.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -12,13 +14,16 @@ function respond($code, $arr) {
 }
 
 if (!isset($_SESSION['user_id'])) {
-  respond(401, ['ok'=>false, 'error'=>'No autenticado (no hay $_SESSION[user_id]). 0†7Mismo dominio? 0†7cookies habilitadas?']);
+  respond(401, ['ok'=>false, 'error'=>'No autenticado (no hay $_SESSION[user_id]). ï¿½0ï¿½7Mismo dominio? ï¿½0ï¿½7cookies habilitadas?']);
 }
 
 $provider_id = (int)$_SESSION['user_id'];
 $role = 'company';
 
-// Caducidad 7 d¨ªas (ajusta si quieres)
+// Email opcional del invitado para envÃ­o automÃ¡tico
+$email_destino = trim($_POST['email_destino'] ?? $_GET['email_destino'] ?? '');
+
+// Caducidad 7 dï¿½ï¿½as (ajusta si quieres)
 try {
   $tz = new DateTimeZone('Europe/Madrid');
 } catch (Throwable $e) {
@@ -33,12 +38,12 @@ try {
   respond(500, ['ok'=>false, 'error'=>'No se pudo generar token seguro', 'extra'=>$e->getMessage()]);
 }
 
-// Inserci¨®n
+// Inserciï¿½ï¿½n
 $sql = "INSERT INTO invites (token, provider_id, role, expires_at) VALUES (?,?,?,?)";
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
   http_response_code(500);
-  echo json_encode(['ok'=>false,'error'=>'Prepare fall¨®','extra'=>$conn->error], JSON_UNESCAPED_UNICODE);
+  echo json_encode(['ok'=>false,'error'=>'Prepare fallï¿½ï¿½','extra'=>$conn->error], JSON_UNESCAPED_UNICODE);
   exit;
 }
 
@@ -50,19 +55,19 @@ if (!$stmt) {
 */
 if (!$stmt->bind_param('siss', $token, $provider_id, $role, $expires_at)) {
   http_response_code(500);
-  echo json_encode(['ok'=>false,'error'=>'bind_param fall¨®','extra'=>$stmt->error], JSON_UNESCAPED_UNICODE);
+  echo json_encode(['ok'=>false,'error'=>'bind_param fallï¿½ï¿½','extra'=>$stmt->error], JSON_UNESCAPED_UNICODE);
   exit;
 }
 
 if (!$stmt->execute()) {
   http_response_code(500);
-  echo json_encode(['ok'=>false,'error'=>'execute fall¨®','extra'=>$stmt->error ?: $conn->error], JSON_UNESCAPED_UNICODE);
+  echo json_encode(['ok'=>false,'error'=>'execute fallï¿½ï¿½','extra'=>$stmt->error ?: $conn->error], JSON_UNESCAPED_UNICODE);
   exit;
 }
 $stmt->close();
 
 
-// Construcci¨®n robusta de la URL absoluta a registro.php
+// Construcciï¿½ï¿½n robusta de la URL absoluta a registro.php
 $scheme = 'http';
 if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')) {
   $scheme = 'https';
@@ -73,4 +78,18 @@ $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
 $register_url = $scheme . '://' . $host . $basePath . '/registro.php?invite=' . $token;
 
-respond(200, ['ok'=>true, 'url'=>$register_url]);
+// Si se proporcionÃ³ email del invitado, enviar la invitaciÃ³n automÃ¡ticamente
+$email_enviado = false;
+if ($email_destino && filter_var($email_destino, FILTER_VALIDATE_EMAIL)) {
+    // Obtener nombre de empresa del provider
+    $q = $conn->prepare("SELECT empresa FROM usuarios WHERE id = ? LIMIT 1");
+    $q->bind_param('i', $provider_id);
+    $q->execute();
+    $prov = stmt_get_result($q)->fetch_assoc();
+    $q->close();
+    $empresa_nombre = $prov['empresa'] ?? 'Tu empresa';
+
+    $email_enviado = Mailer::sendInvitacion($email_destino, $register_url, $empresa_nombre);
+}
+
+respond(200, ['ok' => true, 'url' => $register_url, 'email_enviado' => $email_enviado]);
