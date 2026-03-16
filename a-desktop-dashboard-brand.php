@@ -869,9 +869,9 @@ function battery_svg_html($pct, $height = 20){
     $bar_svg = '';
     for ($i = 0; $i < $bars; $i++) {
         $x = $positions[$i];
-        $bar_svg .= "<rect x="". $x ."" y="3" width="4" height="8" rx="1" fill="{$color}"/>";
+        $bar_svg .= '<rect x="' . $x . '" y="3" width="4" height="8" rx="1" fill="' . $color . '"/>';
     }
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 14" height="' . $height . '" aria-label="Energ\u00eda ' . $label . '" role="img" style="vertical-align:middle;display:inline-block;flex-shrink:0">'
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 14" height="' . $height . '" aria-label="Energía ' . $label . '" role="img" style="vertical-align:middle;display:inline-block;flex-shrink:0">'
         . '<rect x="0.7" y="0.7" width="23.6" height="12.6" rx="2.5" stroke="' . $color . '" stroke-width="1.4" fill="none"/>'
         . '<rect x="24.8" y="4" width="2.5" height="6" rx="1" fill="' . $color . '"/>'
         . $bar_svg
