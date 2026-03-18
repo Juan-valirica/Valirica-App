@@ -118,7 +118,22 @@ if (isset($_GET['action']) && $_GET['action'] === 'descargar_historico_asistenci
                 WHEN a.minutos_tarde_salida < 0 THEN ABS(a.minutos_tarde_salida)
                 ELSE 0
             END AS 'Tiempo Extra (min)',
-            j.nombre AS 'Jornada Asignada',
+            COALESCE(j.nombre, 'Sin jornada asignada') AS 'Jornada Asignada',
+            CASE a.tipo_registro
+                WHEN 'normal'        THEN 'Normal'
+                WHEN 'fuera_jornada' THEN 'Fuera de jornada regular'
+                WHEN 'sin_jornada'   THEN 'Sin jornada asignada'
+                WHEN 'horas_extra'   THEN 'Horas extra'
+                ELSE 'Normal'
+            END AS 'Tipo de Registro',
+            CASE a.estado_validacion
+                WHEN 'pendiente'    THEN 'Pendiente de validación'
+                WHEN 'aprobado'     THEN 'Aprobado'
+                WHEN 'rechazado'    THEN 'Rechazado'
+                WHEN 'no_requiere'  THEN '--'
+                ELSE '--'
+            END AS 'Validación Jornada Extra',
+            COALESCE(a.justificacion_texto, '') AS 'Justificación',
             CONCAT_WS(' | ',
                 NULLIF(COALESCE(a.notas, ''), ''),
                 (
@@ -141,7 +156,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'descargar_historico_asistenci
             ) AS 'Observaciones'
         FROM asistencias a
         INNER JOIN equipo e ON a.persona_id = e.id
-        INNER JOIN jornadas_trabajo j ON a.jornada_id = j.id
+        LEFT JOIN jornadas_trabajo j ON a.jornada_id = j.id
         WHERE e.usuario_id = ?
           AND a.fecha BETWEEN ? AND ?
         ORDER BY e.nombre_persona ASC, a.fecha DESC
