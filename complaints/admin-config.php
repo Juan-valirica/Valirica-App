@@ -7,9 +7,10 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/helper.php';
 
-// DEBUG TEMPORAL — quitar en producción cuando funcione
+// DEBUG TEMPORAL — quitar cuando funcione
 ini_set('display_errors', '1');
 error_reporting(E_ALL);
+error_log("CANAL-DEBUG admin-config.php cargado | session_id=" . session_id() . " | user_id=" . ($_SESSION['user_id'] ?? 'NO_SESSION') . " | __DIR__=" . __DIR__);
 
 date_default_timezone_set('Europe/Madrid');
 
