@@ -4,11 +4,12 @@
  * Acceso: SOLO el dueño de la empresa (usuarios.id === company_id)
  */
 
-ini_set('display_errors', '1');
-error_reporting(E_ALL);
-
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/helper.php';
+
+// DEBUG TEMPORAL — quitar en producción cuando funcione
+ini_set('display_errors', '1');
+error_reporting(E_ALL);
 
 date_default_timezone_set('Europe/Madrid');
 
