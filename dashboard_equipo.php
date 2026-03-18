@@ -3900,6 +3900,97 @@ try {
     </div>
   </section>
 
+  <?php else: ?>
+  <!-- Sin jornada asignada — puede fichar igualmente -->
+  <section id="seccion-asistencia" class="asistencia-section">
+    <div class="asistencia-card">
+      <div class="asistencia-header">
+        <div class="asistencia-header-info">
+          <div class="asistencia-fecha">
+            <i class="ph ph-calendar-blank"></i>
+            <?= date('l, d \d\e F Y') ?>
+          </div>
+          <div>
+            <span class="asistencia-jornada-pill" style="background:#EA580C;">
+              Sin jornada asignada
+            </span>
+          </div>
+        </div>
+        <div id="reloj-asistencia" class="asistencia-reloj"><?= date('H:i:s') ?></div>
+      </div>
+
+      <!-- Aviso informativo -->
+      <div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:12px;padding:14px 18px;margin:16px 20px 0;display:flex;align-items:flex-start;gap:12px;">
+        <i class="ph ph-info" style="font-size:20px;color:#EA580C;flex-shrink:0;margin-top:1px;"></i>
+        <div>
+          <strong style="font-size:13px;color:#9A3412;display:block;margin-bottom:2px;">Registro fuera de jornada asignada</strong>
+          <span style="font-size:12px;color:#C2410C;">No tienes un horario de trabajo asignado. Puedes registrar tu tiempo igualmente, pero este registro requerirá tu justificación y la aprobación del administrador. No implica aprobación automática de horas extra.</span>
+        </div>
+      </div>
+
+      <div class="asistencia-actions">
+        <?php if (!$asistencia_hoy || !$asistencia_hoy['hora_entrada']): ?>
+        <button class="asistencia-btn" onclick="abrirModalUbicacion()" id="btn-entrada"
+          style="border:2px solid #EA580C;background:#FFF7ED;color:#9A3412;">
+          <i class="ph-fill ph-sign-in" style="color:#EA580C;"></i>
+          <span class="asistencia-btn-text">
+            <span class="asistencia-btn-title" style="color:#9A3412;">Iniciar registro de tiempo</span>
+            <span class="asistencia-btn-sub" style="color:#C2410C;">Fuera de jornada — requiere aprobación</span>
+          </span>
+        </button>
+        <?php else: ?>
+        <div class="asistencia-registered asistencia-registered--in">
+          <i class="ph-fill ph-check-circle asistencia-registered-icon" style="color:#EA580C;"></i>
+          <div class="asistencia-registered-info">
+            <span class="asistencia-registered-label">Entrada registrada</span>
+            <span class="asistencia-registered-time"><?= substr($asistencia_hoy['hora_entrada'], 0, 5) ?></span>
+            <span class="asistencia-late-badge"><i class="ph ph-warning-circle"></i> Sin jornada asignada</span>
+            <?php if (!empty($asistencia_hoy['ubicacion_tipo'])): ?>
+            <span class="asistencia-registered-loc">
+              <?= $asistencia_hoy['ubicacion_tipo'] === 'oficina' ? '<i class="ph ph-buildings"></i> Oficina' : '<i class="ph ph-house-line"></i> ' . htmlspecialchars($asistencia_hoy['ubicacion_detalle'] ?: 'Remoto') ?>
+            </span>
+            <?php endif; ?>
+          </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($asistencia_hoy && $asistencia_hoy['hora_entrada'] && !$asistencia_hoy['hora_salida']): ?>
+        <button class="asistencia-btn asistencia-btn--salida" onclick="marcarAsistencia('salida')" id="btn-salida">
+          <i class="ph-fill ph-sign-out"></i>
+          <span class="asistencia-btn-text">
+            <span class="asistencia-btn-title">Finalizar registro</span>
+            <span class="asistencia-btn-sub">Se solicitará justificación</span>
+          </span>
+        </button>
+        <?php elseif ($asistencia_hoy && $asistencia_hoy['hora_salida']): ?>
+        <div class="asistencia-registered asistencia-registered--out">
+          <i class="ph-fill ph-check-circle asistencia-registered-icon"></i>
+          <div class="asistencia-registered-info">
+            <span class="asistencia-registered-label">Salida registrada</span>
+            <span class="asistencia-registered-time"><?= substr($asistencia_hoy['hora_salida'], 0, 5) ?></span>
+            <?php if (($asistencia_hoy['estado_validacion'] ?? '') === 'pendiente'): ?>
+            <span class="asistencia-late-badge"><i class="ph ph-clock"></i> Pendiente de aprobación</span>
+            <?php elseif (($asistencia_hoy['estado_validacion'] ?? '') === 'aprobado'): ?>
+            <span class="asistencia-ontime-badge"><i class="ph ph-check-circle"></i> Aprobado</span>
+            <?php elseif (($asistencia_hoy['estado_validacion'] ?? '') === 'rechazado'): ?>
+            <span class="asistencia-late-badge" style="background:#fee2e2;color:#991b1b;"><i class="ph ph-x-circle"></i> Rechazado — <?= htmlspecialchars($asistencia_hoy['validacion_comentario'] ?? '') ?></span>
+            <?php endif; ?>
+          </div>
+        </div>
+        <?php else: ?>
+        <div class="asistencia-btn asistencia-btn--disabled">
+          <i class="ph ph-sign-out"></i>
+          <span class="asistencia-btn-text">
+            <span class="asistencia-btn-title">Finalizar registro</span>
+            <span class="asistencia-btn-sub">Primero inicia tu registro</span>
+          </span>
+        </div>
+        <?php endif; ?>
+      </div>
+    </div>
+  </section>
+  <?php endif; ?>
+
   <!-- Modal de ubicación para check-in -->
   <div id="modal-ubicacion" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(1,33,51,0.55); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:20px; padding:28px; max-width:420px; width:90%; margin:20px; box-shadow:0 20px 60px rgba(1,33,51,0.25);">
@@ -4332,97 +4423,6 @@ try {
   // Actualizar cada segundo
   setInterval(actualizarReloj, 1000);
   </script>
-
-  <?php else: ?>
-  <!-- Sin jornada asignada — puede fichar igualmente -->
-  <section id="seccion-asistencia" class="asistencia-section">
-    <div class="asistencia-card">
-      <div class="asistencia-header">
-        <div class="asistencia-header-info">
-          <div class="asistencia-fecha">
-            <i class="ph ph-calendar-blank"></i>
-            <?= date('l, d \d\e F Y') ?>
-          </div>
-          <div>
-            <span class="asistencia-jornada-pill" style="background:#EA580C;">
-              Sin jornada asignada
-            </span>
-          </div>
-        </div>
-        <div id="reloj-asistencia" class="asistencia-reloj"><?= date('H:i:s') ?></div>
-      </div>
-
-      <!-- Aviso informativo -->
-      <div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:12px;padding:14px 18px;margin:16px 20px 0;display:flex;align-items:flex-start;gap:12px;">
-        <i class="ph ph-info" style="font-size:20px;color:#EA580C;flex-shrink:0;margin-top:1px;"></i>
-        <div>
-          <strong style="font-size:13px;color:#9A3412;display:block;margin-bottom:2px;">Registro fuera de jornada asignada</strong>
-          <span style="font-size:12px;color:#C2410C;">No tienes un horario de trabajo asignado. Puedes registrar tu tiempo igualmente, pero este registro requerirá tu justificación y la aprobación del administrador. No implica aprobación automática de horas extra.</span>
-        </div>
-      </div>
-
-      <div class="asistencia-actions">
-        <?php if (!$asistencia_hoy || !$asistencia_hoy['hora_entrada']): ?>
-        <button class="asistencia-btn" onclick="abrirModalUbicacion()" id="btn-entrada"
-          style="border:2px solid #EA580C;background:#FFF7ED;color:#9A3412;">
-          <i class="ph-fill ph-sign-in" style="color:#EA580C;"></i>
-          <span class="asistencia-btn-text">
-            <span class="asistencia-btn-title" style="color:#9A3412;">Iniciar registro de tiempo</span>
-            <span class="asistencia-btn-sub" style="color:#C2410C;">Fuera de jornada — requiere aprobación</span>
-          </span>
-        </button>
-        <?php else: ?>
-        <div class="asistencia-registered asistencia-registered--in">
-          <i class="ph-fill ph-check-circle asistencia-registered-icon" style="color:#EA580C;"></i>
-          <div class="asistencia-registered-info">
-            <span class="asistencia-registered-label">Entrada registrada</span>
-            <span class="asistencia-registered-time"><?= substr($asistencia_hoy['hora_entrada'], 0, 5) ?></span>
-            <span class="asistencia-late-badge"><i class="ph ph-warning-circle"></i> Sin jornada asignada</span>
-            <?php if (!empty($asistencia_hoy['ubicacion_tipo'])): ?>
-            <span class="asistencia-registered-loc">
-              <?= $asistencia_hoy['ubicacion_tipo'] === 'oficina' ? '<i class="ph ph-buildings"></i> Oficina' : '<i class="ph ph-house-line"></i> ' . htmlspecialchars($asistencia_hoy['ubicacion_detalle'] ?: 'Remoto') ?>
-            </span>
-            <?php endif; ?>
-          </div>
-        </div>
-        <?php endif; ?>
-
-        <?php if ($asistencia_hoy && $asistencia_hoy['hora_entrada'] && !$asistencia_hoy['hora_salida']): ?>
-        <button class="asistencia-btn asistencia-btn--salida" onclick="marcarAsistencia('salida')" id="btn-salida">
-          <i class="ph-fill ph-sign-out"></i>
-          <span class="asistencia-btn-text">
-            <span class="asistencia-btn-title">Finalizar registro</span>
-            <span class="asistencia-btn-sub">Se solicitará justificación</span>
-          </span>
-        </button>
-        <?php elseif ($asistencia_hoy && $asistencia_hoy['hora_salida']): ?>
-        <div class="asistencia-registered asistencia-registered--out">
-          <i class="ph-fill ph-check-circle asistencia-registered-icon"></i>
-          <div class="asistencia-registered-info">
-            <span class="asistencia-registered-label">Salida registrada</span>
-            <span class="asistencia-registered-time"><?= substr($asistencia_hoy['hora_salida'], 0, 5) ?></span>
-            <?php if (($asistencia_hoy['estado_validacion'] ?? '') === 'pendiente'): ?>
-            <span class="asistencia-late-badge"><i class="ph ph-clock"></i> Pendiente de aprobación</span>
-            <?php elseif (($asistencia_hoy['estado_validacion'] ?? '') === 'aprobado'): ?>
-            <span class="asistencia-ontime-badge"><i class="ph ph-check-circle"></i> Aprobado</span>
-            <?php elseif (($asistencia_hoy['estado_validacion'] ?? '') === 'rechazado'): ?>
-            <span class="asistencia-late-badge" style="background:#fee2e2;color:#991b1b;"><i class="ph ph-x-circle"></i> Rechazado — <?= htmlspecialchars($asistencia_hoy['validacion_comentario'] ?? '') ?></span>
-            <?php endif; ?>
-          </div>
-        </div>
-        <?php else: ?>
-        <div class="asistencia-btn asistencia-btn--disabled">
-          <i class="ph ph-sign-out"></i>
-          <span class="asistencia-btn-text">
-            <span class="asistencia-btn-title">Finalizar registro</span>
-            <span class="asistencia-btn-sub">Primero inicia tu registro</span>
-          </span>
-        </div>
-        <?php endif; ?>
-      </div>
-    </div>
-  </section>
-  <?php endif; ?>
 
 
   <div class="dashboard-grid">
