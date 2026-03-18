@@ -175,6 +175,22 @@ $empresa = $r_u['empresa'] ?? 'Empresa';
 
 $logo    = $r_u['logo'] ?? '/uploads/logo-192.png';
 
+// ── Canal de Denuncias ─────────────────────────────────────────────────────
+$canal_config   = null;
+$stmt_c = $conn->prepare("SELECT is_active, canal_slug FROM complaint_channel_config WHERE company_id = ? LIMIT 1");
+if ($stmt_c) {
+    $stmt_c->bind_param("i", $user_id);
+    $stmt_c->execute();
+    $res_c = stmt_get_result($stmt_c);
+    $stmt_c->close();
+    if ($res_c && $res_c->num_rows > 0) {
+        $canal_config = $res_c->fetch_assoc();
+    }
+}
+$_c_slug   = $canal_config['canal_slug'] ?? null;
+$canal_form_url  = 'complaints/form.php?'  . ($_c_slug ? 'canal=' . urlencode($_c_slug) : 'empresa=' . $user_id);
+$canal_track_url = 'complaints/track.php?empresa=' . $user_id;
+
  
 
 // --------------------------------------------------------------------
@@ -4070,6 +4086,43 @@ try {
   </div>
 
  
+
+  <!-- =====================
+       Tarjeta: Canal de Denuncias
+       ===================== -->
+  <?php if ($canal_config && $canal_config['is_active']): ?>
+  <div class="card" id="card-canal-denuncias" style="overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#4C1D95,#6D28D9);height:5px;"></div>
+    <div style="padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="background:rgba(109,40,217,.1);border-radius:10px;padding:8px;display:flex;align-items:center;">
+            <i class="ph ph-shield-check" style="font-size:20px;color:#6D28D9;"></i>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:800;color:var(--c-secondary);line-height:1.2;">Canal de Denuncias</div>
+            <div style="font-size:12px;color:#888;margin-top:2px;">Confidencial · Protegido por ley</div>
+          </div>
+        </div>
+        <span style="background:#EDE9FE;color:#5B21B6;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">Activo</span>
+      </div>
+      <p style="font-size:13px;color:#666;line-height:1.6;margin-bottom:14px;">
+        Puedes reportar situaciones de acoso, fraude o incumplimiento de forma anónima o identificada.
+        Tu denuncia es confidencial y está protegida por ley.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="<?= htmlspecialchars($canal_form_url) ?>"
+           style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:#6D28D9;color:#fff;border-radius:9px;text-decoration:none;font-size:13px;font-weight:700;">
+          <i class="ph ph-paper-plane-tilt"></i> Presentar denuncia
+        </a>
+        <a href="<?= htmlspecialchars($canal_track_url) ?>"
+           style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:#EDE9FE;color:#5B21B6;border-radius:9px;text-decoration:none;font-size:13px;font-weight:700;">
+          <i class="ph ph-magnifying-glass"></i> Ver estado de mi denuncia
+        </a>
+      </div>
+    </div>
+  </div>
+  <?php endif; ?>
 
   <!-- =====================
 

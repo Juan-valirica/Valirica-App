@@ -29,17 +29,21 @@ if ($company_id <= 0 && !empty($_GET['canal'])) {
     }
 }
 
-// Si el empleado está logueado, deducir company_id desde su sesión
-if ($company_id <= 0 && !empty($_SESSION['empleado_id'])) {
+// Si el empleado está logueado, deducir company_id y prefetch correo
+$empleado_correo_prefill = null;
+if (!empty($_SESSION['empleado_id'])) {
     $eid  = (int)$_SESSION['empleado_id'];
-    $stmt = $conn->prepare("SELECT usuario_id FROM equipo WHERE id = ? LIMIT 1");
+    $stmt = $conn->prepare("SELECT usuario_id, correo FROM equipo WHERE id = ? LIMIT 1");
     $stmt->bind_param("i", $eid);
     $stmt->execute();
     $res_e = stmt_get_result($stmt);
     $stmt->close();
     if ($res_e && $res_e->num_rows > 0) {
-        $row_e      = $res_e->fetch_assoc();
-        $company_id = (int)($row_e['usuario_id'] ?? 0);
+        $row_e = $res_e->fetch_assoc();
+        if ($company_id <= 0) {
+            $company_id = (int)($row_e['usuario_id'] ?? 0);
+        }
+        $empleado_correo_prefill = $row_e['correo'] ?? null;
     }
 }
 
@@ -508,17 +512,21 @@ function updateCharCount(ta) {
     checkSubmit();
 }
 
+// Correo prefill desde sesión empleado (vacío si no hay sesión)
+const EMPLEADO_EMAIL = <?= json_encode($empleado_correo_prefill ?? '') ?>;
+
 // ── Toggle identidad ──
 function toggleIdentity(cb) {
     const fields = document.getElementById('identity-fields');
-    const name   = document.getElementById('name');
-    const email  = document.getElementById('email');
+    const emailInput = document.getElementById('email');
     if (cb.checked) {
         fields.classList.replace('visible','hidden');
-        if (name) name.required = false;
     } else {
         fields.classList.replace('hidden','visible');
-        if (name) name.required = true;
+        // Auto-rellenar correo si el empleado está logueado y el campo está vacío
+        if (EMPLEADO_EMAIL && emailInput && !emailInput.value) {
+            emailInput.value = EMPLEADO_EMAIL;
+        }
     }
     checkSubmit();
 }
