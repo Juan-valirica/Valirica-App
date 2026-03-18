@@ -247,7 +247,7 @@ $scheme     = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'http
 $manage_url = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'app.valirica.com') . '/complaints/manage.php';
 
 if (!empty($config['responsible_user_id'])) {
-    $stmt = $conn->prepare("SELECT nombre, correo FROM usuarios WHERE id = ? LIMIT 1");
+    $stmt = $conn->prepare("SELECT nombre, email FROM usuarios WHERE id = ? LIMIT 1");
     $stmt->bind_param("i", $config['responsible_user_id']);
     $stmt->execute();
     $res_user = stmt_get_result($stmt);
@@ -255,7 +255,7 @@ if (!empty($config['responsible_user_id'])) {
     if ($res_user && $res_user->num_rows > 0) {
         $resp = $res_user->fetch_assoc();
         Mailer::sendNuevaDenuncia(
-            $resp['correo'],
+            $resp['email'],
             $resp['nombre'],
             $reference_code,
             complaint_type_label($type),

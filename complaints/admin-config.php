@@ -92,7 +92,7 @@ while ($m = $res_eq->fetch_assoc()) {
 }
 
 // También pueden ser responsables otros usuarios (company_admin de este mismo tenant)
-$stmt = $conn->prepare("SELECT id, nombre, correo FROM usuarios WHERE id = ? LIMIT 1");
+$stmt = $conn->prepare("SELECT id, nombre, email FROM usuarios WHERE id = ? LIMIT 1");
 $stmt->bind_param("i", $company_id);
 $stmt->execute();
 $res_own = stmt_get_result($stmt);
