@@ -1943,6 +1943,8 @@ try {
             a.hora_salida,
             a.minutos_tarde_entrada as minutos_tarde,
             a.minutos_tarde_salida,
+            COALESCE(a.tipo_registro, 'normal') as tipo_registro,
+            a.estado_validacion,
             j.nombre as jornada_nombre,
             j.color_hex as jornada_color,
             j.tolerancia_entrada_min,
@@ -1997,6 +1999,50 @@ try {
             }
         }
         $stmt_asist_hoy->close();
+    }
+
+    // 1c) Empleados con registro fuera de jornada HOY (sin_jornada / fuera_jornada)
+    // Estos no aparecen en la query 1b por no tener turno asignado hoy
+    $personas_en_query1b = array_column($asistencia_hoy, 'persona_id');
+    $stmt_fuera = $conn->prepare("
+        SELECT
+            e.id as persona_id,
+            e.nombre_persona,
+            e.cargo,
+            a.estado,
+            a.hora_entrada,
+            a.hora_salida,
+            a.minutos_tarde_entrada as minutos_tarde,
+            a.minutos_tarde_salida,
+            a.tipo_registro,
+            a.estado_validacion,
+            NULL as jornada_nombre,
+            '#EA580C' as jornada_color,
+            0 as tolerancia_entrada_min,
+            NULL as hora_inicio,
+            NULL as hora_fin,
+            'warning' as nivel_alerta,
+            '⚠️ Fuera de jornada' as estado_visual
+        FROM asistencias a
+        INNER JOIN equipo e ON a.persona_id = e.id
+        WHERE e.usuario_id = ?
+          AND a.fecha = CURDATE()
+          AND a.tipo_registro IN ('sin_jornada', 'fuera_jornada')
+          AND a.hora_entrada IS NOT NULL
+        ORDER BY a.hora_entrada DESC
+    ");
+    if ($stmt_fuera) {
+        $stmt_fuera->bind_param("i", $user_id);
+        $stmt_fuera->execute();
+        $res_fuera = stmt_get_result($stmt_fuera);
+        while ($row = $res_fuera->fetch_assoc()) {
+            // Evitar duplicados (por si ya aparecen en query 1b)
+            if (!in_array((int)$row['persona_id'], $personas_en_query1b)) {
+                $asistencia_hoy[] = $row;
+                $presentes_hoy++;
+            }
+        }
+        $stmt_fuera->close();
     }
 
     // 2) Total de personas con turno HOY (no todos los empleados, solo los que trabajan hoy)
@@ -6920,12 +6966,17 @@ document.addEventListener('keydown', function(e) {
             foreach ($asistencia_hoy as $persona):
               $hora_inicio_turno = $persona['hora_inicio'] ?? '00:00:00';
               $minutos_tardanza  = (int)($persona['minutos_tarde'] ?? 0);
+              $tipo_reg          = $persona['tipo_registro'] ?? 'normal';
 
               // Determinar status key
               if (!empty($persona['hora_salida'])) {
                   $status_key = 'jornada_finalizada';
               } elseif (!empty($persona['hora_entrada'])) {
-                  $status_key = ($minutos_tardanza > 0) ? 'tarde' : 'a_tiempo';
+                  if (in_array($tipo_reg, ['sin_jornada', 'fuera_jornada'])) {
+                      $status_key = 'fuera_jornada_activa';
+                  } else {
+                      $status_key = ($minutos_tardanza > 0) ? 'tarde' : 'a_tiempo';
+                  }
               } elseif ($hora_actual_now < $hora_inicio_turno) {
                   $status_key = 'fuera_jornada';
               } else {
@@ -6972,6 +7023,14 @@ document.addEventListener('keydown', function(e) {
                       'badge_bg'    => '#FF3B6D',
                       'badge_icon'  => 'ph ph-x-circle-fill',
                       'accent'      => '#FF3B6D',
+                  ],
+                  'fuera_jornada_activa' => [
+                      'label'       => $tipo_reg === 'sin_jornada' ? 'Sin jornada' : 'Fuera de jornada',
+                      'label_color' => '#EA580C',
+                      'label_bg'    => '#FFF7ED',
+                      'badge_bg'    => '#EA580C',
+                      'badge_icon'  => 'ph ph-warning-fill',
+                      'accent'      => '#EA580C',
                   ],
               ];
               $st = $st_map[$status_key];
