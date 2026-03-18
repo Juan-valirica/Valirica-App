@@ -7025,7 +7025,7 @@ document.addEventListener('keydown', function(e) {
                       'accent'      => '#FF3B6D',
                   ],
                   'fuera_jornada_activa' => [
-                      'label'       => $tipo_reg === 'sin_jornada' ? 'Sin jornada' : 'Fuera de jornada',
+                      'label'       => 'Fuera de jornada regular',
                       'label_color' => '#EA580C',
                       'label_bg'    => '#FFF7ED',
                       'badge_bg'    => '#EA580C',
