@@ -117,10 +117,10 @@
     /* ─── Choice cards ─── */
     .vl-choices {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 20px;
       width: 100%;
-      max-width: 680px;
+      max-width: 1000px;
     }
 
     .vl-card {
@@ -151,8 +151,9 @@
       opacity: 0;
       transition: opacity 0.22s ease;
     }
-    .vl-card--empresa::before  { background: linear-gradient(90deg, var(--c-teal), #00b0d0); }
-    .vl-card--equipo::before   { background: linear-gradient(90deg, var(--c-accent), #f5a23d); }
+    .vl-card--empresa::before   { background: linear-gradient(90deg, var(--c-teal), #00b0d0); }
+    .vl-card--equipo::before    { background: linear-gradient(90deg, var(--c-accent), #f5a23d); }
+    .vl-card--denuncia::before  { background: linear-gradient(90deg, #6d28d9, #a78bfa); }
 
     .vl-card:hover {
       transform: translateY(-5px);
@@ -165,6 +166,10 @@
     .vl-card--equipo:hover {
       border-color: rgba(239,127,27,0.45);
       box-shadow: 0 16px 48px rgba(239,127,27,0.20);
+    }
+    .vl-card--denuncia:hover {
+      border-color: rgba(109,40,217,0.45);
+      box-shadow: 0 16px 48px rgba(109,40,217,0.20);
     }
     .vl-card:hover::before { opacity: 1; }
 
@@ -190,6 +195,11 @@
       color: #f5a23d;
       border: 1px solid rgba(239,127,27,0.25);
     }
+    .vl-card--denuncia .vl-card-icon {
+      background: rgba(109,40,217,0.13);
+      color: #c4b5fd;
+      border: 1px solid rgba(109,40,217,0.25);
+    }
 
     .vl-card-role {
       font-size: 10px;
@@ -198,8 +208,9 @@
       text-transform: uppercase;
       margin-bottom: 6px;
     }
-    .vl-card--empresa .vl-card-role { color: rgba(77,214,240,0.7); }
-    .vl-card--equipo  .vl-card-role { color: rgba(245,162,61,0.7); }
+    .vl-card--empresa  .vl-card-role { color: rgba(77,214,240,0.7); }
+    .vl-card--equipo   .vl-card-role { color: rgba(245,162,61,0.7); }
+    .vl-card--denuncia .vl-card-role { color: rgba(196,181,253,0.7); }
 
     .vl-card-title {
       font-size: 21px;
@@ -247,6 +258,11 @@
       color: #fff;
       box-shadow: 0 4px 14px rgba(239,127,27,0.35);
     }
+    .vl-card--denuncia .vl-card-cta {
+      background: linear-gradient(135deg, #6d28d9, #4c1d95);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(109,40,217,0.35);
+    }
 
     .vl-card-cta i { font-size: 16px; }
 
@@ -264,12 +280,25 @@
     }
     .vl-footer a:hover { color: rgba(255,255,255,0.6); }
 
-    /* ─── Mobile ─── */
+    /* ─── Tablet: 2 columnas ─── */
+    @media (max-width: 860px) {
+      .vl-choices {
+        grid-template-columns: 1fr 1fr;
+        max-width: 680px;
+      }
+      /* Tercera tarjeta (denuncia) ocupa las dos columnas en tablet */
+      .vl-card--denuncia {
+        grid-column: span 2;
+      }
+    }
+
+    /* ─── Mobile: 1 columna ─── */
     @media (max-width: 600px) {
       .vl-choices {
         grid-template-columns: 1fr;
         max-width: 360px;
       }
+      .vl-card--denuncia { grid-column: span 1; }
       .vl-card { padding: 26px 22px 22px; }
       .vl-headline { font-size: 24px; }
       .vl-sub { margin-bottom: 32px; font-size: 14px; }
@@ -317,6 +346,18 @@
       <p class="vl-card-desc">Accede a tu dashboard personal, revisa tus metas, tareas y gestiona tu jornada.</p>
       <span class="vl-card-cta">
         Ingresar como empleado
+        <i class="ph ph-arrow-right"></i>
+      </span>
+    </a>
+
+    <!-- Canal de Denuncias -->
+    <a href="complaints/find.php" class="vl-card vl-card--denuncia">
+      <div class="vl-card-icon"><i class="ph ph-shield-check"></i></div>
+      <p class="vl-card-role">Canal confidencial</p>
+      <h2 class="vl-card-title">Presentar una denuncia</h2>
+      <p class="vl-card-desc">Canal seguro y confidencial para informar sobre irregularidades. Tu identidad está protegida.</p>
+      <span class="vl-card-cta">
+        Acceder al canal
         <i class="ph ph-arrow-right"></i>
       </span>
     </a>

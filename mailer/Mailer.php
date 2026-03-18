@@ -81,6 +81,36 @@ class Mailer
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Envío con BCC opcional
+    // -------------------------------------------------------------------------
+    private static function sendWithBcc(
+        string  $toEmail,
+        string  $toName,
+        string  $subject,
+        string  $htmlBody,
+        ?string $bcc = null
+    ): bool {
+        try {
+            $mail = self::build();
+            $mail->addAddress($toEmail, $toName);
+            if ($bcc) {
+                $mail->addBCC($bcc);
+            }
+            $mail->Subject = $subject;
+            $mail->Body    = $htmlBody;
+            $mail->AltBody = strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>', '</li>'], "\n", $htmlBody));
+            $mail->send();
+            return true;
+        } catch (PHPMailerException $e) {
+            error_log("Mailer error [{$toEmail}]: " . $e->getMessage());
+            return false;
+        } catch (\Throwable $e) {
+            error_log("Mailer unexpected error [{$toEmail}]: " . $e->getMessage());
+            return false;
+        }
+    }
+
     // =========================================================================
     // EMAILS PÚBLICOS
     // =========================================================================
@@ -146,6 +176,145 @@ class Mailer
         $asunto = "Tu solicitud de {$tipoLabel} ha sido {$estadoLabel}";
 
         return self::send($email, $nombre, $asunto, $html);
+    }
+
+    // =========================================================================
+    // CANAL DE DENUNCIAS
+    // =========================================================================
+
+    /**
+     * Notificación al responsable cuando se recibe una nueva denuncia.
+     *
+     * @param string      $emailResponsable  Correo del responsable
+     * @param string      $nombreResponsable Nombre del responsable
+     * @param string      $referenceCode     Código VLD-YYYY-XXXX
+     * @param string      $tipo              Tipo legible (ej. "Acoso laboral")
+     * @param string      $country           'ES' | 'CO'
+     * @param string      $manageUrl         URL al panel de gestión
+     * @param string|null $bcc               BCC confidencial (null si no crítica)
+     */
+    public static function sendNuevaDenuncia(
+        string  $emailResponsable,
+        string  $nombreResponsable,
+        string  $referenceCode,
+        string  $tipo,
+        string  $country,
+        string  $manageUrl,
+        ?string $bcc = null
+    ): bool {
+        $html = self::renderTemplate('denuncia_nueva', [
+            'nombre_responsable' => $nombreResponsable,
+            'reference_code'     => $referenceCode,
+            'tipo'               => $tipo,
+            'country'            => $country,
+            'manage_url'         => $manageUrl,
+        ]);
+        return self::sendWithBcc(
+            $emailResponsable,
+            $nombreResponsable,
+            "Nueva denuncia recibida — {$referenceCode}",
+            $html,
+            $bcc
+        );
+    }
+
+    /**
+     * Acuse de recibo al denunciante no anónimo.
+     *
+     * @param string $emailDenunciante Correo del denunciante
+     * @param string $nombre           Nombre del denunciante
+     * @param string $referenceCode    Código VLD-YYYY-XXXX
+     * @param string $trackUrl         URL de seguimiento público
+     * @param string $country          'ES' | 'CO'
+     */
+    public static function sendAcuseReciboDenuncia(
+        string $emailDenunciante,
+        string $nombre,
+        string $referenceCode,
+        string $trackUrl,
+        string $country
+    ): bool {
+        $html = self::renderTemplate('denuncia_acuse', [
+            'nombre'         => $nombre,
+            'reference_code' => $referenceCode,
+            'track_url'      => $trackUrl,
+            'country'        => $country,
+        ]);
+        return self::send(
+            $emailDenunciante,
+            $nombre,
+            "Hemos recibido tu denuncia — {$referenceCode}",
+            $html
+        );
+    }
+
+    /**
+     * Actualización de estado al denunciante no anónimo.
+     *
+     * @param string $emailDenunciante Correo del denunciante
+     * @param string $nombre           Nombre del denunciante
+     * @param string $referenceCode    Código VLD-YYYY-XXXX
+     * @param string $nuevoEstado      'en_tramite' | 'resuelta' | 'archivada'
+     * @param string $trackUrl         URL de seguimiento público
+     */
+    public static function sendActualizacionDenuncia(
+        string $emailDenunciante,
+        string $nombre,
+        string $referenceCode,
+        string $nuevoEstado,
+        string $trackUrl
+    ): bool {
+        $estado_labels = [
+            'en_tramite' => 'En trámite',
+            'resuelta'   => 'Resuelta',
+            'archivada'  => 'Archivada',
+        ];
+        $estado_label = $estado_labels[$nuevoEstado] ?? ucfirst($nuevoEstado);
+
+        $html = self::renderTemplate('denuncia_actualizacion', [
+            'nombre'         => $nombre,
+            'reference_code' => $referenceCode,
+            'nuevo_estado'   => $nuevoEstado,
+            'estado_label'   => $estado_label,
+            'track_url'      => $trackUrl,
+        ]);
+        return self::send(
+            $emailDenunciante,
+            $nombre,
+            "Actualización de tu denuncia {$referenceCode} — {$estado_label}",
+            $html
+        );
+    }
+
+    /**
+     * Alerta de vencimiento inminente al responsable (para cron/recordatorio).
+     *
+     * @param string $emailResponsable  Correo del responsable
+     * @param string $nombreResponsable Nombre del responsable
+     * @param string $referenceCode     Código VLD-YYYY-XXXX
+     * @param int    $diasRestantes     Días que quedan hasta el deadline
+     * @param string $manageUrl         URL al panel de gestión
+     */
+    public static function sendAlertaVencimientoDenuncia(
+        string $emailResponsable,
+        string $nombreResponsable,
+        string $referenceCode,
+        int    $diasRestantes,
+        string $manageUrl
+    ): bool {
+        $html = self::renderTemplate('denuncia_alerta', [
+            'nombre_responsable' => $nombreResponsable,
+            'reference_code'     => $referenceCode,
+            'dias_restantes'     => $diasRestantes,
+            'manage_url'         => $manageUrl,
+        ]);
+        $urgencia = $diasRestantes <= 0 ? '🚨 VENCIDA' : "⚠️ Vence en {$diasRestantes} día" . ($diasRestantes === 1 ? '' : 's');
+        return self::send(
+            $emailResponsable,
+            $nombreResponsable,
+            "{$urgencia} — Denuncia {$referenceCode}",
+            $html
+        );
     }
 
     /**

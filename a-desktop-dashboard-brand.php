@@ -2148,6 +2148,93 @@ $motiv_bottom_val = round($values_sorted[$motiv_bottom_key] ?? 0);
 
     </div><!-- /grid-sidebar charts -->
 
+<?php
+// ── Canal de Denuncias — tarjeta resumen para el admin ───────────────────────
+$cd_company_id = $user_id;
+
+// Contar pendientes (recibida + en_tramite)
+$cd_pending = 0;
+$cd_urgentes = 0;
+$stmt_cd = $conn->prepare("
+    SELECT
+        SUM(CASE WHEN status IN ('recibida','en_tramite') THEN 1 ELSE 0 END) AS pendientes,
+        SUM(CASE WHEN status NOT IN ('resuelta','archivada')
+                 AND resolution_deadline IS NOT NULL
+                 AND resolution_deadline <= DATE_ADD(NOW(), INTERVAL 3 DAY) THEN 1 ELSE 0 END) AS urgentes
+    FROM complaints
+    WHERE company_id = ?
+");
+$stmt_cd->bind_param("i", $cd_company_id);
+$stmt_cd->execute();
+$res_cd = stmt_get_result($stmt_cd);
+$stmt_cd->close();
+if ($row_cd = $res_cd->fetch_assoc()) {
+    $cd_pending  = (int)$row_cd['pendientes'];
+    $cd_urgentes = (int)$row_cd['urgentes'];
+}
+
+// Verificar si el canal está activo
+$stmt_cfg = $conn->prepare("SELECT is_active FROM complaint_channel_config WHERE company_id = ? LIMIT 1");
+$stmt_cfg->bind_param("i", $cd_company_id);
+$stmt_cfg->execute();
+$res_cfg = stmt_get_result($stmt_cfg);
+$stmt_cfg->close();
+$cd_active = ($res_cfg && $res_cfg->num_rows > 0) ? (bool)$res_cfg->fetch_assoc()['is_active'] : false;
+?>
+    <div class="card card-cta" style="border-left:4px solid #EF7F1B;">
+      <div class="cta-head">
+        <div class="cta-icon">🔒</div>
+        <h3 style="margin:0;display:flex;align-items:center;gap:10px;">
+          Canal de Denuncias
+          <?php if ($cd_active): ?>
+            <span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:#D1FAE5;color:#065F46;">Activo</span>
+          <?php else: ?>
+            <span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:#F3F4F6;color:#6B7280;">Inactivo</span>
+          <?php endif; ?>
+        </h3>
+      </div>
+
+      <?php if ($cd_urgentes > 0): ?>
+      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:9px;padding:11px 14px;margin-bottom:14px;font-size:13px;color:#B91C1C;display:flex;align-items:center;gap:8px;">
+        ⚠️ <strong><?= $cd_urgentes ?> denuncia<?= $cd_urgentes > 1 ? 's' : '' ?></strong>&nbsp;vence<?= $cd_urgentes > 1 ? 'n' : '' ?> en 3 días o menos
+      </div>
+      <?php endif; ?>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+        <div style="background:#f7f6f4;border-radius:9px;padding:12px;text-align:center;">
+          <div style="font-size:24px;font-weight:800;color:#EF7F1B;"><?= $cd_pending ?></div>
+          <div style="font-size:12px;color:#9a9896;">Pendientes</div>
+        </div>
+        <div style="background:#f7f6f4;border-radius:9px;padding:12px;text-align:center;">
+          <div style="font-size:24px;font-weight:800;color:<?= $cd_urgentes > 0 ? '#B91C1C' : '#9a9896' ?>;"><?= $cd_urgentes ?></div>
+          <div style="font-size:12px;color:#9a9896;">Urgentes</div>
+        </div>
+      </div>
+
+      <p class="cta-copy" style="margin-bottom:16px;">
+        <?php if ($cd_active): ?>
+          Gestiona las denuncias activas, revisa plazos y actúa dentro de los tiempos legales.
+        <?php else: ?>
+          Activa el canal para recibir y gestionar denuncias de forma segura y conforme a la ley.
+        <?php endif; ?>
+      </p>
+
+      <div class="cta-actions" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <?php if ($cd_active): ?>
+        <a href="complaints/panel.php" class="btn-cta-primary" style="display:inline-flex;align-items:center;gap:7px;">
+          Ver denuncias →
+        </a>
+        <a href="complaints/manage.php" class="btn-cta-ghost" style="display:inline-flex;align-items:center;gap:7px;">
+          Gestión detallada
+        </a>
+        <?php else: ?>
+        <a href="complaints/admin-config.php" class="btn-cta-primary" style="display:inline-flex;align-items:center;gap:7px;">
+          Activar canal →
+        </a>
+        <?php endif; ?>
+      </div>
+    </div>
+
   </div><!-- /wrap -->
   
   

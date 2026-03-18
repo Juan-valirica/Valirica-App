@@ -2216,6 +2216,73 @@ usort($items, fn($a, $b) => ($b['score'] <=> $a['score']));
 
 
 
+<?php
+// ── Canal de Denuncias — sección visible para la empresa ─────────────────────
+$cd_company_id = $user_id;
+$cd_form_url   = 'complaints/form.php?empresa=' . $cd_company_id;
+
+$cd_complaints = [];
+$stmt_cd = $conn->prepare("
+    SELECT reference_code, status, created_at
+    FROM complaints
+    WHERE company_id = ? AND reporter_equipo_id = ? AND is_anonymous = 0
+    ORDER BY created_at DESC
+    LIMIT 10
+");
+$stmt_cd->bind_param("ii", $cd_company_id, $empleado_id);
+$stmt_cd->execute();
+$res_cd = stmt_get_result($stmt_cd);
+$stmt_cd->close();
+while ($r = $res_cd->fetch_assoc()) { $cd_complaints[] = $r; }
+
+$cd_status_chip = [
+    'recibida'   => ['bg'=>'#DBEAFE','color'=>'#1D4ED8','label'=>'Recibida'],
+    'en_tramite' => ['bg'=>'#FEF3C7','color'=>'#92400E','label'=>'En trámite'],
+    'resuelta'   => ['bg'=>'#D1FAE5','color'=>'#065F46','label'=>'Resuelta'],
+    'archivada'  => ['bg'=>'#F3F4F6','color'=>'#6B7280','label'=>'Archivada'],
+];
+?>
+<div class="wrap" style="padding-top:4px;">
+<section style="margin-bottom:28px;">
+  <div class="card" style="border-left:4px solid #EF7F1B;">
+    <h3 style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <span style="width:28px;height:28px;border-radius:8px;background:#FFF5F0;display:grid;place-items:center;font-size:15px;">🔒</span>
+      Canal de Denuncias
+    </h3>
+    <p style="font-size:14px;color:#7a7977;margin-bottom:16px;line-height:1.5;">
+      Comparte este enlace con el colaborador para que pueda enviar denuncias de forma confidencial.
+    </p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <a href="<?= htmlspecialchars($cd_form_url) ?>" target="_blank"
+         style="display:inline-flex;align-items:center;gap:7px;padding:10px 18px;background:#EF7F1B;color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:700;">
+        Abrir formulario →
+      </a>
+      <button onclick="navigator.clipboard.writeText('<?= htmlspecialchars($cd_form_url) ?>').then(function(){this.textContent='✓ Copiado';var b=this;setTimeout(function(){b.textContent='📋 Copiar enlace'},2000)}.bind(this)).catch(function(){})"
+         style="display:inline-flex;align-items:center;gap:6px;padding:10px 16px;background:#FFF5F0;color:#184656;border:1px solid rgba(1,33,51,.12);border-radius:10px;font-family:inherit;font-size:14px;cursor:pointer;">
+        📋 Copiar enlace
+      </button>
+    </div>
+    <?php if (!empty($cd_complaints)): ?>
+    <div style="margin-top:20px;">
+      <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#9a9896;margin-bottom:10px;">
+        Denuncias identificadas de este colaborador
+      </p>
+      <ul style="list-style:none;">
+        <?php foreach ($cd_complaints as $cd):
+          $chip = $cd_status_chip[$cd['status']] ?? ['bg'=>'#F3F4F6','color'=>'#6B7280','label'=>$cd['status']];
+        ?>
+          <li style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0eeeb;font-size:13px;">
+            <span style="font-family:monospace;font-weight:700;color:#012133;"><?= htmlspecialchars($cd['reference_code']) ?></span>
+            <span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:<?= $chip['bg'] ?>;color:<?= $chip['color'] ?>;"><?= htmlspecialchars($chip['label']) ?></span>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    </div>
+    <?php endif; ?>
+  </div>
+</section>
+</div>
+
 <script>
 // Defaults visuales coherentes
 if (window.Chart){
