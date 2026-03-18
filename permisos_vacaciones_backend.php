@@ -493,6 +493,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $stmt->execute();
         $stmt->close();
 
+        // Auto-migración: asegurar que referencia_tipo incluye 'asistencia'
+        $conn->query("ALTER TABLE notificaciones MODIFY COLUMN referencia_tipo ENUM('permiso','vacacion','denuncia','asistencia') NULL DEFAULT NULL");
+
         // Notificar al empleado
         $tipo_notif   = ($decision === 'aprobar') ? 'jornada_extra_aprobada' : 'jornada_extra_rechazada';
         $titulo_notif = ($decision === 'aprobar') ? 'Jornada extra aprobada' : 'Jornada extra rechazada';
