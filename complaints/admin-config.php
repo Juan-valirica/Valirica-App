@@ -4,17 +4,43 @@
  * Acceso: SOLO el dueño de la empresa (usuarios.id === company_id)
  */
 
+ini_set('display_errors', '1');
+error_reporting(E_ALL);
+
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/helper.php';
 
 date_default_timezone_set('Europe/Madrid');
 
-// ── Auto-migración: garantizar que canal_slug exista ─────────────────────────
-// Si run_migration_paso8.php no se ejecutó todavía, la columna puede faltar y
-// cualquier INSERT/UPDATE/SELECT que la referencia provoca un error fatal.
+// ── Auto-migración: garantizar columnas necesarias ────────────────────────────
 (function() use ($conn) {
-    $chk = $conn->query("SHOW COLUMNS FROM complaint_channel_config LIKE 'canal_slug'");
+    // 1) country en usuarios
+    $chk = $conn->query("SHOW COLUMNS FROM usuarios LIKE 'country'");
     if ($chk && $chk->num_rows === 0) {
+        $conn->query("ALTER TABLE usuarios ADD COLUMN country ENUM('ES','CO') NOT NULL DEFAULT 'ES' AFTER empresa");
+    }
+
+    // 2) tabla complaint_channel_config (por si run_migrations.php no se ejecutó)
+    $conn->query("CREATE TABLE IF NOT EXISTS complaint_channel_config (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        company_id INT NOT NULL UNIQUE,
+        canal_slug VARCHAR(60) NULL UNIQUE,
+        country ENUM('ES','CO') NOT NULL DEFAULT 'ES',
+        is_anonymous_allowed TINYINT(1) DEFAULT 1,
+        responsible_user_id INT NULL,
+        channel_policy_text TEXT NULL,
+        receipt_days INT DEFAULT 7,
+        resolution_days INT DEFAULT 90,
+        notification_email VARCHAR(255) NULL,
+        is_active TINYINT(1) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_canal_slug (canal_slug)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    // 3) canal_slug en complaint_channel_config (si la tabla ya existía sin ella)
+    $chk2 = $conn->query("SHOW COLUMNS FROM complaint_channel_config LIKE 'canal_slug'");
+    if ($chk2 && $chk2->num_rows === 0) {
         $conn->query(
             "ALTER TABLE complaint_channel_config
              ADD COLUMN canal_slug VARCHAR(60) NULL UNIQUE AFTER company_id,
