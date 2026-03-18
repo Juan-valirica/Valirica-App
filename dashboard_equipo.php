@@ -706,16 +706,119 @@ if (!empty($area_ids_emp)) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_asistencia'])) {
     header('Content-Type: application/json');
 
+    // ── Auto-migración: columnas para jornada extra ──────────────────────────
+    (function() use ($conn) {
+        $cols = [
+            'tipo_registro'            => "ALTER TABLE asistencias ADD COLUMN tipo_registro ENUM('normal','sin_jornada','fuera_jornada','horas_extra') NOT NULL DEFAULT 'normal'",
+            'jornada_teorica_inicio'   => "ALTER TABLE asistencias ADD COLUMN jornada_teorica_inicio TIME NULL",
+            'jornada_teorica_fin'      => "ALTER TABLE asistencias ADD COLUMN jornada_teorica_fin TIME NULL",
+            'desviacion_minutos'       => "ALTER TABLE asistencias ADD COLUMN desviacion_minutos INT NULL",
+            'justificacion_texto'      => "ALTER TABLE asistencias ADD COLUMN justificacion_texto TEXT NULL",
+            'justificacion_evidencias' => "ALTER TABLE asistencias ADD COLUMN justificacion_evidencias JSON NULL",
+            'estado_validacion'        => "ALTER TABLE asistencias ADD COLUMN estado_validacion ENUM('no_requiere','pendiente','aprobado','rechazado') NOT NULL DEFAULT 'no_requiere'",
+            'validacion_comentario'    => "ALTER TABLE asistencias ADD COLUMN validacion_comentario TEXT NULL",
+            'validado_por'             => "ALTER TABLE asistencias ADD COLUMN validado_por INT NULL",
+            'validado_at'              => "ALTER TABLE asistencias ADD COLUMN validado_at TIMESTAMP NULL",
+        ];
+        foreach ($cols as $col => $sql) {
+            $chk = $conn->query("SHOW COLUMNS FROM asistencias LIKE '{$col}'");
+            if ($chk && $chk->num_rows === 0) { $conn->query($sql); }
+        }
+        // Permitir NULL en jornada_id para registros sin jornada asignada
+        $chk_j = $conn->query("SHOW COLUMNS FROM asistencias LIKE 'jornada_id'");
+        if ($chk_j && ($row_j = $chk_j->fetch_assoc()) && strpos($row_j['Null'], 'NO') !== false) {
+            $conn->query("ALTER TABLE asistencias MODIFY COLUMN jornada_id INT NULL DEFAULT NULL");
+        }
+        // Extender ENUM de notificaciones para jornada_extra
+        $conn->query("ALTER TABLE notificaciones MODIFY COLUMN tipo ENUM(
+            'permiso_solicitado','permiso_aprobado','permiso_rechazado',
+            'vacacion_solicitada','vacacion_aprobada','vacacion_rechazada',
+            'denuncia_recibida','denuncia_asignada','denuncia_resuelta','denuncia_vencimiento',
+            'jornada_extra_solicitada','jornada_extra_aprobada','jornada_extra_rechazada'
+        ) NOT NULL");
+    })();
+
     try {
-        $action = $_POST['action_asistencia']; // 'entrada' o 'salida'
+        $action    = $_POST['action_asistencia'];
         $fecha_hoy = date('Y-m-d');
         $hora_actual = date('H:i:s');
 
-        // Obtener ubicación (solo para entrada)
-        $ubicacion_tipo = isset($_POST['ubicacion_tipo']) ? trim($_POST['ubicacion_tipo']) : null;
+        // ── Acción: guardar justificación de jornada extra ──────────────────
+        if ($action === 'guardar_justificacion') {
+            $asistencia_id  = (int)($_POST['asistencia_id'] ?? 0);
+            $justificacion  = trim($_POST['justificacion_texto'] ?? '');
+
+            if ($asistencia_id <= 0) throw new Exception('Registro no válido.');
+            if (strlen($justificacion) < 10) throw new Exception('La justificación debe tener al menos 10 caracteres.');
+
+            // Verificar que pertenece al empleado
+            $stmt_v = $conn->prepare("SELECT a.id, a.tipo_registro, a.fecha, a.hora_entrada, a.hora_salida, e.nombre_persona, e.usuario_id FROM asistencias a INNER JOIN equipo e ON a.persona_id = e.id WHERE a.id = ? AND a.persona_id = ? LIMIT 1");
+            $stmt_v->bind_param("ii", $asistencia_id, $empleado_id);
+            $stmt_v->execute();
+            $asis = stmt_get_result($stmt_v)->fetch_assoc();
+            $stmt_v->close();
+            if (!$asis) throw new Exception('Registro no encontrado.');
+
+            // Subir evidencias
+            $evidencia_paths = [];
+            if (!empty($_FILES['evidencias']['name'][0])) {
+                $upload_dir = __DIR__ . '/uploads/jornadas_extra/' . $asistencia_id . '/';
+                if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+                $allowed_mime = ['image/jpeg','image/png','image/gif','image/webp',
+                    'application/pdf','application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+                foreach ($_FILES['evidencias']['tmp_name'] as $idx => $tmp) {
+                    if ($_FILES['evidencias']['error'][$idx] !== UPLOAD_ERR_OK) continue;
+                    $finfo = new finfo(FILEINFO_MIME_TYPE);
+                    $mime  = $finfo->file($tmp);
+                    if (!in_array($mime, $allowed_mime, true)) continue;
+                    if ($_FILES['evidencias']['size'][$idx] > 10 * 1024 * 1024) continue;
+                    $ext      = strtolower(pathinfo($_FILES['evidencias']['name'][$idx], PATHINFO_EXTENSION));
+                    $filename = bin2hex(random_bytes(12)) . '.' . $ext;
+                    if (move_uploaded_file($tmp, $upload_dir . $filename)) {
+                        $evidencia_paths[] = 'uploads/jornadas_extra/' . $asistencia_id . '/' . $filename;
+                    }
+                }
+            }
+            $evidencia_json = !empty($evidencia_paths) ? json_encode($evidencia_paths) : null;
+
+            // Guardar justificación y marcar pendiente de validación
+            $stmt_u = $conn->prepare("UPDATE asistencias SET justificacion_texto = ?, justificacion_evidencias = ?, estado_validacion = 'pendiente' WHERE id = ?");
+            $stmt_u->bind_param("ssi", $justificacion, $evidencia_json, $asistencia_id);
+            $stmt_u->execute();
+            $stmt_u->close();
+
+            // Notificar al administrador
+            if (!empty($asis['usuario_id'])) {
+                $admin_id    = (int)$asis['usuario_id'];
+                $tipo_label  = match($asis['tipo_registro']) {
+                    'sin_jornada'   => 'sin jornada asignada',
+                    'fuera_jornada' => 'fuera de su jornada (día no laborable)',
+                    'horas_extra'   => 'con horas extra',
+                    default         => 'fuera de horario'
+                };
+                $nombre  = $asis['nombre_persona'];
+                $fecha_f = $asis['fecha'];
+                $hora_e  = substr($asis['hora_entrada'] ?? '', 0, 5);
+                $hora_s  = substr($asis['hora_salida']  ?? '', 0, 5);
+                $titulo  = "Jornada extra pendiente: {$nombre}";
+                $mensaje_notif = "{$nombre} trabajó {$tipo_label} el {$fecha_f} ({$hora_e}–{$hora_s}). Ha enviado su justificación y requiere tu aprobación.";
+
+                $stmt_n = $conn->prepare("INSERT INTO notificaciones (usuario_destino_id, tipo_destino, tipo, titulo, mensaje, referencia_tipo, referencia_id) VALUES (?, 'empresa', 'jornada_extra_solicitada', ?, ?, 'asistencia', ?)");
+                $stmt_n->bind_param("issi", $admin_id, $titulo, $mensaje_notif, $asistencia_id);
+                $stmt_n->execute();
+                $stmt_n->close();
+            }
+
+            echo json_encode(['success' => true, 'message' => 'Justificación enviada. El administrador la revisará pronto.']);
+            exit;
+        }
+
+        // ── Obtener ubicación (solo para entrada) ────────────────────────────
+        $ubicacion_tipo    = isset($_POST['ubicacion_tipo'])    ? trim($_POST['ubicacion_tipo'])    : null;
         $ubicacion_detalle = isset($_POST['ubicacion_detalle']) ? trim($_POST['ubicacion_detalle']) : null;
 
-        // Obtener jornada asignada del empleado
+        // ── Obtener jornada asignada del empleado ────────────────────────────
         $stmt_jornada = $conn->prepare("
             SELECT ej.jornada_id, j.tolerancia_entrada_min, j.tolerancia_salida_min
             FROM equipo_jornadas ej
@@ -731,41 +834,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_asistencia']))
         $jornada_result = stmt_get_result($stmt_jornada)->fetch_assoc();
         $stmt_jornada->close();
 
+        // ── Determinar tipo de registro ──────────────────────────────────────
+        $tipo_registro          = 'normal';
+        $jornada_id             = null;
+        $tolerancia_entrada     = 15;
+        $tolerancia_salida      = 15;
+        $turno                  = null;
+        $jornada_teorica_inicio = null;
+        $jornada_teorica_fin    = null;
+        $cruza_medianoche       = 0;
+
         if (!$jornada_result) {
-            throw new Exception('No tienes una jornada asignada');
+            $tipo_registro = 'sin_jornada';
+        } else {
+            $jornada_id         = (int)$jornada_result['jornada_id'];
+            $tolerancia_entrada = (int)$jornada_result['tolerancia_entrada_min'];
+            $tolerancia_salida  = (int)$jornada_result['tolerancia_salida_min'];
+            $dia_semana = (int)date('N');
+            $stmt_turno = $conn->prepare("SELECT hora_inicio, hora_fin, cruza_medianoche FROM turnos WHERE jornada_id = ? AND dia_semana = ? LIMIT 1");
+            $stmt_turno->bind_param("ii", $jornada_id, $dia_semana);
+            $stmt_turno->execute();
+            $turno = stmt_get_result($stmt_turno)->fetch_assoc();
+            $stmt_turno->close();
+
+            if (!$turno) {
+                $tipo_registro = 'fuera_jornada';
+            } else {
+                $jornada_teorica_inicio = $turno['hora_inicio'];
+                $jornada_teorica_fin    = $turno['hora_fin'];
+                $cruza_medianoche       = (int)($turno['cruza_medianoche'] ?? 0);
+            }
         }
 
-        $jornada_id = (int)$jornada_result['jornada_id'];
-        $tolerancia_entrada = (int)$jornada_result['tolerancia_entrada_min'];
-        $tolerancia_salida = (int)$jornada_result['tolerancia_salida_min'];
-
-        // Obtener turno de hoy (día de la semana)
-        $dia_semana = (int)date('N'); // 1=Lun, 7=Dom
-        $stmt_turno = $conn->prepare("
-            SELECT hora_inicio, hora_fin, cruza_medianoche
-            FROM turnos
-            WHERE jornada_id = ? AND dia_semana = ?
-            LIMIT 1
-        ");
-        $stmt_turno->bind_param("ii", $jornada_id, $dia_semana);
-        $stmt_turno->execute();
-        $turno = stmt_get_result($stmt_turno)->fetch_assoc();
-        $stmt_turno->close();
-
-        if (!$turno) {
-            throw new Exception('No hay turno configurado para hoy');
-        }
-
-        $hora_inicio_turno = $turno['hora_inicio'];
-        $hora_fin_turno = $turno['hora_fin'];
-        $cruza_medianoche = (int)($turno['cruza_medianoche'] ?? 0);
-
+        // ── ACCIÓN: ENTRADA ──────────────────────────────────────────────────
         if ($action === 'entrada') {
-            // Verificar si ya marcó entrada hoy
-            $stmt_check = $conn->prepare("
-                SELECT id, hora_entrada FROM asistencias
-                WHERE persona_id = ? AND fecha = ?
-            ");
+            $stmt_check = $conn->prepare("SELECT id, hora_entrada FROM asistencias WHERE persona_id = ? AND fecha = ?");
             $stmt_check->bind_param("is", $empleado_id, $fecha_hoy);
             $stmt_check->execute();
             $asistencia_existente = stmt_get_result($stmt_check)->fetch_assoc();
@@ -775,127 +878,114 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_asistencia']))
                 throw new Exception('Ya marcaste tu entrada hoy a las ' . substr($asistencia_existente['hora_entrada'], 0, 5));
             }
 
-            // Calcular minutos de retraso
-            $hora_inicio_timestamp = strtotime($hora_inicio_turno);
-            $hora_actual_timestamp = strtotime($hora_actual);
-            $minutos_diferencia = round(($hora_actual_timestamp - $hora_inicio_timestamp) / 60);
-            $minutos_tarde = max(0, $minutos_diferencia - $tolerancia_entrada);
-
-            $estado = 'presente';
-            if ($minutos_tarde > 0) {
-                $estado = 'tarde';
+            // Calcular desviación y estado (solo si hay turno)
+            $minutos_tarde      = 0;
+            $desviacion_minutos = null;
+            $estado             = 'presente';
+            if ($tipo_registro === 'normal') {
+                $hora_inicio_ts    = strtotime($jornada_teorica_inicio);
+                $hora_actual_ts    = strtotime($hora_actual);
+                $minutos_dif       = round(($hora_actual_ts - $hora_inicio_ts) / 60);
+                $minutos_tarde     = max(0, $minutos_dif - $tolerancia_entrada);
+                $desviacion_minutos = $minutos_dif;
+                if ($minutos_tarde > 0) $estado = 'tarde';
             }
 
-            // Insertar o actualizar registro
+            $estado_validacion = ($tipo_registro === 'normal') ? 'no_requiere' : 'pendiente';
+
             if ($asistencia_existente) {
-                $stmt_update = $conn->prepare("
-                    UPDATE asistencias SET
-                        hora_entrada = ?,
-                        estado = ?,
-                        minutos_tarde_entrada = ?,
-                        ubicacion_tipo = ?,
-                        ubicacion_detalle = ?
-                    WHERE id = ?
-                ");
-                $stmt_update->bind_param("ssissi", $hora_actual, $estado, $minutos_tarde, $ubicacion_tipo, $ubicacion_detalle, $asistencia_existente['id']);
-                $stmt_update->execute();
-                $stmt_update->close();
+                $stmt_u = $conn->prepare("UPDATE asistencias SET hora_entrada=?, estado=?, minutos_tarde_entrada=?, ubicacion_tipo=?, ubicacion_detalle=?, tipo_registro=?, jornada_teorica_inicio=?, jornada_teorica_fin=?, desviacion_minutos=?, estado_validacion=? WHERE id=?");
+                $stmt_u->bind_param("ssisssssisi", $hora_actual, $estado, $minutos_tarde, $ubicacion_tipo, $ubicacion_detalle, $tipo_registro, $jornada_teorica_inicio, $jornada_teorica_fin, $desviacion_minutos, $estado_validacion, $asistencia_existente['id']);
+                $stmt_u->execute(); $stmt_u->close();
             } else {
-                $stmt_insert = $conn->prepare("
-                    INSERT INTO asistencias (persona_id, jornada_id, fecha, hora_entrada, estado, minutos_tarde_entrada, ubicacion_tipo, ubicacion_detalle)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                ");
-                $stmt_insert->bind_param("iisssiss", $empleado_id, $jornada_id, $fecha_hoy, $hora_actual, $estado, $minutos_tarde, $ubicacion_tipo, $ubicacion_detalle);
-                $stmt_insert->execute();
-                $stmt_insert->close();
+                $stmt_i = $conn->prepare("INSERT INTO asistencias (persona_id, jornada_id, fecha, hora_entrada, estado, minutos_tarde_entrada, ubicacion_tipo, ubicacion_detalle, tipo_registro, jornada_teorica_inicio, jornada_teorica_fin, desviacion_minutos, estado_validacion) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                $stmt_i->bind_param("iisssisssssis", $empleado_id, $jornada_id, $fecha_hoy, $hora_actual, $estado, $minutos_tarde, $ubicacion_tipo, $ubicacion_detalle, $tipo_registro, $jornada_teorica_inicio, $jornada_teorica_fin, $desviacion_minutos, $estado_validacion);
+                $stmt_i->execute(); $stmt_i->close();
             }
 
             $mensaje = '✅ Entrada registrada a las ' . substr($hora_actual, 0, 5);
-            if ($ubicacion_tipo === 'oficina') {
-                $mensaje .= "\n📍 Desde: Oficina";
-            } elseif ($ubicacion_tipo === 'remoto') {
-                $mensaje .= "\n📍 Desde: " . ($ubicacion_detalle ?: 'Remoto');
+            if ($ubicacion_tipo === 'oficina') $mensaje .= "\n📍 Desde: Oficina";
+            elseif ($ubicacion_tipo === 'remoto') $mensaje .= "\n📍 Desde: " . ($ubicacion_detalle ?: 'Remoto');
+            if ($tipo_registro === 'normal') {
+                $mensaje .= "\n✅ Estado: " . ($estado === 'tarde' ? 'TARDE ⚠️' : 'A TIEMPO ✅');
             }
-            $mensaje .= "\n✅ Estado: " . ($estado === 'tarde' ? 'TARDE ⚠️' : 'A TIEMPO ✅');
 
-            echo json_encode(['success' => true, 'message' => $mensaje]);
+            $response = ['success' => true, 'message' => $mensaje, 'tipo_registro' => $tipo_registro];
+            if ($tipo_registro !== 'normal') {
+                $response['fuera_jornada'] = true;
+                $response['aviso']         = match($tipo_registro) {
+                    'sin_jornada'   => 'No tienes jornada asignada. Este registro queda fuera de tu horario de trabajo y requerirá justificación y aprobación del administrador al finalizar.',
+                    'fuera_jornada' => 'Hoy no tienes turno configurado. Este registro es fuera de tu jornada y requerirá justificación y aprobación del administrador al finalizar.',
+                    default         => 'Registro fuera de jornada. Se solicitará justificación al finalizar.'
+                };
+            }
+            echo json_encode($response);
             exit;
+        }
 
-        } elseif ($action === 'salida') {
-            // Verificar que ya marcó entrada
-            $stmt_check = $conn->prepare("
-                SELECT id, hora_entrada, hora_salida FROM asistencias
-                WHERE persona_id = ? AND fecha = ?
-            ");
+        // ── ACCIÓN: SALIDA ───────────────────────────────────────────────────
+        if ($action === 'salida') {
+            $stmt_check = $conn->prepare("SELECT id, hora_entrada, hora_salida, tipo_registro FROM asistencias WHERE persona_id = ? AND fecha = ?");
             $stmt_check->bind_param("is", $empleado_id, $fecha_hoy);
             $stmt_check->execute();
             $asistencia_existente = stmt_get_result($stmt_check)->fetch_assoc();
             $stmt_check->close();
 
             if (!$asistencia_existente || !$asistencia_existente['hora_entrada']) {
-                throw new Exception('Primero debes marcar tu entrada');
+                throw new Exception('Primero debes marcar tu entrada.');
             }
-
             if ($asistencia_existente['hora_salida']) {
                 throw new Exception('Ya marcaste tu salida hoy a las ' . substr($asistencia_existente['hora_salida'], 0, 5));
             }
 
-            // Calcular diferencia con hora programada de salida
-            $hora_fin_timestamp = strtotime($hora_fin_turno);
-            $hora_actual_timestamp = strtotime($hora_actual);
+            $tipo_registro_actual  = $asistencia_existente['tipo_registro'] ?? $tipo_registro;
+            $minutos_tarde_salida  = 0;
+            $mensaje_salida        = '';
+            $needs_justification   = ($tipo_registro_actual !== 'normal');
 
-            // Si el turno cruza medianoche, la hora de fin es del día siguiente
-            if ($cruza_medianoche && $hora_fin_timestamp < strtotime($hora_inicio_turno)) {
-                $hora_fin_timestamp += 86400; // Agregar 24 horas (86400 segundos)
-            }
-
-            $minutos_diferencia_salida = round(($hora_actual_timestamp - $hora_fin_timestamp) / 60);
-
-            // Lógica mejorada para 3 escenarios:
-            // 1. Sale ANTES de tiempo: minutos_diferencia < 0 y fuera de tolerancia
-            // 2. Sale a tiempo: dentro del rango de tolerancia
-            // 3. Sale DESPUÉS (horas extra): minutos_diferencia > 0
-
-            $minutos_tarde_salida = 0; // Salió antes de tiempo (cuántos minutos antes)
-            $mensaje_salida = '';
-
-            if ($minutos_diferencia_salida < -$tolerancia_salida) {
-                // Caso 1: Salió ANTES del rango permitido
-                $minutos_tarde_salida = abs($minutos_diferencia_salida) - $tolerancia_salida;
-                $mensaje_salida = " (⚠️ Salió {$minutos_tarde_salida} min antes de tiempo)";
-            } elseif ($minutos_diferencia_salida > 0) {
-                // Caso 3: Salió DESPUÉS (horas extra)
-                // Guardamos como valor negativo para diferenciarlo
-                $minutos_tarde_salida = -$minutos_diferencia_salida;
-                $horas_extra = floor($minutos_diferencia_salida / 60);
-                $mins_extra = $minutos_diferencia_salida % 60;
-                if ($horas_extra > 0) {
-                    $mensaje_salida = " (💼 {$horas_extra}h {$mins_extra}m de tiempo extra)";
-                } else {
-                    $mensaje_salida = " (💼 {$mins_extra}m de tiempo extra)";
+            if ($tipo_registro_actual === 'normal' && $jornada_teorica_fin) {
+                $hora_fin_ts      = strtotime($jornada_teorica_fin);
+                $hora_actual_ts   = strtotime($hora_actual);
+                if ($cruza_medianoche && $hora_fin_ts < strtotime($jornada_teorica_inicio)) {
+                    $hora_fin_ts += 86400;
                 }
+                $minutos_dif_salida = round(($hora_actual_ts - $hora_fin_ts) / 60);
+
+                if ($minutos_dif_salida < -$tolerancia_salida) {
+                    $minutos_tarde_salida = abs($minutos_dif_salida) - $tolerancia_salida;
+                    $mensaje_salida = " (⚠️ Salió {$minutos_tarde_salida} min antes)";
+                } elseif ($minutos_dif_salida > 30) {
+                    // Horas extra significativas (>30 min) — requiere justificación
+                    $minutos_tarde_salida = -$minutos_dif_salida;
+                    $horas_e = floor($minutos_dif_salida / 60);
+                    $mins_e  = $minutos_dif_salida % 60;
+                    $mensaje_salida = $horas_e > 0
+                        ? " (💼 {$horas_e}h {$mins_e}m de tiempo extra)"
+                        : " (💼 {$mins_e}m de tiempo extra)";
+                    $needs_justification = true;
+                    $conn->query("UPDATE asistencias SET tipo_registro='horas_extra', estado_validacion='pendiente' WHERE id=" . (int)$asistencia_existente['id']);
+                    $tipo_registro_actual = 'horas_extra';
+                } else {
+                    $mensaje_salida = " (✅ A tiempo)";
+                }
+                $mensaje_horario = "\n🕐 Turno finaliza: " . substr($jornada_teorica_fin, 0, 5) . "\n⏱️ Tolerancia: {$tolerancia_salida} min";
             } else {
-                // Caso 2: Salió a tiempo (dentro de tolerancia)
-                $mensaje_salida = " (✅ A tiempo)";
+                $mensaje_horario = '';
             }
 
-            // Actualizar registro
-            $stmt_update = $conn->prepare("
-                UPDATE asistencias SET
-                    hora_salida = ?,
-                    minutos_tarde_salida = ?
-                WHERE id = ?
-            ");
-            $stmt_update->bind_param("sii", $hora_actual, $minutos_tarde_salida, $asistencia_existente['id']);
-            $stmt_update->execute();
-            $stmt_update->close();
+            $stmt_u = $conn->prepare("UPDATE asistencias SET hora_salida=?, minutos_tarde_salida=? WHERE id=?");
+            $stmt_u->bind_param("sii", $hora_actual, $minutos_tarde_salida, $asistencia_existente['id']);
+            $stmt_u->execute(); $stmt_u->close();
 
-            $mensaje = '✅ Salida registrada a las ' . substr($hora_actual, 0, 5) . $mensaje_salida;
-            $mensaje .= "\n🕐 Turno finaliza: " . substr($hora_fin_turno, 0, 5);
-            $mensaje .= "\n📊 Diferencia: {$minutos_diferencia_salida} min";
-            $mensaje .= "\n⏱️ Tolerancia: {$tolerancia_salida} min";
+            $mensaje = '✅ Salida registrada a las ' . substr($hora_actual, 0, 5) . $mensaje_salida . $mensaje_horario;
 
-            echo json_encode(['success' => true, 'message' => $mensaje]);
+            $response = ['success' => true, 'message' => $mensaje];
+            if ($needs_justification) {
+                $response['needs_justification'] = true;
+                $response['asistencia_id']       = (int)$asistencia_existente['id'];
+                $response['tipo_registro']        = $tipo_registro_actual;
+            }
+            echo json_encode($response);
             exit;
         }
 
@@ -944,17 +1034,18 @@ try {
         $stmt_turno->execute();
         $turno_hoy = stmt_get_result($stmt_turno)->fetch_assoc();
         $stmt_turno->close();
-
-        // Obtener registro de asistencia de hoy
-        $stmt_asistencia = $conn->prepare("
-            SELECT * FROM asistencias
-            WHERE persona_id = ? AND fecha = ?
-        ");
-        $stmt_asistencia->bind_param("is", $empleado_id, $fecha_hoy);
-        $stmt_asistencia->execute();
-        $asistencia_hoy = stmt_get_result($stmt_asistencia)->fetch_assoc();
-        $stmt_asistencia->close();
     }
+
+    // Obtener registro de asistencia de hoy — SIEMPRE, con o sin jornada asignada
+    $stmt_asistencia = $conn->prepare("
+        SELECT * FROM asistencias
+        WHERE persona_id = ? AND fecha = ?
+    ");
+    $stmt_asistencia->bind_param("is", $empleado_id, $fecha_hoy);
+    $stmt_asistencia->execute();
+    $asistencia_hoy = stmt_get_result($stmt_asistencia)->fetch_assoc();
+    $stmt_asistencia->close();
+
 } catch (Exception $e) {
     // Silenciar errores de tablas que no existen
 }
@@ -3750,11 +3841,59 @@ try {
       </div>
 
       <?php else: ?>
-      <!-- No hay turno hoy -->
-      <div class="asistencia-no-turno">
-        <i class="ph ph-calendar-x"></i>
-        <h3>No hay turno configurado para hoy</h3>
-        <p><?= date('l') ?> &mdash; Día libre</p>
+      <!-- No hay turno hoy — pero puede fichar igualmente -->
+      <div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:12px;padding:14px 18px;margin:16px 20px 0;display:flex;align-items:flex-start;gap:12px;">
+        <i class="ph ph-warning" style="font-size:20px;color:#EA580C;flex-shrink:0;margin-top:1px;"></i>
+        <div>
+          <strong style="font-size:13px;color:#9A3412;display:block;margin-bottom:2px;">Día no laborable según tu jornada</strong>
+          <span style="font-size:12px;color:#C2410C;"><?= date('l') ?> — Este registro quedará fuera de jornada y requerirá aprobación del administrador.</span>
+        </div>
+      </div>
+      <div class="asistencia-actions">
+        <?php if (!$asistencia_hoy || !$asistencia_hoy['hora_entrada']): ?>
+        <button class="asistencia-btn" onclick="abrirModalUbicacion()" id="btn-entrada"
+          style="border:2px solid #EA580C;background:#FFF7ED;color:#9A3412;">
+          <i class="ph-fill ph-sign-in" style="color:#EA580C;"></i>
+          <span class="asistencia-btn-text">
+            <span class="asistencia-btn-title" style="color:#9A3412;">Iniciar registro</span>
+            <span class="asistencia-btn-sub" style="color:#C2410C;">Fuera de jornada — requiere aprobación</span>
+          </span>
+        </button>
+        <?php else: ?>
+        <div class="asistencia-registered asistencia-registered--in">
+          <i class="ph-fill ph-check-circle asistencia-registered-icon" style="color:#EA580C;"></i>
+          <div class="asistencia-registered-info">
+            <span class="asistencia-registered-label">Entrada registrada</span>
+            <span class="asistencia-registered-time"><?= substr($asistencia_hoy['hora_entrada'], 0, 5) ?></span>
+            <span class="asistencia-late-badge"><i class="ph ph-warning-circle"></i> Fuera de jornada</span>
+          </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($asistencia_hoy && $asistencia_hoy['hora_entrada'] && !$asistencia_hoy['hora_salida']): ?>
+        <button class="asistencia-btn asistencia-btn--salida" onclick="marcarAsistencia('salida')" id="btn-salida">
+          <i class="ph-fill ph-sign-out"></i>
+          <span class="asistencia-btn-text">
+            <span class="asistencia-btn-title">Finalizar registro</span>
+            <span class="asistencia-btn-sub">Se solicitará justificación</span>
+          </span>
+        </button>
+        <?php elseif ($asistencia_hoy && $asistencia_hoy['hora_salida']): ?>
+        <div class="asistencia-registered asistencia-registered--out">
+          <i class="ph-fill ph-check-circle asistencia-registered-icon"></i>
+          <div class="asistencia-registered-info">
+            <span class="asistencia-registered-label">Salida registrada</span>
+            <span class="asistencia-registered-time"><?= substr($asistencia_hoy['hora_salida'], 0, 5) ?></span>
+            <?php if (($asistencia_hoy['estado_validacion'] ?? '') === 'pendiente'): ?>
+            <span class="asistencia-late-badge"><i class="ph ph-clock"></i> Pendiente de aprobación</span>
+            <?php elseif (($asistencia_hoy['estado_validacion'] ?? '') === 'aprobado'): ?>
+            <span class="asistencia-ontime-badge"><i class="ph ph-check-circle"></i> Aprobado</span>
+            <?php elseif (($asistencia_hoy['estado_validacion'] ?? '') === 'rechazado'): ?>
+            <span class="asistencia-late-badge" style="background:#fee2e2;color:#991b1b;"><i class="ph ph-x-circle"></i> Rechazado</span>
+            <?php endif; ?>
+          </div>
+        </div>
+        <?php endif; ?>
       </div>
       <?php endif; ?>
 
@@ -3964,8 +4103,8 @@ try {
     const btn = tipo === 'entrada' ? document.getElementById('btn-entrada') : document.getElementById('btn-salida');
     if (!btn) return;
 
-    const titleEl = btn.querySelector('.asistencia-btn-title');
-    const subEl   = btn.querySelector('.asistencia-btn-sub');
+    const titleEl   = btn.querySelector('.asistencia-btn-title');
+    const subEl     = btn.querySelector('.asistencia-btn-sub');
     const titleOrig = titleEl ? titleEl.textContent : '';
     const subOrig   = subEl   ? subEl.textContent   : '';
 
@@ -3983,13 +4122,28 @@ try {
 
     fetch(window.location.href, {
       method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
       body: formData
     })
     .then(r => r.json())
     .then(data => {
       if (data.success) {
-        // Eliminar emojis del mensaje del backend antes de mostrarlo
         const msgLimpio = (data.message || '').replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim();
+
+        if (tipo === 'entrada' && data.fuera_jornada) {
+          // Mostrar aviso y recargar
+          vToast(msgLimpio || 'Entrada registrada');
+          abrirModalAvisoJornada(data.aviso || 'Este registro está fuera de tu jornada y requerirá justificación al salir.');
+          return;
+        }
+
+        if (tipo === 'salida' && data.needs_justification) {
+          // Mostrar modal de justificación antes de recargar
+          vToast(msgLimpio || 'Salida registrada');
+          abrirModalJustificacion(data.asistencia_id, data.tipo_registro);
+          return;
+        }
+
         vToast(msgLimpio || (tipo === 'entrada' ? 'Entrada registrada correctamente' : 'Salida registrada correctamente'));
         setTimeout(() => location.reload(), 1500);
       } else {
@@ -4010,6 +4164,159 @@ try {
     });
   }
 
+  // ── Modal: Aviso tras entrada fuera de jornada ───────────────────────────
+  function abrirModalAvisoJornada(aviso) {
+    const overlay = document.createElement('div');
+    overlay.id = 'modal-aviso-jornada';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(1,33,51,0.55);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:20px;padding:28px;max-width:420px;width:90%;margin:20px;box-shadow:0 20px 60px rgba(1,33,51,0.25);">
+        <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:20px;">
+          <div style="width:44px;height:44px;background:#FFF7ED;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ph ph-warning" style="font-size:24px;color:#EA580C;"></i>
+          </div>
+          <div>
+            <h3 style="margin:0 0 6px;font-size:17px;font-weight:800;color:var(--c-primary);">Registro fuera de jornada</h3>
+            <p style="margin:0;font-size:13px;color:#666;line-height:1.5;">${aviso}</p>
+          </div>
+        </div>
+        <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:#9A3412;">
+          <strong>⚠️ Nota legal:</strong> Este registro no implica aprobación automática de horas extra ni de compensación adicional.
+        </div>
+        <button onclick="document.getElementById('modal-aviso-jornada').remove();location.reload();"
+          style="width:100%;padding:14px;background:var(--c-primary);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">
+          Entendido
+        </button>
+      </div>`;
+    document.body.appendChild(overlay);
+  }
+
+  // ── Modal: Justificación al finalizar jornada extra ──────────────────────
+  function abrirModalJustificacion(asistenciaId, tipoRegistro) {
+    const tipoLabel = {
+      'sin_jornada'  : 'sin jornada asignada',
+      'fuera_jornada': 'fuera de jornada (día no laborable)',
+      'horas_extra'  : 'con horas extra (>30 min adicionales)',
+    }[tipoRegistro] || 'fuera de horario';
+
+    const overlay = document.createElement('div');
+    overlay.id = 'modal-justificacion-jornada';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(1,33,51,0.6);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;overflow-y:auto;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:20px;padding:0;max-width:480px;width:90%;margin:20px;box-shadow:0 20px 60px rgba(1,33,51,0.25);overflow:hidden;">
+        <div style="background:linear-gradient(135deg,#EA580C,#C2410C);padding:20px 24px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <i class="ph ph-clipboard-text" style="font-size:28px;color:#fff;"></i>
+            <div>
+              <h3 style="margin:0;font-size:18px;font-weight:800;color:#fff;">Justificación requerida</h3>
+              <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.8);">Registro ${tipoLabel}</p>
+            </div>
+          </div>
+        </div>
+        <div style="padding:24px;">
+          <p style="font-size:13px;color:#666;margin:0 0 16px;line-height:1.5;">
+            Por favor explica brevemente qué actividades realizaste durante este tiempo fuera de tu jornada. Esta justificación será revisada por el administrador.
+          </p>
+
+          <label style="display:block;font-size:12px;font-weight:700;color:var(--c-primary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">
+            Descripción de la actividad <span style="color:#DC2626;">*</span>
+          </label>
+          <textarea id="just-texto" placeholder="Ej: Finalicé el informe mensual de ventas pendiente para entrega urgente del cliente X. Se requería para el cierre de mes..."
+            style="width:100%;min-height:110px;padding:12px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;resize:vertical;box-sizing:border-box;outline:none;"
+            oninput="this.style.borderColor=this.value.length>=10?'var(--c-teal)':'#e5e7eb'"
+          ></textarea>
+          <div id="just-texto-error" style="font-size:11px;color:#DC2626;margin-top:4px;display:none;">Mínimo 10 caracteres.</div>
+
+          <label style="display:block;font-size:12px;font-weight:700;color:var(--c-primary);margin:16px 0 6px;text-transform:uppercase;letter-spacing:0.5px;">
+            Evidencias (opcional)
+          </label>
+          <div style="border:2px dashed #d1d5db;border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;"
+            onclick="document.getElementById('just-files').click()"
+            ondragover="event.preventDefault();this.style.borderColor='var(--c-teal)';this.style.background='rgba(0,122,150,0.04)'"
+            ondragleave="this.style.borderColor='#d1d5db';this.style.background=''"
+            ondrop="event.preventDefault();handleJustDrop(event);this.style.borderColor='#d1d5db';this.style.background=''">
+            <i class="ph ph-upload-simple" style="font-size:24px;color:#9ca3af;display:block;margin-bottom:6px;"></i>
+            <span style="font-size:13px;color:#6b7280;">Arrastra archivos aquí o <strong style="color:var(--c-teal);">haz clic para seleccionar</strong></span>
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px;">Imágenes, PDF, Word — máx. 10 MB c/u</div>
+            <div id="just-files-list" style="margin-top:8px;font-size:12px;color:var(--c-teal);"></div>
+          </div>
+          <input type="file" id="just-files" multiple accept="image/*,.pdf,.doc,.docx" style="display:none;" onchange="actualizarListaArchivos()">
+
+          <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:12px 14px;margin-top:16px;font-size:12px;color:#9A3412;">
+            <strong>⚠️ Aviso legal:</strong> Este registro no implica aprobación automática de horas extra ni compensación adicional. Queda sujeto a la revisión y decisión del administrador.
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:20px;">
+            <button onclick="enviarJustificacion(${asistenciaId})"
+              style="flex:1;padding:14px;background:var(--c-primary);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">
+              <i class="ph ph-paper-plane-tilt"></i> Enviar justificación
+            </button>
+          </div>
+          <p style="font-size:11px;color:#9ca3af;text-align:center;margin:10px 0 0;">
+            Esta ventana se cerrará automáticamente al enviar.
+          </p>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+  }
+
+  function handleJustDrop(e) {
+    const dt = e.dataTransfer;
+    if (dt.files.length) {
+      document.getElementById('just-files').files = dt.files;
+      actualizarListaArchivos();
+    }
+  }
+
+  function actualizarListaArchivos() {
+    const input  = document.getElementById('just-files');
+    const listEl = document.getElementById('just-files-list');
+    if (!input.files.length) { listEl.textContent = ''; return; }
+    const names = Array.from(input.files).map(f => f.name).join(', ');
+    listEl.textContent = `📎 ${input.files.length} archivo(s): ${names}`;
+  }
+
+  async function enviarJustificacion(asistenciaId) {
+    const texto = document.getElementById('just-texto').value.trim();
+    const errEl = document.getElementById('just-texto-error');
+
+    if (texto.length < 10) {
+      errEl.style.display = 'block';
+      document.getElementById('just-texto').focus();
+      return;
+    }
+    errEl.style.display = 'none';
+
+    const btn = document.querySelector('#modal-justificacion-jornada button[onclick]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+    const fd = new FormData();
+    fd.append('action_asistencia', 'guardar_justificacion');
+    fd.append('asistencia_id', asistenciaId);
+    fd.append('justificacion_texto', texto);
+    const filesInput = document.getElementById('just-files');
+    if (filesInput.files.length) {
+      Array.from(filesInput.files).forEach(f => fd.append('evidencias[]', f));
+    }
+
+    try {
+      const r    = await fetch(window.location.href, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd });
+      const data = await r.json();
+      if (data.success) {
+        document.getElementById('modal-justificacion-jornada')?.remove();
+        vToast(data.message || 'Justificación enviada correctamente.');
+        setTimeout(() => location.reload(), 2000);
+      } else {
+        vToast(data.message || 'Error al enviar justificación.', 'error');
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ph ph-paper-plane-tilt"></i> Enviar justificación'; }
+      }
+    } catch (err) {
+      console.error(err);
+      vToast('Error de conexión.', 'error');
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ph ph-paper-plane-tilt"></i> Enviar justificación'; }
+    }
+  }
+
   // Reloj en tiempo real
   function actualizarReloj() {
     const reloj = document.getElementById('reloj-asistencia');
@@ -4027,16 +4334,92 @@ try {
   </script>
 
   <?php else: ?>
-  <!-- No tiene jornada asignada -->
-  <section style="margin-bottom: 28px;">
-    <div class="asistencia-sin-jornada">
-      <i class="ph ph-clock"></i>
-      <h3 style="margin: 0 0 10px; color: var(--c-secondary); font-size: 18px; font-weight: 700;">
-        Sin jornada asignada
-      </h3>
-      <p style="margin: 0; color: var(--c-body); opacity: 0.65; font-size: 14px;">
-        Contacta a tu supervisor para que te asigne un horario de trabajo
-      </p>
+  <!-- Sin jornada asignada — puede fichar igualmente -->
+  <section id="seccion-asistencia" class="asistencia-section">
+    <div class="asistencia-card">
+      <div class="asistencia-header">
+        <div class="asistencia-header-info">
+          <div class="asistencia-fecha">
+            <i class="ph ph-calendar-blank"></i>
+            <?= date('l, d \d\e F Y') ?>
+          </div>
+          <div>
+            <span class="asistencia-jornada-pill" style="background:#EA580C;">
+              Sin jornada asignada
+            </span>
+          </div>
+        </div>
+        <div id="reloj-asistencia" class="asistencia-reloj"><?= date('H:i:s') ?></div>
+      </div>
+
+      <!-- Aviso informativo -->
+      <div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:12px;padding:14px 18px;margin:16px 20px 0;display:flex;align-items:flex-start;gap:12px;">
+        <i class="ph ph-info" style="font-size:20px;color:#EA580C;flex-shrink:0;margin-top:1px;"></i>
+        <div>
+          <strong style="font-size:13px;color:#9A3412;display:block;margin-bottom:2px;">Registro fuera de jornada asignada</strong>
+          <span style="font-size:12px;color:#C2410C;">No tienes un horario de trabajo asignado. Puedes registrar tu tiempo igualmente, pero este registro requerirá tu justificación y la aprobación del administrador. No implica aprobación automática de horas extra.</span>
+        </div>
+      </div>
+
+      <div class="asistencia-actions">
+        <?php if (!$asistencia_hoy || !$asistencia_hoy['hora_entrada']): ?>
+        <button class="asistencia-btn" onclick="abrirModalUbicacion()" id="btn-entrada"
+          style="border:2px solid #EA580C;background:#FFF7ED;color:#9A3412;">
+          <i class="ph-fill ph-sign-in" style="color:#EA580C;"></i>
+          <span class="asistencia-btn-text">
+            <span class="asistencia-btn-title" style="color:#9A3412;">Iniciar registro de tiempo</span>
+            <span class="asistencia-btn-sub" style="color:#C2410C;">Fuera de jornada — requiere aprobación</span>
+          </span>
+        </button>
+        <?php else: ?>
+        <div class="asistencia-registered asistencia-registered--in">
+          <i class="ph-fill ph-check-circle asistencia-registered-icon" style="color:#EA580C;"></i>
+          <div class="asistencia-registered-info">
+            <span class="asistencia-registered-label">Entrada registrada</span>
+            <span class="asistencia-registered-time"><?= substr($asistencia_hoy['hora_entrada'], 0, 5) ?></span>
+            <span class="asistencia-late-badge"><i class="ph ph-warning-circle"></i> Sin jornada asignada</span>
+            <?php if (!empty($asistencia_hoy['ubicacion_tipo'])): ?>
+            <span class="asistencia-registered-loc">
+              <?= $asistencia_hoy['ubicacion_tipo'] === 'oficina' ? '<i class="ph ph-buildings"></i> Oficina' : '<i class="ph ph-house-line"></i> ' . htmlspecialchars($asistencia_hoy['ubicacion_detalle'] ?: 'Remoto') ?>
+            </span>
+            <?php endif; ?>
+          </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($asistencia_hoy && $asistencia_hoy['hora_entrada'] && !$asistencia_hoy['hora_salida']): ?>
+        <button class="asistencia-btn asistencia-btn--salida" onclick="marcarAsistencia('salida')" id="btn-salida">
+          <i class="ph-fill ph-sign-out"></i>
+          <span class="asistencia-btn-text">
+            <span class="asistencia-btn-title">Finalizar registro</span>
+            <span class="asistencia-btn-sub">Se solicitará justificación</span>
+          </span>
+        </button>
+        <?php elseif ($asistencia_hoy && $asistencia_hoy['hora_salida']): ?>
+        <div class="asistencia-registered asistencia-registered--out">
+          <i class="ph-fill ph-check-circle asistencia-registered-icon"></i>
+          <div class="asistencia-registered-info">
+            <span class="asistencia-registered-label">Salida registrada</span>
+            <span class="asistencia-registered-time"><?= substr($asistencia_hoy['hora_salida'], 0, 5) ?></span>
+            <?php if (($asistencia_hoy['estado_validacion'] ?? '') === 'pendiente'): ?>
+            <span class="asistencia-late-badge"><i class="ph ph-clock"></i> Pendiente de aprobación</span>
+            <?php elseif (($asistencia_hoy['estado_validacion'] ?? '') === 'aprobado'): ?>
+            <span class="asistencia-ontime-badge"><i class="ph ph-check-circle"></i> Aprobado</span>
+            <?php elseif (($asistencia_hoy['estado_validacion'] ?? '') === 'rechazado'): ?>
+            <span class="asistencia-late-badge" style="background:#fee2e2;color:#991b1b;"><i class="ph ph-x-circle"></i> Rechazado — <?= htmlspecialchars($asistencia_hoy['validacion_comentario'] ?? '') ?></span>
+            <?php endif; ?>
+          </div>
+        </div>
+        <?php else: ?>
+        <div class="asistencia-btn asistencia-btn--disabled">
+          <i class="ph ph-sign-out"></i>
+          <span class="asistencia-btn-text">
+            <span class="asistencia-btn-title">Finalizar registro</span>
+            <span class="asistencia-btn-sub">Primero inicia tu registro</span>
+          </span>
+        </div>
+        <?php endif; ?>
+      </div>
     </div>
   </section>
   <?php endif; ?>

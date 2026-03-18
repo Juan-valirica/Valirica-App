@@ -2065,6 +2065,31 @@ try {
     }
     $total_pendientes = count($permisos_pendientes) + count($vacaciones_pendientes);
 
+    // 3d) Jornadas extra pendientes de aprobación
+    $jornadas_extra_pendientes = [];
+    $stmt_je = $conn->prepare("
+        SELECT a.id, a.fecha, a.hora_entrada, a.hora_salida, a.tipo_registro,
+               a.justificacion_texto, a.justificacion_evidencias,
+               e.nombre_persona, e.cargo, e.id AS equipo_id
+        FROM asistencias a
+        INNER JOIN equipo e ON a.persona_id = e.id
+        WHERE e.usuario_id = ?
+          AND a.tipo_registro IN ('sin_jornada','fuera_jornada','horas_extra')
+          AND a.estado_validacion = 'pendiente'
+          AND a.justificacion_texto IS NOT NULL
+        ORDER BY a.fecha DESC, a.id DESC
+        LIMIT 50
+    ");
+    if ($stmt_je) {
+        $stmt_je->bind_param("i", $user_id);
+        $stmt_je->execute();
+        $res_je = stmt_get_result($stmt_je);
+        while ($row = $res_je->fetch_assoc()) {
+            $jornadas_extra_pendientes[] = $row;
+        }
+        $stmt_je->close();
+    }
+
     // 3c) Total horas acumuladas por empleado — capeadas al fin de jornada
     // LEAST(hora_salida, hora_fin_turno) evita acumular horas por olvido de marcar salida
     // Si no hay hora_salida, se usa hora_fin del turno (máximo del día)
@@ -2266,15 +2291,18 @@ try {
 $porcentaje_presentes = $total_personas > 0 ? round(($presentes_hoy / $total_personas) * 100) : 0;
 $porcentaje_a_tiempo = $presentes_hoy > 0 ? round(($a_tiempo_hoy / $presentes_hoy) * 100) : 0;
 
-// Contar solicitudes pendientes totales (permisos + vacaciones)
+// Contar solicitudes pendientes totales (permisos + vacaciones + jornadas extra)
 $solicitudes_pendientes_count = 0;
 try {
     $stmt_count_pendientes = $conn->prepare("
         SELECT
             (SELECT COUNT(*) FROM permisos WHERE usuario_id = ? AND estado = 'pendiente') +
-            (SELECT COUNT(*) FROM vacaciones WHERE usuario_id = ? AND estado = 'pendiente') as total
+            (SELECT COUNT(*) FROM vacaciones WHERE usuario_id = ? AND estado = 'pendiente') +
+            (SELECT COUNT(*) FROM asistencias a INNER JOIN equipo e ON a.persona_id = e.id
+             WHERE e.usuario_id = ? AND a.tipo_registro IN ('sin_jornada','fuera_jornada','horas_extra')
+               AND a.estado_validacion = 'pendiente' AND a.justificacion_texto IS NOT NULL) as total
     ");
-    $stmt_count_pendientes->bind_param("ii", $user_id, $user_id);
+    $stmt_count_pendientes->bind_param("iii", $user_id, $user_id, $user_id);
     $stmt_count_pendientes->execute();
     $result_count = stmt_get_result($stmt_count_pendientes)->fetch_assoc();
     $solicitudes_pendientes_count = (int)($result_count['total'] ?? 0);
@@ -6670,7 +6698,7 @@ document.addEventListener('keydown', function(e) {
               <div style="font-size:11px;color:var(--c-body);opacity:0.5;margin-top:2px;">Permisos y vacaciones · requieren aprobación</div>
             </div>
           </div>
-          <?php $pv_total = count($permisos_pendientes) + count($vacaciones_pendientes); ?>
+          <?php $pv_total = count($permisos_pendientes) + count($vacaciones_pendientes) + count($jornadas_extra_pendientes); ?>
           <?php if ($pv_total > 0): ?>
             <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 11px;background:#FEF3C7;color:#D97706;border-radius:20px;white-space:nowrap;flex-shrink:0;">
               <span style="width:6px;height:6px;border-radius:50%;background:#D97706;"></span>
@@ -6755,8 +6783,60 @@ document.addEventListener('keydown', function(e) {
             <?php endforeach; ?>
           <?php endif; ?>
 
+          <!-- Jornadas extra pendientes -->
+          <?php if (!empty($jornadas_extra_pendientes)): ?>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--c-body);opacity:.5;margin:<?= (!empty($permisos_pendientes)||!empty($vacaciones_pendientes))?'14px':'0' ?> 0 10px;display:flex;align-items:center;gap:5px;">
+              <i class="ph ph-clock-clockwise" style="font-size:11px;"></i>
+              Jornadas extra · <?= count($jornadas_extra_pendientes) ?>
+            </div>
+            <?php foreach ($jornadas_extra_pendientes as $je):
+              $je_p  = explode(' ', trim($je['nombre_persona'] ?? ''));
+              $je_i  = strtoupper(substr($je_p[0]??'',0,1).substr($je_p[1]??'',0,1));
+              if (strlen($je_i)<2) $je_i = strtoupper(substr($je['nombre_persona']??'NA',0,2));
+              $je_bg = $pv_palette[($je['id']??0) % count($pv_palette)];
+              $tipo_labels = ['sin_jornada'=>'Sin jornada','fuera_jornada'=>'Día no lab.','horas_extra'=>'Horas extra'];
+              $tipo_l = $tipo_labels[$je['tipo_registro']] ?? 'Extra';
+              $evidencias_je = !empty($je['justificacion_evidencias']) ? json_decode($je['justificacion_evidencias'], true) : [];
+            ?>
+              <div style="border:1px solid #F0F0F0;border-left:3px solid #EA580C;border-radius:12px;padding:12px 13px;margin-bottom:8px;">
+                <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;">
+                  <div style="width:34px;height:34px;border-radius:10px;background:<?= $je_bg ?>;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <span style="font-size:11px;font-weight:800;color:rgba(255,255,255,.92);"><?= h($je_i) ?></span>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:700;color:var(--c-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?= h($je['nombre_persona']) ?></div>
+                    <div style="font-size:11px;color:var(--c-body);opacity:.5;"><?= h($je['cargo'] ?? '') ?></div>
+                  </div>
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;background:#FFF7ED;color:#EA580C;border-radius:6px;border:1px solid #FED7AA;flex-shrink:0;"><?= $tipo_l ?></span>
+                </div>
+                <div style="font-size:11px;color:#6B7280;margin-bottom:6px;display:flex;align-items:center;gap:4px;">
+                  <i class="ph ph-calendar-blank" style="font-size:11px;"></i>
+                  <?= date('d M Y', strtotime($je['fecha'])) ?>
+                  · <?= substr($je['hora_entrada']??'',0,5) ?> → <?= substr($je['hora_salida']??'',0,5) ?>
+                </div>
+                <?php if (!empty($je['justificacion_texto'])): ?>
+                <div style="background:#F9FAFB;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:12px;color:#374151;line-height:1.4;font-style:italic;">
+                  "<?= h(mb_strimwidth($je['justificacion_texto'], 0, 120, '…')) ?>"
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($evidencias_je)): ?>
+                <div style="font-size:11px;color:var(--c-teal);margin-bottom:8px;">
+                  <i class="ph ph-paperclip"></i> <?= count($evidencias_je) ?> evidencia<?= count($evidencias_je)>1?'s':'' ?> adjunta<?= count($evidencias_je)>1?'s':'' ?>
+                  <?php foreach ($evidencias_je as $ev): ?>
+                  · <a href="/<?= h($ev) ?>" target="_blank" style="color:var(--c-teal);text-decoration:none;" title="Ver evidencia"><i class="ph ph-link"></i></a>
+                  <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+                <div style="display:flex;gap:6px;">
+                  <button onclick="decidirJornadaExtra(<?= $je['id'] ?>, 'aprobar')" style="flex:1;padding:6px 10px;background:#ECFDF5;color:#059669;border:1px solid #D1FAE5;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#ECFDF5'"><i class="ph ph-check" style="font-size:11px;"></i> Aprobar</button>
+                  <button onclick="decidirJornadaExtraConMotivo(<?= $je['id'] ?>)" style="flex:1;padding:6px 10px;background:#FFF1F2;color:#E11D48;border:1px solid #FFE4E6;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;" onmouseover="this.style.background='#FFE4E6'" onmouseout="this.style.background='#FFF1F2'"><i class="ph ph-x" style="font-size:11px;"></i> Rechazar</button>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
+
           <!-- Empty state -->
-          <?php if (empty($permisos_pendientes) && empty($vacaciones_pendientes)): ?>
+          <?php if (empty($permisos_pendientes) && empty($vacaciones_pendientes) && empty($jornadas_extra_pendientes)): ?>
             <div style="text-align:center;padding:36px 20px;">
               <i class="ph ph-check-circle" style="font-size:46px;color:#D1FAE5;display:block;margin-bottom:14px;"></i>
               <div style="font-size:14px;font-weight:700;color:var(--c-secondary);margin-bottom:5px;">Todo al día</div>
@@ -7136,6 +7216,19 @@ document.addEventListener('keydown', function(e) {
     if (!motivo || !motivo.trim()) { alert('Debes proporcionar un motivo para rechazar'); return; }
     const fd = new FormData();
     fd.append('action', 'decidir_vacacion'); fd.append('vacacion_id', vacacionId); fd.append('decision', 'rechazar'); fd.append('motivo_rechazo', motivo);
+    try { const r = await fetch('permisos_vacaciones_backend.php', {method:'POST',body:fd}); const d = await r.json(); if(d.success){alert('✅ '+d.message);location.reload();}else{alert('❌ '+d.message);} } catch(e){alert('Error: '+e.message);}
+  }
+  async function decidirJornadaExtra(asistenciaId, decision) {
+    if (!confirm('¿Estás seguro de aprobar este registro de jornada extra?')) return;
+    const fd = new FormData();
+    fd.append('action', 'decidir_asistencia_extra'); fd.append('asistencia_id', asistenciaId); fd.append('decision', decision);
+    try { const r = await fetch('permisos_vacaciones_backend.php', {method:'POST',body:fd}); const d = await r.json(); if(d.success){alert('✅ '+d.message);location.reload();}else{alert('❌ '+d.message);} } catch(e){alert('Error: '+e.message);}
+  }
+  async function decidirJornadaExtraConMotivo(asistenciaId) {
+    const motivo = prompt('Escribe el motivo del rechazo:');
+    if (!motivo || !motivo.trim()) { alert('Debes proporcionar un motivo para rechazar'); return; }
+    const fd = new FormData();
+    fd.append('action', 'decidir_asistencia_extra'); fd.append('asistencia_id', asistenciaId); fd.append('decision', 'rechazar'); fd.append('comentario', motivo);
     try { const r = await fetch('permisos_vacaciones_backend.php', {method:'POST',body:fd}); const d = await r.json(); if(d.success){alert('✅ '+d.message);location.reload();}else{alert('❌ '+d.message);} } catch(e){alert('Error: '+e.message);}
   }
   </script>

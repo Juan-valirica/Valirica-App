@@ -451,6 +451,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 // ===================================================================
+// APROBAR/RECHAZAR JORNADA EXTRA (Empleador)
+// ===================================================================
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'decidir_asistencia_extra') {
+    try {
+        $asistencia_id  = (int)$_POST['asistencia_id'];
+        $decision       = $_POST['decision']; // 'aprobar' o 'rechazar'
+        $comentario     = trim($_POST['comentario'] ?? '');
+        $user_id        = (int)$_SESSION['user_id'];
+
+        if ($decision === 'rechazar' && empty($comentario)) {
+            throw new Exception('Debes indicar el motivo del rechazo.');
+        }
+
+        // Verificar que el registro pertenece a un empleado de esta empresa
+        $stmt = $conn->prepare("
+            SELECT a.*, e.nombre_persona, e.id AS equipo_id
+            FROM asistencias a
+            INNER JOIN equipo e ON a.persona_id = e.id
+            WHERE a.id = ? AND e.usuario_id = ?
+        ");
+        $stmt->bind_param("ii", $asistencia_id, $user_id);
+        $stmt->execute();
+        $asis = stmt_get_result($stmt)->fetch_assoc();
+        $stmt->close();
+
+        if (!$asis) throw new Exception('Registro no encontrado o sin permisos.');
+        if ($asis['estado_validacion'] !== 'pendiente') throw new Exception('Este registro ya fue procesado.');
+
+        $nuevo_estado = ($decision === 'aprobar') ? 'aprobado' : 'rechazado';
+        $stmt = $conn->prepare("
+            UPDATE asistencias SET
+                estado_validacion    = ?,
+                validacion_comentario = ?,
+                validado_por         = ?,
+                validado_at          = NOW()
+            WHERE id = ?
+        ");
+        $stmt->bind_param("ssii", $nuevo_estado, $comentario, $user_id, $asistencia_id);
+        $stmt->execute();
+        $stmt->close();
+
+        // Notificar al empleado
+        $tipo_notif   = ($decision === 'aprobar') ? 'jornada_extra_aprobada' : 'jornada_extra_rechazada';
+        $titulo_notif = ($decision === 'aprobar') ? 'Jornada extra aprobada' : 'Jornada extra rechazada';
+        $fecha_f      = $asis['fecha'];
+        $msg_notif    = ($decision === 'aprobar')
+            ? "Tu registro de jornada extra del {$fecha_f} ha sido aprobado."
+            : "Tu registro de jornada extra del {$fecha_f} fue rechazado. Motivo: {$comentario}";
+
+        crear_notificacion($conn, $asis['persona_id'], 'empleado', $tipo_notif, $titulo_notif, $msg_notif, 'asistencia', $asistencia_id);
+
+        echo json_encode([
+            'success' => true,
+            'message' => ($decision === 'aprobar') ? 'Jornada extra aprobada correctamente' : 'Jornada extra rechazada correctamente'
+        ]);
+
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// ===================================================================
 // MARCAR NOTIFICACIÓN COMO LEÍDA (Empleado)
 // ===================================================================
 
