@@ -212,10 +212,13 @@ $f_is_active        = (int)($config['is_active']      ?? 0);
 $f_canal_slug       = $config['canal_slug']            ?? null;
 
 // URL pública del canal (para mostrar y compartir)
-$_scheme          = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-$_host            = $_SERVER['HTTP_HOST'] ?? 'app.valirica.com';
+$_scheme    = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$_host      = $_SERVER['HTTP_HOST'] ?? 'app.valirica.com';
+// Derivar la ruta base de la app desde SCRIPT_NAME para evitar hardcodear rutas del servidor
+// Ej: SCRIPT_NAME = /app.valirica.com/complaints/admin-config.php → base = /app.valirica.com
+$_app_base  = rtrim(dirname(dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
 $public_canal_url = $f_canal_slug
-    ? "{$_scheme}://{$_host}/complaints/form.php?canal=" . urlencode($f_canal_slug)
+    ? "{$_scheme}://{$_host}{$_app_base}/complaints/form.php?canal=" . urlencode($f_canal_slug)
     : null;
 ?>
 <!DOCTYPE html>
@@ -362,9 +365,12 @@ $public_canal_url = $f_canal_slug
     <div>
         <h1>Configuración del Canal de Denuncias</h1>
     </div>
-    <?php if ($config && $config['is_active']): ?>
-    <a href="manage.php">← Ver denuncias</a>
-    <?php endif; ?>
+    <div style="display:flex;gap:12px;align-items:center;">
+        <?php if ($config && $config['is_active']): ?>
+        <a href="manage.php">Ver denuncias →</a>
+        <?php endif; ?>
+        <a href="../a-desktop-dashboard-brand.php" style="background:#EF7F1B;color:#fff;padding:7px 14px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:700;">← Dashboard</a>
+    </div>
 </div>
 
 <div class="container">

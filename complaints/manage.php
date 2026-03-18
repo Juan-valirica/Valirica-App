@@ -370,7 +370,10 @@ $csrf = getCsrfToken();
         <h1>Canal de Denuncias</h1>
         <div class="sub"><?= htmlspecialchars($config['company_name']) ?></div>
     </div>
-    <a href="admin-config.php">⚙ Configuración</a>
+    <div style="display:flex;gap:12px;align-items:center;">
+        <a href="admin-config.php">⚙ Configuración</a>
+        <a href="../a-desktop-dashboard-brand.php" style="background:#EF7F1B;color:#fff;padding:7px 14px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:700;">← Dashboard</a>
+    </div>
 </div>
 
 <div class="container">

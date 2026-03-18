@@ -404,16 +404,16 @@ $csrf = getCsrfToken();
 
             <div id="identity-fields" class="hidden">
                 <div class="field">
-                    <label>Nombre <span class="req">*</span></label>
-                    <input type="text" name="name" id="name" placeholder="Tu nombre completo" autocomplete="off">
-                </div>
-                <div class="field">
-                    <label>Correo electrónico</label>
-                    <input type="email" name="email" id="email" placeholder="para recibir actualizaciones" autocomplete="off">
+                    <label>Correo corporativo <span class="req">*</span></label>
+                    <input type="email" name="email" id="email" placeholder="tu.nombre@empresa.com" autocomplete="off">
                     <div class="encrypt-note">
                         <i class="ph ph-lock-key" style="font-size:14px;color:var(--c-teal)"></i>
-                        Tus datos se cifrarán con AES-256 antes de guardarse.
+                        Si tu correo está registrado en la empresa, la denuncia se vinculará a tu perfil y podrás hacer seguimiento desde tu dashboard. Tus datos se cifran con AES-256.
                     </div>
+                </div>
+                <div class="field">
+                    <label>Nombre <span style="font-size:11px;color:#aaa;">(opcional)</span></label>
+                    <input type="text" name="name" id="name" placeholder="Solo si quieres que aparezca en el expediente" autocomplete="off">
                 </div>
             </div>
         </div>
@@ -468,22 +468,31 @@ $csrf = getCsrfToken();
 <div class="modal-overlay" id="modal-overlay">
     <div class="modal">
         <div class="modal-icon"><i class="ph ph-check-circle"></i></div>
-        <div class="modal-title">Denuncia registrada</div>
-        <p class="modal-sub">Tu denuncia ha sido enviada de forma segura. Guarda este código:</p>
-        <div class="modal-code" id="modal-code">VLD-0000-XXXX</div>
-        <div class="modal-code-note">
-            Es la única forma de hacer seguimiento.
-            <button class="copy-btn" onclick="copyCode()">
-                <i class="ph ph-copy"></i> Copiar
+        <div class="modal-title">Denuncia enviada con éxito</div>
+        <p class="modal-sub">Tu denuncia ha sido registrada de forma segura y confidencial.</p>
+
+        <div style="background:#FFF7ED;border:2px solid #EF7F1B;border-radius:12px;padding:18px 20px;margin-bottom:16px;">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#92400E;font-weight:700;margin-bottom:8px;">
+                🔑 Tu código de referencia
+            </div>
+            <div class="modal-code" id="modal-code" style="font-size:28px;letter-spacing:4px;margin-bottom:10px;">VLD-0000-XXXX</div>
+            <button class="copy-btn" onclick="copyCode()" style="background:#EF7F1B;color:#fff;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;width:100%;justify-content:center;">
+                <i class="ph ph-copy"></i> Copiar código
             </button>
         </div>
+
+        <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#B91C1C;line-height:1.6;">
+            <strong>⚠️ Guarda este código en un lugar seguro.</strong><br>
+            Es la <strong>única manera</strong> de consultar el estado de tu denuncia. No podemos recuperarlo si lo pierdes.
+        </div>
+
         <div class="modal-actions">
             <a href="track.php?empresa=<?= $company_id ?>" id="modal-track-btn"
                class="btn-modal-primary">
-                <i class="ph ph-magnifying-glass"></i> Seguimiento
+                <i class="ph ph-magnifying-glass"></i> Ver estado de mi denuncia
             </a>
             <a href="javascript:location.reload()" class="btn-modal-ghost">
-                Volver al inicio
+                Enviar otra denuncia
             </a>
         </div>
     </div>
@@ -566,7 +575,11 @@ document.getElementById('complaint-form').addEventListener('submit', async funct
     const data = new FormData(this);
 
     try {
-        const res  = await fetch('submit.php', { method: 'POST', body: data });
+        const res  = await fetch('submit.php', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: data
+        });
         const json = await res.json();
 
         if (json.ok) {

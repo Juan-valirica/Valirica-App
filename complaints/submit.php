@@ -96,17 +96,38 @@ $reporter_encrypted_name  = null;
 $reporter_encrypted_email = null;
 
 if (!$is_anonymous) {
-    $name  = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
-    if (empty($name)) {
-        fail('Debes indicar tu nombre o marcar la denuncia como anónima.', $is_ajax);
+    $name  = trim($_POST['name'] ?? '');
+
+    if (empty($email)) {
+        fail('Debes indicar tu correo corporativo o marcar la denuncia como anónima.', $is_ajax);
     }
-    $reporter_encrypted_name  = complaint_encrypt($name);
-    if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $reporter_encrypted_email = complaint_encrypt($email);
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        fail('El correo no tiene un formato válido.', $is_ajax);
     }
-    // Vincular a equipo si el empleado está logueado
-    if (!empty($_SESSION['empleado_id'])) {
+
+    // Cifrar el correo siempre
+    $reporter_encrypted_email = complaint_encrypt($email);
+
+    // Intentar vincular al miembro de equipo por correo corporativo
+    $stmt = $conn->prepare("SELECT id, nombre_persona FROM equipo WHERE correo = ? AND usuario_id = ? LIMIT 1");
+    $stmt->bind_param("si", $email, $company_id);
+    $stmt->execute();
+    $res_eq = stmt_get_result($stmt);
+    $stmt->close();
+
+    if ($res_eq && $res_eq->num_rows > 0) {
+        // Correo reconocido: vincular al perfil del equipo
+        $eq = $res_eq->fetch_assoc();
+        $reporter_equipo_id      = (int)$eq['id'];
+        $reporter_encrypted_name = complaint_encrypt($eq['nombre_persona']);
+    } else {
+        // Correo externo o no registrado: cifrar lo que proporcionaron
+        $reporter_encrypted_name = !empty($name) ? complaint_encrypt($name) : null;
+    }
+
+    // Fallback: si tiene sesión de empleado activa y no se vinculó por correo
+    if (!$reporter_equipo_id && !empty($_SESSION['empleado_id'])) {
         $eid  = (int)$_SESSION['empleado_id'];
         $stmt = $conn->prepare("SELECT id FROM equipo WHERE id = ? AND usuario_id = ? LIMIT 1");
         $stmt->bind_param("ii", $eid, $company_id);

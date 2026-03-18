@@ -395,7 +395,7 @@ $all_types = [
         <a href="admin-config.php" class="btn-topbar btn-topbar-ghost">
             <i class="ph ph-gear"></i> Configuración
         </a>
-        <a href="../dashboard.php" class="btn-topbar btn-topbar-accent">
+        <a href="../a-desktop-dashboard-brand.php" class="btn-topbar btn-topbar-accent">
             <i class="ph ph-squares-four"></i> Dashboard
         </a>
     </div>
