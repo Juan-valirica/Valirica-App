@@ -804,7 +804,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_asistencia']))
                 $titulo  = "Jornada extra pendiente: {$nombre}";
                 $mensaje_notif = "{$nombre} trabajó {$tipo_label} el {$fecha_f} ({$hora_e}–{$hora_s}). Ha enviado su justificación y requiere tu aprobación.";
 
-                $stmt_n = $conn->prepare("INSERT INTO notificaciones (usuario_destino_id, tipo_destino, tipo, titulo, mensaje, referencia_tipo, referencia_id) VALUES (?, 'empresa', 'jornada_extra_solicitada', ?, ?, 'asistencia', ?)");
+                $stmt_n = $conn->prepare("INSERT INTO notificaciones (usuario_destino_id, tipo_destino, tipo, titulo, mensaje, referencia_tipo, referencia_id) VALUES (?, 'empleador', 'jornada_extra_solicitada', ?, ?, 'asistencia', ?)");
                 $stmt_n->bind_param("issi", $admin_id, $titulo, $mensaje_notif, $asistencia_id);
                 $stmt_n->execute();
                 $stmt_n->close();
